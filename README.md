@@ -14,8 +14,6 @@ Once the book is ready to be deployed, you can run `mdbook build` to build the b
 
 ## Todo
 
-- [ ] adding to project
-- [ ] building handlers
 - [ ] running jobs
 - [ ] introduction
 - [ ] selecting handlers for project
