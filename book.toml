@@ -1,0 +1,6 @@
+[book]
+authors = ["nelson-pereira8"]
+language = "en"
+multilingual = false
+src = "src"
+title = "Recon Docs"
