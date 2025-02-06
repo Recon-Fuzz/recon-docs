@@ -14,13 +14,12 @@ Once the book is ready to be deployed, you can run `mdbook build` to build the b
 
 ## Todo
 
-- [ ] running jobs
+- [x] running jobs
 - [ ] introduction
 - [ ] selecting handlers for project
 - [ ] understanding job outputs
 - [ ] first steps (using create chimera app)
 - [ ] how chimera framework works
-- [ ] adding private repos
 - [ ] recipes
 - [ ] campaigns
 - [ ] recurring jobs
