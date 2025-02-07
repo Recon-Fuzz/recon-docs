@@ -1,7 +1,17 @@
 # Summary
 
-- [Introduction](./introduction.md)
+[Introduction](./introduction.md)
+
+--- 
+
+# Getting Started
 - [First Steps](./first_steps.md)
+- [Chimera](./chimera_framework.md)
+
+--- 
+
+# Using Recon
 - [Building Handlers](./building_handlers.md)
 - [Running Jobs](./running_jobs.md)
 - [Recipes](./recipes.md)
+- [Alerts](./alerts.md)
