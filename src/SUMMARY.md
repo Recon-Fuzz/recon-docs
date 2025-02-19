@@ -6,12 +6,12 @@
 
 # Getting Started
 - [First Steps](./first_steps.md)
-- [Chimera](./chimera_framework.md)
+- [Chimera Framework](./chimera_framework.md)
 
---- 
+<!-- ---  -->
 
-# Using Recon
+<!-- # Using Recon
 - [Building Handlers](./building_handlers.md)
 - [Running Jobs](./running_jobs.md)
 - [Recipes](./recipes.md)
-- [Alerts](./alerts.md)
+- [Alerts](./alerts.md) -->

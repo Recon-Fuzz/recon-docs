@@ -1,6 +1,6 @@
-# The Chimera Framework
+# Chimera Framework
 
-The Chimera framework lets you run fuzzing tests with Echidna and Medusa that can be easily debugged using Foundry. 
+The Chimera framework lets you run invariant tests with Echidna and Medusa that can be easily debugged using Foundry. 
 
 The framework is made up of the following files:
 - `Setup.sol`
@@ -10,7 +10,7 @@ The framework is made up of the following files:
 - `BeforeAfter.sol`
 - `CryticTester.sol`
 
-When you build your handlers using Recon these files get automatically generated and populated for you. To use the framework in your project, you just need to add these files that get generated for you and add the [Chimera dependency](https://github.com/Recon-Fuzz/chimera) to your project: 
+When you build your handlers using Recon these files get automatically generated and populated for you. To use the framework in your project, you just need to download these files that get generated for you and add the [Chimera dependency](https://github.com/Recon-Fuzz/chimera) to your project: 
 
 ```bash
 forge install Recon-Fuzz/chimera
@@ -42,11 +42,11 @@ abstract contract Setup is BaseSetup {
 
 This is perhaps the most important file in your fuzzing suite, it defines the target [function handlers](./building_handlers.md#what-are-handlers) that will be called by the fuzzer to manipulate the state of your target contracts. 
 
-NOTE: These are the _only_ functions that will be called by the fuzzer. 
+**Note: These are the _only_ functions that will be called by the fuzzer**. 
 
 Because these functions have the aim of changing the state of the target contract, they usually only include non-view and non-pure functions. 
 
-Target functions make a call to the target contracts deployed in the `Setup` contract. The handler that wraps the target function allow you to add clamping (reducing the possible fuzzed input values) before the call to the target contract and properties (assertions about the state of the target contract) after the call to the target contract. 
+Target functions make calls to the target contracts deployed in the `Setup` contract. The handler that wraps the target function allows you to add clamping (reducing the possible fuzzed input values) before the call to the target contract and properties (assertions about the state of the target contract) after the call to the target contract. 
 
 In our `create-chimera-app` template project, the `TargetFunctions` contract is used to define the `increment` and `setNumber` functions:
 
@@ -92,7 +92,7 @@ abstract contract TargetFunctions is
 
 This contract is used to define the properties that will be checked after the target functions are called. 
 
-At Recon our preference is to define these as assertion properties but they can also be defined as [boolean properties](https://secure-contracts.com/program-analysis/echidna/basic/testing-modes.html#boolean-properties).
+At Recon our preference is to define these as Echidna/Medusa assertion properties but they can also be defined as [boolean properties](https://secure-contracts.com/program-analysis/echidna/basic/testing-modes.html#boolean-properties).
 
 In our `create-chimera-app` template project, the `Properties` contract is used to define a property that states that the number can never be 0:
 
@@ -107,13 +107,15 @@ abstract contract Properties is BeforeAfter, Asserts {
 
 ### `CryticToFoundry`
 
-This contract is used to debug broken properties by converting the breaking call sequence from Echidna/Medusa into a Foundry unit test. When running jobs on Recon this is done automatically for all broken properties. 
+This contract is used to debug broken properties by converting the breaking call sequence from Echidna/Medusa into a Foundry unit test. When running jobs on Recon this is done automatically for all broken properties using the fuzzer logs. 
 
-If you are running the fuzzers locally you can use the [Echidna](https://getrecon.xyz/tools/echidna) and [Medusa](https://getrecon.xyz/tools/medusa) tools on Recon to convert the breaking call sequence into a Foundry unit test. 
+If you are running the fuzzers locally you can use the [Echidna](https://getrecon.xyz/tools/echidna) and [Medusa](https://getrecon.xyz/tools/medusa) tools on Recon to convert the breaking call sequence from the logs into a Foundry unit test. 
 
 This contract is also useful for debugging issues related to the `setup` function and allows testing individual handlers in isolation to verify if they're working as expected for specific inputs.
 
-In our `create-chimera-app` template project, the `CryticToFoundry` contract doesn't include any reproducer tests because all the properties pass, the `test_crytic` function is demonstrates the template for adding a reproducer test:
+In our `create-chimera-app` template project, the `CryticToFoundry` contract doesn't include any reproducer tests because all the properties pass. 
+
+The `test_crytic` function demonstrates the template for adding a reproducer test:
 
 ```solidity
 contract CryticToFoundry is Test, TargetFunctions, FoundryAsserts {
@@ -175,7 +177,7 @@ contract CryticTester is TargetFunctions, CryticAsserts {
 
 ## Assertions 
 
-When using assertions from Chimera in your properties, they use a different interface that the standard assertions from foundry's `forge-std`.
+When using assertions from Chimera in your properties, they use a different interface than the standard assertions from foundry's `forge-std`.
 
 The following assertions are available in Chimera's `Asserts` contract:
 
