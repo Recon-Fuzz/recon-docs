@@ -1,6 +1,7 @@
 [book]
-authors = ["nelson-pereira8"]
+authors = ["nican0r"]
 language = "en"
 multilingual = false
 src = "src"
 title = "Recon Docs"
+default-theme = "navy"
