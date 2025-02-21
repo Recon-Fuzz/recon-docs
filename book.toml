@@ -4,4 +4,7 @@ language = "en"
 multilingual = false
 src = "src"
 title = "Recon Docs"
+
+[output.html]
 default-theme = "navy"
+preferred-dark-theme = "navy"
