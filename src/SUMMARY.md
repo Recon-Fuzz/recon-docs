@@ -7,7 +7,7 @@
 # Getting Started
 - [First Steps](./first_steps.md)
 - [Chimera Framework](./chimera_framework.md)
-
+- [Setup Helpers](./setup_helpers.md)
 <!-- ---  -->
 
 <!-- # Using Recon

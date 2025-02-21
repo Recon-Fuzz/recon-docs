@@ -2,7 +2,7 @@
 
 To make getting started with Recon as easy as possible, we created the [create-chimera-app](https://github.com/Recon-Fuzz/create-chimera-app/tree/main) repository which serves as a template that you can use to create a new project with invariant testing built in. 
 
-This template uses our [Chimera framework](./chimera_framework.md) that lets you run invariant tests with Echidna and Medusa that can be easily debugged using Foundry. 
+This template uses our [Chimera framework](./chimera_framework.md) to let you run invariant tests with Echidna and Medusa that can be easily debugged using Foundry. We've also incorporated contracts from our [Setup Helpers](./setup_helpers.md) repo which make managing the test suite setup much simpler.
 
 ### Creating A New Project
 If you haven't already, first create a recon account as described in the [create an account](./introduction.md#creating-an-account) section and download either [Echidna](https://github.com/crytic/echidna) or [Medusa](https://github.com/crytic/medusa). 
