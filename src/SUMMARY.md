@@ -8,6 +8,7 @@
 - [First Steps](./first_steps.md)
 - [Chimera Framework](./chimera_framework.md)
 - [Setup Helpers](./setup_helpers.md)
+- [Recon Extension](./recon_extension.md)
 <!-- ---  -->
 
 <!-- # Using Recon
