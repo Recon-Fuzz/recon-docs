@@ -16,3 +16,4 @@ See the [anatomy of a book](https://rust-lang.github.io/mdBook/guide/creating.ht
 
 Once the book is ready to be deployed, you can run `mdbook build` to build the book. This generates a directoy named `book` with the html files that can be added to any webserver for hosting. 
 
+Currently hosted at: https://recon-fuzz.github.io/recon-docs/
