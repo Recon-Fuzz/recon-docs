@@ -8,7 +8,12 @@
 - [First Steps](./first_steps.md)
 - [Chimera Framework](./chimera_framework.md)
 - [Setup Helpers](./setup_helpers.md)
-- [Recon Extension](./recon_extension.md)
+- [Example Project](./sample_project.md)
+- [Roadmap](./roadmap.md)
+
+# Advanced Chimera Topics
+- [Advanced Ideas Stub](./advanced.md)
+<!-- - [Recon Extension](./recon_extension.md) -->
 <!-- ---  -->
 
 <!-- # Using Recon
