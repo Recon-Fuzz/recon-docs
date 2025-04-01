@@ -43,3 +43,13 @@ Hardcoded Precision Tollerance?
 Just set these as constants in your `Setup` file and then use Dynamic Replacement
 
 You already paid for the cloud service, save time and run a few extra runs to help you test all edge cases
+
+## Reuse your suite for Monitoring
+
+Some invariant testing suites end up having hundreds of thousands of dollars worth of effort put into them
+
+Echidna, Medusa and Foundry all support fuzzing on Forked tests
+
+Repurposing a Chimera suite to work with forking takes just a couple of hours, and Recon supports API jobs with Dynamic Replacement
+
+We've demoed using Invariant Testing as the best monitoring at [Fuzz Fest](https://www.youtube.com/watch?v=Cqmu-mhSLt8&t=5657s)
