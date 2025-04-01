@@ -5,6 +5,12 @@ In this simple article we'll use Create Chimera App to create a simple Contract 
 
 ## Writing the Contract
 
+Let's write a simple contract that given a deposit will vest your points over time
+
+```solidity
+    
+```
+
 ## Setup
 
 Deploy the Contract
