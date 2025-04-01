@@ -9,7 +9,6 @@
 - [Example Project](./tutorial/sample_project.md)
 - [Roadmap](./tutorial/roadmap.md)
 
-
 # Using Recon
 - [Building Handlers](./recon/building_handlers.md)
 - [Running Jobs](./recon/running_jobs.md)
@@ -17,6 +16,13 @@
 - [Alerts](./recon/alerts.md)
 - [Dynamic Replacement](./recon/dynamic_replacement.md)
 - [Governance Fuzzing](./recon/governance_fuzzing.md)
+
+# Free Recon Tools
+- [Medusa Logs Parser](./tools/medusa_parser.md)
+- [Echidna Logs Parser](./tools/echidna_parser.md)
+- [Invariants Builder](./tools/builder.md)
+- [Bytecode Compare](./tools/bytecode_compare.md)
+- [Bytecode To Interface](./tools/bytecode_to_interface.md)
 
 # Help
 - [Glossary](./glossary.md)
