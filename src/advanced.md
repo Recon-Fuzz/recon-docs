@@ -5,6 +5,7 @@
 For each contract, for each function, grab each input, have the fuzzer generate said input
 
 Prank the current actor (if necessary)
+
 Call the contract and function with the parameters
 
 ### Clamping Target Functions
@@ -34,11 +35,11 @@ This will allow you to use Dynamic Replacement to toggle the value on run setup 
 
 ## Setup
 
-TODO:
+A few rules we use in our engagements
+
 - Don't blindly trust the dev
 - Define programmatic deployments
-- Figure out "implicit" clamping
-- "implicit clamps" = 
+- Figure out "implicit" clamping and base your properties on this
 
 ## Programmatic Deployment
 
@@ -67,8 +68,6 @@ Repeated inline properties should be refactroed to only be assessed once, either
 
 ### Identifying errors
 
-Start by using exact checks
-
-Change to Optimization
-
-Improve work
+- Start by using exact checks
+- Change to Optimization
+- Improve work and explore further
