@@ -20,7 +20,3 @@ Our goal with Create Chimera App 3 is to have most devs write exclusivelty prope
 - [ ] Use Formal Methods to generate automatic clamps for target functions
 - [ ] Add the Formal Methods, and TargetFunctions to a Fuzzer as to abstract them away
 - [ ] Convert all fuzzing to concolic / category based to check one concrete path by a candiate only once (and then optimize the result later)
-
-
-
-# Glossary / Explanation
