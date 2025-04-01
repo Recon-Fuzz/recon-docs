@@ -16,6 +16,7 @@
 - [Alerts](./recon/alerts.md)
 - [Dynamic Replacement](./recon/dynamic_replacement.md)
 - [Governance Fuzzing](./recon/governance_fuzzing.md)
+- [Recon Tricks](./recon/recon_tricks.md)
 
 # Free Recon Tools
 - [Medusa Logs Parser](./tools/medusa_parser.md)
