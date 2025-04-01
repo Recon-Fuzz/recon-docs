@@ -33,3 +33,13 @@ The way the corpus for Optimization is built is a bit different, so running Opti
 You can save a lot of back and forth by creating a share and sending it to your team or auditors
 
 Recon jobs update automatically every minute, so once you know the job will work you can share it and go afk
+
+## Use Dynamic Replacement for Config
+
+Thinking about multi-deployment tests?
+Admin Mistakes?
+Hardcoded Precision Tollerance?
+
+Just set these as constants in your `Setup` file and then use Dynamic Replacement
+
+You already paid for the cloud service, save time and run a few extra runs to help you test all edge cases
