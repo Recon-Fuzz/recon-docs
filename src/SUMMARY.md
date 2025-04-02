@@ -25,13 +25,18 @@
 - [Invariants Builder](./tools/builder.md)
 - [Bytecode Compare](./tools/bytecode_compare.md)
 - [Bytecode To Interface](./tools/bytecode_to_interface.md)
-<!-- - [Recon Extension](./recon_extension.md) -->
-<!-- ---  -->
+<!-- [Recon Extension](./recon_extension.md) -->
+
+# OSS Repos
+- [Chimera](./oss/chimera.md)
+- [Create Chimera App](./oss/create_chimera_app.md)
+- [Setup Helpers](./oss/setup_helps.md)
+- [Properties Table](./oss/properties.md)
 
 # Help
 - [Glossary](./glossary.md)
 
-
 # Extra
-- [Advanced Ideas Stub](./extra/advanced.md)
+- [Advanced Ideas](./extra/advanced.md)
+- [Remote Work](./extra/remote_work.md)
 - [The Recon Invariant Audit Process](./extra/audit_process.md)
