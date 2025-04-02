@@ -32,6 +32,7 @@
 - [Create Chimera App](./oss/create_chimera_app.md)
 - [Setup Helpers](./oss/setup_helps.md)
 - [Properties Table](./oss/properties.md)
+- [Logs Parser](./oss/logs_parser.md)
 
 # Help
 - [Glossary](./glossary.md)
