@@ -503,11 +503,6 @@ contract CryticToFoundry is Test, TargetFunctions, FoundryAsserts {
 
 We now have a Foundry repro! Much easier to debug than using console.log from scraped logs
 
-
-# TODO 2nd Part
-
-If you enjoyed part 1, please lmk!
-
 ## Testing for Monotonicity
 
 The contract power is monotonically increasing since there's no way to withdraw
@@ -570,32 +565,3 @@ We don't expect this property to break, but you should still run the fuzzer to c
 And here's a fun result, the fuzzer broken the property
 
 I'll leave you as an exercise to figure out why!
-
-
-
-
-# TODO: Check Below
-
-## Setup
-
-Deploy the Contract
-
-## Target Functions
-
-Build them with Extension / UI
-
-## Why no Ghost Variables
-
-Explain
-
-## Running the suite and ensuring you reach coverage
-
-## Adding Canaries
-
-## Breaking a Precision Property
-
-## Exploring the Precision Property with Optimization Mode
-
-## Chaining a loss of Precision into an exploit
-
-## Thinking
