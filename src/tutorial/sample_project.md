@@ -275,15 +275,15 @@ Let's now run medusa
 `medusa fuzz`
 
 ```bash
-cerberus@cerberuss-MacBook-Air example-recon % medusa fuzz
-⇾ Reading the configuration file at: /Users/cerberus/Desktop/Consulting/example-recon/medusa.json
+medusa fuzz
+⇾ Reading the configuration file at: /temp/example-recon/medusa.json
 ⇾ Compiling targets with crytic-compile
 ⇾ Running command:
-/opt/homebrew/bin/crytic-compile . --export-format solc --foundry-compile-all
+crytic-compile . --export-format solc --foundry-compile-all
 ⇾ Finished compiling targets in 5s
 ⇾ No Slither cached results found at slither_results.json
 ⇾ Running Slither:
-/opt/homebrew/bin/slither . --ignore-compile --print echidna --json -
+slither . --ignore-compile --print echidna --json -
 ⇾ Finished running Slither in 7s
 ⇾ Initializing corpus
 ⇾ Setting up test chain
