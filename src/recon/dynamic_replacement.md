@@ -1,10 +1,8 @@
 # Dynamic Replacement
 
-Demo:
-https://getrecon.xyz/dynamic-replacement-demo
+Demo: [https://getrecon.xyz/dynamic-replacement-demo](https://getrecon.xyz/dynamic-replacement-demo)
 
-Use it:
-https://getrecon.xyz/dashboard/dynamic-replacement
+Use it: [https://getrecon.xyz/dashboard/dynamic-replacement](https://getrecon.xyz/dashboard/dynamic-replacement)
 
 
 Dynamic Replacement allows you to replace the value of any variable in your contracts

@@ -1,5 +1,17 @@
 # Glossary
 
+## Actor
+
+The address that will perform the calls specific in TargetFunctions
+
+## CryticTester
+
+The Invariant Testing contract that we will deploy and that the fuzzer will use to explore state and properties
+
+## CryticToFoundry
+
+The Foundry Test contract we use to debug repros obtained with other tools
+
 ## Invariant Testing
 
 The techniques and the act of testing specific invariants and properties on Smart Contracts
