@@ -38,5 +38,4 @@
 
 # Extra
 - [Advanced Ideas](./extra/advanced.md)
-- [Remote Work](./extra/remote_work.md)
 - [The Recon Invariant Audit Process](./extra/audit_process.md)
