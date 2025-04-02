@@ -508,6 +508,72 @@ We now have a Foundry repro! Much easier to debug than using console.log from sc
 
 If you enjoyed part 1, please lmk!
 
+## Testing for Monotonicity
+
+The contract power is monotonically increasing since there's no way to withdraw
+
+Let's prove it with a global property and ghost variables
+
+To keep things simple, let's just test on the current actor
+
+Go to `BeforeAfter.sol` and add a way to fetch the power before and after:
+
+```solidity
+// SPDX-License-Identifier: GPL-2.0
+pragma solidity ^0.8.0;
+
+import {Setup} from "./Setup.sol";
+
+// ghost variables for tracking state variable values before and after function calls
+abstract contract BeforeAfter is Setup {
+    struct Vars {
+        uint256 power;
+    }
+
+    Vars internal _before;
+    Vars internal _after;
+
+    modifier updateGhosts {
+        __before();
+        _;
+        __after();
+    }
+
+    function __before() internal {
+        _before.power = points.power(_getActor());
+    }
+
+    function __after() internal {
+        _after.power = points.power(_getActor());
+    }
+}
+```
+
+From this we can specify the property in `Properties.sol`
+
+```solidity
+// SPDX-License-Identifier: GPL-2.0
+pragma solidity ^0.8.0;
+
+import {Asserts} from "@chimera/Asserts.sol";
+import {BeforeAfter} from "./BeforeAfter.sol";
+
+abstract contract Properties is BeforeAfter, Asserts {
+    function property_powerIsMonotonic() public {
+        gte(_after.power, _before.power, "property_powerIsMonotonic");
+    }
+}
+```
+
+We don't expect this property to break, but you should still run the fuzzer to check
+
+And here's a fun result, the fuzzer broken the property
+
+I'll leave you as an exercise to figure out why!
+
+
+
+
 # TODO: Check Below
 
 ## Setup
