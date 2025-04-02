@@ -3,6 +3,7 @@
 [Introduction](./base/introduction.md)
 
 # Writing Invariant Tests
+
 - [First Steps](./tutorial/first_steps.md)
 - [Chimera Framework](./tutorial/chimera_framework.md)
 - [Setup Helpers](./tutorial/setup_helpers.md)
@@ -24,11 +25,12 @@
 - [Invariants Builder](./tools/builder.md)
 - [Bytecode Compare](./tools/bytecode_compare.md)
 - [Bytecode To Interface](./tools/bytecode_to_interface.md)
+<!-- - [Recon Extension](./recon_extension.md) -->
+<!-- ---  -->
 
 # Help
 - [Glossary](./glossary.md)
-<!-- - [Recon Extension](./recon_extension.md) -->
-<!-- ---  -->
+
 
 # Extra
 - [Advanced Ideas Stub](./extra/advanced.md)
