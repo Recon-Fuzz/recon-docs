@@ -20,6 +20,8 @@ If you're new to invariant testing, we recommend you start with the following po
 2. [How To Define Invariants](https://getrecon.substack.com/p/how-to-define-invariants?r=34r2zr)
 3. [Implementing Your First Smart Contract Invariants: A Practical Guide](https://getrecon.substack.com/p/implementing-your-first-few-invariants?r=34r2zr)
 
+If you prefer a full end-to-end video bootcamp, checkout [this series](https://getrecon.xyz/bootcamp) on everything you need to know about invariant testing.
+
 Once you've grasped the basics of invariant testing you can setup your first suite and run it on Recon. For a step-by-step guide on how to do this, check out the [First Steps](./first_steps.md) guide.
 
 <!-- or use the documentation in the _Using Recon_ section to help guide you.  -->
