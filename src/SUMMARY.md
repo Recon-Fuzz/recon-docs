@@ -42,3 +42,5 @@
 # Extra
 - [Advanced Ideas](./extra/advanced.md)
 - [The Recon Invariant Audit Process](./extra/audit_process.md)
+- [Suggested Office Hours](./extra/office_hours.md)
+
