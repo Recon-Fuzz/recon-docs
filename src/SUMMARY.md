@@ -34,6 +34,7 @@
 - [ABI to Invariants](./oss/abi_to_invariants.md)
 - [Setup Helpers](./oss/setup_helps.md)
 - [Properties Table](./oss/properties.md)
+- [ERC7540 Reusable Properties](./oss/erc7540.md)
 
 
 # Help
@@ -42,5 +43,6 @@
 # Extra
 - [Advanced Ideas](./extra/advanced.md)
 - [The Recon Invariant Audit Process](./extra/audit_process.md)
+- [Suggested Recon Articles](./extra/substack.md)
 - [Suggested Office Hours](./extra/office_hours.md)
 
