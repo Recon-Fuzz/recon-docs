@@ -8,13 +8,13 @@ You can specify whether an alert should trigger a Webhook or send a message on T
 
 Navigate to a Recipe
 
-![Manage Alerts](./images/alerts/manage-alerts.png)
+![Manage Alerts](../images/alerts/manage-alerts.png)
 Click on `Manage Alerts` on the top right
 
 You'll be redirected to a page that displays all your alerts for that recipe
 
 Scroll down and click on `Manage Alerts` to display and create all alerts attached to this Recipe
-![Create Alerts](./images/alerts/create-alerts.png)
+![Create Alerts](../images/alerts/create-alerts.png)
 
 You will then be able to Delete, Disable or Edit an alert
 
