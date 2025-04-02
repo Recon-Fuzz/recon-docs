@@ -32,6 +32,7 @@
 - [Create Chimera App](./oss/create_chimera_app.md)
 - [Logs Parser](./oss/logs_parser.md)
 - [ABI to Invariants](./oss/abi_to_invariants.md)
+- [ABI to Mock](./oss/abi_to_mock.md)
 - [Setup Helpers](./oss/setup_helps.md)
 - [Properties Table](./oss/properties.md)
 - [ERC7540 Reusable Properties](./oss/erc7540.md)
