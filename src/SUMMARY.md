@@ -21,7 +21,7 @@
 - [Recon Tricks](./recon/recon_tricks.md)
 
 # Free Recon Tools
-- [Medusa Log Scraper](./tools/echidna_scraper.md)
+- [Medusa Log Scraper](./tools/medusa_scraper.md)
 - [Echidna Log Scraper](./tools/echidna_scraper.md)
 - [Invariants Builder](./tools/builder.md)
 - [Bytecode Compare](./tools/bytecode_compare.md)
