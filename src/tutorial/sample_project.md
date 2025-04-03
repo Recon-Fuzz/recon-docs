@@ -1,7 +1,7 @@
 
 # Introduction
 
-In this simple article we'll use Create Chimera App to create a simple Contract and run Invariant Tests on it
+In this simple article, we'll use Create Chimera App to create a simple Contract and run Invariant Tests on it.
 
 ## Getting started
 
@@ -11,7 +11,7 @@ Or use `forge init --template https://github.com/Recon-Fuzz/create-chimera-app`
 
 ## Writing the Contract
 
-Let's write a simple contract that given a deposit will vest your points over time
+Let's write a simple contract that given a deposit will vest your points over time.
 
 ```solidity
 
@@ -20,24 +20,24 @@ contract Points {
     mapping (address => uint256) depositTime;
 
     function deposit(uint256 amt) external {
-        depositAmount[msg.sender] += amt;
-        depositTime[msg.sender] = block.timestamp;
-    }
+ depositAmount[msg.sender] += amt;
+ depositTime[msg.sender] = block.timestamp;
+ }
 
     function power(address who) external view returns (uint256) {
         return depositAmount[msg.sender] * (block.timestamp - depositTime[msg.sender]);
-    }
+ }
 }
     
 ```
 
 ## Dealing with the Boilerplate
 
-Let's delete `Counter.t.sol` since we won't be writing unit tests
+Let's delete `Counter.t.sol` since we won't be writing unit tests.
 
 Rename `Counter.sol` to `Points.sol`
 
-Now we need to fix some imports
+Now we need to fix some imports.
 
 ### Delete all handlers in TargetFunctions
 
@@ -108,9 +108,9 @@ abstract contract DoomsdayTargets is
     /// The fuzzer will call this anyway, and because it reverts it will be removed from shrinking
     /// Replace the "withGhosts" with "stateless" to make the code clean
     modifier stateless() {
-        _;
+ _;
         revert("stateless");
-    }
+ }
 
 }
 ```
@@ -128,22 +128,22 @@ import {Setup} from "./Setup.sol";
 abstract contract BeforeAfter is Setup {
     struct Vars {
         uint256 counter_number;
-    }
+ }
 
-    Vars internal _before;
-    Vars internal _after;
+ Vars internal _before;
+ Vars internal _after;
 
     modifier updateGhosts {
         __before();
-        _;
+ _;
         __after();
-    }
+ }
 
     function __before() internal {
-    }
+ }
 
     function __after() internal {
-    }
+ }
 }
 
 ```
@@ -167,12 +167,12 @@ import {TargetFunctions} from "./TargetFunctions.sol";
 contract CryticToFoundry is Test, TargetFunctions, FoundryAsserts {
     function setUp() public {
         setup();
-    }
+ }
 
     // forge test --match-test test_crytic -vvv
     function test_crytic() public {
         // TODO: add failing property tests here for debugging
-    }
+ }
 }
 ```
 
@@ -199,7 +199,7 @@ Error: Compiler run failed:
 Error (6275): Source "src/Counter.sol" not found: File not found. Searched the following locations: "/temp/example-recon".
 ParserError: Source "src/Counter.sol" not found: File not found. Searched the following locations: "/temp/example-recon".
   --> test/recon/Setup.sol:16:1:
-   |
+ |
 16 | import "src/Counter.sol";
 ```
 
@@ -225,7 +225,7 @@ import {Utils} from "@recon/Utils.sol";
 import "src/Points.sol";
 
 abstract contract Setup is BaseSetup, ActorManager, AssetManager, Utils {
-    Points points;
+ Points points;
 
     /// === Setup === ///
     /// This contains all calls to be performed in the tester constructor, both for Echidna and Foundry
@@ -234,26 +234,26 @@ abstract contract Setup is BaseSetup, ActorManager, AssetManager, Utils {
         _addActor(address(0x411c3));
         _newAsset(18); // New 18 decimals token
 
-        points = new Points();
+ points = new Points();
 
         // Mints to all actors and approves allowances to the counter
         address[] memory approvalArray = new address[](1);
-        approvalArray[0] = address(points);
+ approvalArray[0] = address(points);
         _finalizeAssetDeployment(_getActors(), approvalArray, type(uint88).max);
-    }
+ }
 
     /// === MODIFIERS === ///
     /// Prank admin and actor
     
     modifier asAdmin {
-        vm.prank(address(this));
-        _;
-    }
+ vm.prank(address(this));
+ _;
+ }
 
     modifier asActor {
-        vm.prank(address(_getActor()));
-        _;
-    }
+ vm.prank(address(_getActor()));
+ _;
+ }
 }
 
 ```
@@ -268,9 +268,9 @@ Let's use Foundry to check that everything compiles
 
 Just run `forge test`
 
-It's passing, meaning the deployment is working
+It's passing, meaning the deployment is working.
 
-Let's now run medusa
+Let's now run Medusa.
 
 `medusa fuzz`
 
@@ -299,27 +299,27 @@ slither . --ignore-compile --print echidna --json -
 ⇾ fuzz: elapsed: 6s, calls: 141341 (236
 ```
 
-At this point we expect close to no lines being covered
+At this point, we expect close to no lines to be covered.
 
 We'll address this soon.
 
-You should note that Medusa is picking up the `ManagerTargets` which can help you setup multiple-tokens multiple-actor tests
+You should note that Medusa is picking up the `ManagerTargets` which can help you setup multiple-tokens multiple-actor tests.
 
 Stop medusa with `CTRL + C`
 
 Open the coverage report located at `/medusa/coverage/coverage_report.html`
 
-Green lines means the line was hit
+A Green line means the line was hit.
 
-Red lines means the line was not hit
+A Red line means the line was not hit.
 
 ![Medusa Coverage](../images/sample_project/medusa_coverage.png)
 
-Let's rectify the situation by adding target functions
+Let's rectify the situation by adding target functions.
 
 ## Building Target Functions
 
-Foundry produces an `/out` folder, which contains the ABI of the `Points` contract
+Foundry produces an `/out` folder, which contains the ABI of the `Points` contract.
 
 We will use that in conjunction with our ABI builder to quickly generate `TargetFunctions`
 
@@ -335,7 +335,7 @@ This generates the `TargetFunctions` for `Points` in this case it's just oen
 
 You can just copy the handler into your `TargetFunctions.sol`
 
-Make sure to add the `updateGhosts asActor` modifiers to this `public` function if they are not present
+Make sure to add the `updateGhosts asActor` modifiers to this `public` function if they are not present.
 
 `updateGhosts` means we will update all ghost variables
 `asActor` means we will ensure that the call is done by the currently active actor
@@ -362,26 +362,26 @@ abstract contract TargetFunctions is
     ManagersTargets
 {
     function points_deposit(uint256 amt) public updateGhosts asActor {
-        points.deposit(amt);
-    }
+ points.deposit(amt);
+ }
 }
 
 ```
 
-Let's run `medusa fuzz` again
+Let's run `medusa fuzz` again.
 
-And then we'll check coverage
+Then we'll check the coverage.
 
-The coverage report is effectively our eyes into what the fuzzer is doing
+The coverage report is effectively our eyes into what the fuzzer is doing.
 
 ![Better Coverage](../images/sample_project/medusa_better_coverage.png)
 
 
-We now see that the function `deposit` is fully covered
+We now see that the function `deposit` is fully covered.
 
-You can tell that `power` is not being tested
+You can tell that `power` is not being tested.
 
-This gives us an opportunity to write a global property
+This gives us an opportunity to write a global property.
 
 ## Writing Global Properties
 
@@ -416,43 +416,43 @@ abstract contract DoomsdayTargets is
     /// The fuzzer will call this anyway, and because it reverts it will be removed from shrinking
     /// Replace the "withGhosts" with "stateless" to make the code clean
     modifier stateless() {
-        _;
+ _;
         revert("stateless");
-    }
+ }
 
     function doomsday_deposit_revert(uint256 amt) public stateless asActor {
         try points.deposit(amt) {} catch {
             t(false, "Should never revert");
-        }
-    }
+ }
+ }
 
 }
 ```
 
-The handler `doomsday_deposit_revert` is what we call a doomsday test, a property that should never fail as a failure indicates the system breaking in some way
+The handler `doomsday_deposit_revert` is what we call a doomsday test, a property that should never fail as a failure indicates the system breaking in some way.
 
-We use `stateless` to make it so that we don't need to track ghost variables for this test
+We use `stateless` to make it so that we don't need to track ghost variables for this test.
 
-This pattern is very useful if you want to perform extremely specific tests that would make your code more complex
+This pattern is very useful if you want to perform extremely specific tests that would make your code more complex.
 
 Run `medusa fuzz` and we should get a broken property!
 
 ## Debugging Broken Properties
 
-The Chimera Framework is extremely opinionated, in a way that we think is good
+The Chimera Framework is extremely opinionated, in a way that we think is good.
 
-We believe that reading Medusa and Echdina traces is a very slow way to debug broken properties
+We believe that reading Medusa and Echdina traces is a very slow way to debug broken properties.
 
-That's why all of our templates come with the ability to repro broken properties in Foundry
+That's why all of our templates come with the ability to repro broken properties in Foundry.
 
-Instead of debugging from logs, let's use foundry
+Instead of debugging from logs, let's use foundry.
 
-- Copy the logs from medusa
+- Copy the logs from Medusa
 - Go to [https://getrecon.xyz/tools/medusa](https://getrecon.xyz/tools/medusa)
 - Paste the logs
 - You'll see a broken property
 - Open it by clicking it
-- Disable vm.prank by clicking on it (as we're overriding medusa's behaviour)
+- Disable vm.prank by clicking on it (as we're overriding Medusa's behavior)
 - Click on the clipboard icon to copy the repro
 
 ![Medusa Repro](../images/sample_project/medusa_repro.png)
@@ -478,25 +478,25 @@ import {TargetFunctions} from "./TargetFunctions.sol";
 contract CryticToFoundry is Test, TargetFunctions, FoundryAsserts {
     function setUp() public {
         setup();
-    }
+ }
 
     // forge test --match-test test_crytic -vvv
     function test_crytic() public {
         // TODO: add failing property tests here for debugging
-    }
+ }
 
     // forge test --match-test test_doomsday_deposit_revert_0 -vvv 
 
     function test_doomsday_deposit_revert_0() public {
     
-    vm.roll(20125);
-    vm.warp(424303);
+ vm.roll(20125);
+ vm.warp(424303);
     points_deposit(47847039802010376432191764575089043774271359955637698993445805766260571833418);
     
-    vm.roll(51974);
-    vm.warp(542538);
+ vm.roll(51974);
+ vm.warp(542538);
     doomsday_deposit_revert(71706648638691613974674094072029978422499381042277843030097252733530259068757);
-    }
+ }
             
 }
 ```
@@ -505,11 +505,11 @@ We now have a Foundry repro! Much easier to debug than using console.log from sc
 
 ## Testing for Monotonicity
 
-The contract power is monotonically increasing since there's no way to withdraw
+The contract power is monotonically increasing since there's no way to withdraw.
 
-Let's prove it with a global property and ghost variables
+Let's prove it with a global property and ghost variables.
 
-To keep things simple, let's just test on the current actor
+To keep things simple, let's just test on the current actor.
 
 Go to `BeforeAfter.sol` and add a way to fetch the power before and after:
 
@@ -523,28 +523,28 @@ import {Setup} from "./Setup.sol";
 abstract contract BeforeAfter is Setup {
     struct Vars {
         uint256 power;
-    }
+ }
 
-    Vars internal _before;
-    Vars internal _after;
+ Vars internal _before;
+ Vars internal _after;
 
     modifier updateGhosts {
         __before();
-        _;
+ _;
         __after();
-    }
+ }
 
     function __before() internal {
-        _before.power = points.power(_getActor());
-    }
+ _before.power = points.power(_getActor());
+ }
 
     function __after() internal {
-        _after.power = points.power(_getActor());
-    }
+ _after.power = points.power(_getActor());
+ }
 }
 ```
 
-From this we can specify the property in `Properties.sol`
+From this, we can specify the property in `Properties.sol`
 
 ```solidity
 // SPDX-License-Identifier: GPL-2.0
@@ -556,12 +556,12 @@ import {BeforeAfter} from "./BeforeAfter.sol";
 abstract contract Properties is BeforeAfter, Asserts {
     function property_powerIsMonotonic() public {
         gte(_after.power, _before.power, "property_powerIsMonotonic");
-    }
+ }
 }
 ```
 
 We don't expect this property to break, but you should still run the fuzzer to check
 
-And here's a fun result, the fuzzer broken the property
+And here's a fun result, the fuzzer broke the property
 
 I'll leave you as an exercise to figure out why!

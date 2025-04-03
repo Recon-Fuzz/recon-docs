@@ -1,6 +1,6 @@
 # ABI to Mock
 
-Given an ABI file generate a mock with functions that allow to set the return value of all view functions
+Given an ABI file generate a mock with functions that allow setting the return value of all view functions.
 
 [https://github.com/Recon-Fuzz/abi-to-mock](https://github.com/Recon-Fuzz/abi-to-mock)
 

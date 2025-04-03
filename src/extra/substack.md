@@ -1,8 +1,8 @@
 # Suggested Recon Articles
 
-## Get started with Invariant Testing Series
+## Get started with the Invariant Testing Series
 
-A viral series of article, teaching you how to perform invariant testing from first principles
+A viral series of articles, teaching you how to perform invariant testing from first principles
 
 [First Day At Invariant School](https://getrecon.substack.com/p/first-day-at-invariant-school)
 

@@ -3,7 +3,7 @@
 [https://getrecon.xyz/tools/sandbox
 ![Builder](../images/tools/builder.png)](https://getrecon.xyz/tools/sandbox)
 
-Scaffold an Invariant Testing suite in seconds
+Scaffold an Invariant Testing suite in seconds!
 
 - Paste your contracts ABI
 - Rename them
