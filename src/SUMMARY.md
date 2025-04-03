@@ -21,8 +21,8 @@
 - [Recon Tricks](./recon/recon_tricks.md)
 
 # Free Recon Tools
-- [Medusa Logs Parser](./tools/medusa_parser.md)
-- [Echidna Logs Parser](./tools/echidna_parser.md)
+- [Medusa Log Scraper](./tools/echidna_scraper.md)
+- [Echidna Log Scraper](./tools/echidna_scraper.md)
 - [Invariants Builder](./tools/builder.md)
 - [Bytecode Compare](./tools/bytecode_compare.md)
 - [Bytecode To Interface](./tools/bytecode_to_interface.md)
@@ -31,7 +31,7 @@
 # OSS Repos
 - [Chimera](./oss/chimera.md)
 - [Create Chimera App](./oss/create_chimera_app.md)
-- [Logs Parser](./oss/logs_parser.md)
+- [Log Parser](./oss/logs_parser.md)
 - [ABI to Invariants](./oss/abi_to_invariants.md)
 - [ABI to Mock](./oss/abi_to_mock.md)
 - [Setup Helpers](./oss/setup_helps.md)

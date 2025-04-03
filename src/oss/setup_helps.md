@@ -1,5 +1,5 @@
-# Setup Helpers
+# <a href="https://github.com/Recon-Fuzz/setup-helpers" target="_blank" rel="noopener noreferrer">Setup Helpers</a>
 
-A library of small contracts used for niche use cases for Invariant Testing.
+A library of contracts used for niche use cases for invariant testing.
 
-[https://github.com/Recon-Fuzz/setup-helpers](https://github.com/Recon-Fuzz/setup-helpers)
+See the [Setup Helpers](../tutorial/setup_helpers.md) page on how to use these. 
