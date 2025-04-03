@@ -8,6 +8,7 @@
 - [Chimera Framework](./tutorial/chimera_framework.md)
 - [Setup Helpers](./tutorial/setup_helpers.md)
 - [Example Project](./tutorial/sample_project.md)
+- [Invariant Testing Bootcamp](./tutorial/bootcamp.md)
 - [Roadmap](./tutorial/roadmap.md)
 
 # Using Recon
