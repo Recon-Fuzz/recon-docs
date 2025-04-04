@@ -7,15 +7,15 @@ Handlers are functions that help you test invariants by wrapping a call to a tar
 For example, if we want to test the deposit function of an ERC4626 vault, we can build a handler that will call the deposit function and then assert some property about the state of the vault after the deposit is complete.
 
 ```solidity
-// this is the handler
+//This is the handler
 function vault_deposit(uint256 assets, address receiver) public {  
-    // we can add clamping here to reduce the search space of the fuzzer    
-    assets = assets %  underlyingAsset.balanceOf(address(this));
+    //We can add clamping here to reduce the search space of the fuzzer    
+ assets = assets %  underlyingAsset.balanceOf(address(this));
 
-    // this is the call to the target contract
-    vault.deposit(assets, receiver);
+    //This is the call to the target contract
+ vault.deposit(assets, receiver);
 
-    // we can add properties here to test the state of the vault after the deposit is complete
+    //We can add properties here to test the state of the vault after the deposit is complete
     eq(vault.balanceOf(receiver) == assets);
 }
 ```
@@ -50,7 +50,7 @@ You'll then need to add chimera to your remappings. If your project does this in
 
 ```toml
 remappings = [
-    '@chimera/=lib/chimera/src/'
+ '@chimera/=lib/chimera/src/'
 ]
 ```
 
@@ -81,12 +81,3 @@ echidna . --contract CryticTester --config echidna.yaml
 ```bash
 medusa fuzz
 ```
-
-
-
-
-
-
-
-
-

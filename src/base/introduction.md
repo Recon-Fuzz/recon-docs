@@ -2,11 +2,15 @@
 
 Recon is a tool for automatically scaffolding and running invariant testing in the cloud.
 
+We also maintain a suite of tools that help with invariant testing and security research more generally.
+
 ## Creating An Account
 
-To get started with Recon, you'll need to [create an account](https://getrecon.xyz/auth/signin?callbackUrl=https%3A%2F%2Fgetrecon.xyz%2Fdashboard) using your GitHub account. 
+To get started using Recon's free tools, you don't need to create an account and can use any of the tools in the [Free Recon Tools](../tools/medusa_scraper.md) section. 
 
-Once you've created an account, you'll be redirected to the dashboard where you'll have access to all of the tools in the Recon suite. To run a job you'll need a Recon Pro account. The other tools in the Recon suite are free to use without a Pro account. 
+To use more advanced features (running jobs in the cloud, alerts, etc.) you'll need to [create an account](https://getrecon.xyz/auth/signin?callbackUrl=https%3A%2F%2Fgetrecon.xyz%2Fdashboard) using your GitHub account and sign up for Recon Pro. 
+
+Once you've created an account, you'll be redirected to the dashboard where you'll have access to all of the tools in the Recon suite.
 
 ## Learn Invariant Testing
 
@@ -14,7 +18,7 @@ Most of our guides and documentation are focused on using fuzzing tools, primari
 
 After having chosen a tool best suited to your needs and downloading it locally, you can get started by running jobs directly on the jobs pge.
 
-If you're new to invariant testing, we recommend you start with the following posts before getting started: 
+If you're new to invariant testing, we recommend you starting with the following posts: 
 
 1. [First Day At Invariant School](https://getrecon.substack.com/p/first-day-at-invariant-school?r=34r2zr)
 2. [How To Define Invariants](https://getrecon.substack.com/p/how-to-define-invariants?r=34r2zr)
