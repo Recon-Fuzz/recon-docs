@@ -5,11 +5,12 @@
 # Writing Invariant Tests
 
 - [First Steps](./tutorial/first_steps.md)
+- [Example Project](./tutorial/sample_project.md)
 - [Chimera Framework](./tutorial/chimera_framework.md)
 - [Setup Helpers](./tutorial/setup_helpers.md)
-- [Example Project](./tutorial/sample_project.md)
 - [Invariant Testing Bootcamp](./tutorial/bootcamp.md)
-- [Roadmap](./tutorial/roadmap.md)
+
+--- 
 
 # Using Recon
 - [Building Handlers](./recon/building_handlers.md)
@@ -20,6 +21,8 @@
 - [Governance Fuzzing](./recon/governance_fuzzing.md)
 - [Recon Tricks](./recon/recon_tricks.md)
 
+--- 
+
 # Free Recon Tools
 - [Medusa Log Scraper](./tools/medusa_scraper.md)
 - [Echidna Log Scraper](./tools/echidna_scraper.md)
@@ -27,6 +30,7 @@
 - [Bytecode Compare](./tools/bytecode_compare.md)
 - [Bytecode To Interface](./tools/bytecode_to_interface.md)
 <!-- [Recon Extension](./recon_extension.md) -->
+--- 
 
 # OSS Repos
 - [Chimera](./oss/chimera.md)
@@ -38,13 +42,18 @@
 - [Properties Table](./oss/properties.md)
 - [ERC7540 Reusable Properties](./oss/erc7540.md)
 
+--- 
 
 # Help
 - [Glossary](./glossary.md)
 
+--- 
+
 # Extra
+- [Roadmap](./extra/roadmap.md)
 - [Advanced Ideas](./extra/advanced.md)
 - [The Recon Invariant Audit Process](./extra/audit_process.md)
 - [Suggested Recon Articles](./extra/substack.md)
 - [Suggested Office Hours](./extra/office_hours.md)
+
 
