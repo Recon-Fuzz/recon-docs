@@ -1,6 +1,5 @@
-# Properties Table
+# <a href="https://github.com/Recon-Fuzz/properties-table" target="_blank" rel="noopener noreferrer">Properties Table</a>
 
-A boilerplate to write property specification.
+A template table to write property specifications.
 
-[https://github.com/Recon-Fuzz/properties-table](https://github.com/Recon-Fuzz/properties-table)
 
