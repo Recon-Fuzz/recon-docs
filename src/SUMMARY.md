@@ -12,14 +12,14 @@
 
 --- 
 
-# Using Recon
-- [Building Handlers](./recon/building_handlers.md)
+# Using Recon (Coming Soon)
+<!-- - [Building Handlers](./recon/building_handlers.md)
 - [Running Jobs](./recon/running_jobs.md)
 - [Recipes](./recon/recipes.md)
 - [Alerts](./recon/alerts.md)
 - [Dynamic Replacement](./recon/dynamic_replacement.md)
 - [Governance Fuzzing](./recon/governance_fuzzing.md)
-- [Recon Tricks](./recon/recon_tricks.md)
+- [Recon Tricks](./recon/recon_tricks.md) -->
 
 --- 
 
@@ -49,9 +49,9 @@
 
 --- 
 
-# Extra
+<!-- # Extra
 - [Roadmap](./extra/roadmap.md)
 - [Advanced Ideas](./extra/advanced.md)
-- [The Recon Invariant Audit Process](./extra/audit_process.md)
+- [The Recon Invariant Audit Process](./extra/audit_process.md) -->
 
 
