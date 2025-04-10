@@ -7,7 +7,6 @@
 - [First Steps](./tutorial/first_steps.md)
 - [Example Project](./tutorial/sample_project.md)
 - [Chimera Framework](./tutorial/chimera_framework.md)
-- [Setup Helpers](./tutorial/setup_helpers.md)
 - [Invariant Testing Bootcamp](./tutorial/bootcamp.md)
 
 --- 
@@ -38,7 +37,7 @@
 - [Log Parser](./oss/logs_parser.md)
 - [ABI to Invariants](./oss/abi_to_invariants.md)
 - [ABI to Mock](./oss/abi_to_mock.md)
-- [Setup Helpers](./oss/setup_helps.md)
+- [Setup Helpers](./oss/setup_helpers.md)
 - [Properties Table](./oss/properties.md)
 - [ERC7540 Reusable Properties](./oss/erc7540.md)
 
