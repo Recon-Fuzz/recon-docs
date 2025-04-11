@@ -8,12 +8,12 @@ Using Reconâ€™s Job running feature you can offload long-duration jobs to Reconâ
 
 On the _Jobs_ tab you'll see a form for running a job. 
 
-1. First select the tool you'd like to use to run your job. The Echidna, Medusa and Foundry options use fuzzing. The Halmos and Kontrol options use formal verification. 
+1. First select the tool you'd like to use to run your job. The Echidna, Medusa, and Foundry options use fuzzing. The Halmos and Kontrol options use formal verification. 
 
 2. Next add the repository you'd like to fuzz or verify in the _GitHub Repo Url_ field. Additionally, you can specify a custom name for the job in the _Job Name_ field. If you don't specify a custom name, Recon will generate one for you that is a hash with numbers and letters. 
 
-3. If you'd prefer to specify the organization, repo name, branch and directory where the `foundry.toml` file is located, you can do so in the _Organization_, _Repo Name_, _Branch_ and _Directory_ fields. 
+3. If you'd prefer to specify the organization, repo name, branch, and directory where the `foundry.toml` file is located, you can do so in the _Organization_, _Repo Name_, _Branch_ and _Directory_ fields. 
 
 4. Next you can specify the configuration parameters for the tool you selected in step 1 using a config file or by specifying values in the form fields directly (NOTE: these will override any parameters set in the config file if one is passed in). 
 
-5. If your project uses a dependecy system in addition to foundry, you can select the custom preinstall process in the dropdown menu. 
+5. If your project uses a dependency system in addition to foundry, you can select the custom preinstall process in the dropdown menu. 

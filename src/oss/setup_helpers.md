@@ -1,4 +1,5 @@
-# Setup Helpers
+# <a href="https://github.com/Recon-Fuzz/setup-helpers" target="_blank" rel="noopener noreferrer">Setup Helpers</a>
+
 These contracts were created with the intention of speeding up the setup process for an invariant testing suite.
 
 For an example implementation of these contracts in use see the [create-chimera-app](https://github.com/Recon-Fuzz/create-chimera-app-2) repo. 
@@ -48,5 +49,6 @@ library Panic {
 
 ## [MockERC20](https://github.com/Recon-Fuzz/setup-helpers/blob/main/src/MockERC20.sol)
 A minimal `MockERC20` contract that lets you mock any standard ERC20 tokens that will be interacting with the system without requiring external dependencies. 
+
 
 
