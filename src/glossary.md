@@ -42,7 +42,7 @@ A wrapper around a target function that makes a call to a target contract.
 
 The set of functions that the fuzzer will call to explore state and properties for the smart contract or system.
 
-## Scaffolding
+## <a href="/tools/builder.html" target="_blank" rel="noopener noreferrer">Scaffolding</a>
 
 The set of smart contracts put into place to organize the code and tell the fuzzer how to explore states and test properties.
 
