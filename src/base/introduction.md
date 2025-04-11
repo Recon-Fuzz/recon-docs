@@ -34,7 +34,8 @@ If you have any questions about how to use Recon or invariant testing in general
 
 ## Additional Learning Resources
 
-If you're looking for more resources to help you get started with invariant testing, please see the following: 
+### Invariant Testing In General
+If you're looking for more resources to help you get started with invariant testing, see the following: 
 
 - [Recon Substack](https://getrecon.substack.com)
 - [Recon Video Tutorials](https://getrecon.xyz/media)
@@ -42,7 +43,8 @@ If you're looking for more resources to help you get started with invariant test
 - [Recon GitHub](https://github.com/Recon-Fuzz)
 - [EVM Fuzzing Resources](https://github.com/perimetersec/evm-fuzzing-resources)
 
-For more resources on Echidna and Medusa, please see the following: 
+### Fuzzers
+For more resources on our favorite fuzzers (Echidna and Medusa) see the following: 
 
 - [Echidna Documentation](https://secure-contracts.com/program-analysis/echidna/index.html)
 - [Medusa Documentation](https://secure-contracts.com/program-analysis/medusa/docs/src/index.html)
@@ -52,7 +54,7 @@ For more resources on Echidna and Medusa, please see the following:
 
 ### Retrospectives
 
-Deep dives into the work we've done with our elite customers:
+Deep dives into the work we've done with our elite customers with tips and tricks on building effective invariant testing suites:
 
 - [Corn Retrospective](https://getrecon.substack.com/p/corn-engagement-retrospective)
 - [eBTC Retrospective](https://getrecon.substack.com/p/ebtc-retrospective)
@@ -60,13 +62,9 @@ Deep dives into the work we've done with our elite customers:
 - [Centrifuge Retrospective part 2](https://getrecon.substack.com/p/lessons-learned-from-fuzzing-centrifuge-059)
 
 
-### (Video) Suggested Office Hours
+### Suggested Office Hours (Video)
 
-Office hours is an initiative Alex has done for over half a year.
-
-All talks are improvised so they are not as polished as structured content.
-
-They provide a lot of hot takes and insights based on what the Recon Team was working on at the time.
+Office hours are improvised live recordings of useful tips and tricks for invariant testing. They provide a lot of hot takes and insights based on what the Recon Team was working on at the time.
 
 - [Fuzz Fest](https://www.youtube.com/watch?v=Cqmu-mhSLt8) | The best Talks of 2024 on Fuzzing for Security
 - [The Dangers of Arbitrary Calls](https://www.youtube.com/watch?v=8-qWL2Dcgpc) | How to write safe contracts that use arbitrary calls and the risk tied to them
@@ -76,8 +74,6 @@ They provide a lot of hot takes and insights based on what the Recon Team was wo
 - [Finding bugs with Differential Fuzzing](https://www.youtube.com/watch?v=AMCN1HP84BQ) | Using differential fuzzing to find bugs
 - [Fuzzing Bytecode Directly](https://www.youtube.com/watch?v=RWvA9myV_LQ)
 
-## Trophies 
+## <a href="https://getrecon.xyz/#trophies" target="_blank" rel="noopener noreferrer">Trophies</a>
 
-A sample of the bugs we found thanks to Invariant Testing:
-
-[https://getrecon.xyz/#trophies](https://getrecon.xyz/#trophies)
+A sample of some publicly disclosed bugs we've found using invariant testing. You can use these to understand what kinds of properties will help you find issues that manual review sometimes can't.
