@@ -23,12 +23,12 @@
 --- 
 
 # Free Recon Tools
+- [Recon Extension](./recon_extension.md)
 - [Medusa Log Scraper](./tools/medusa_scraper.md)
 - [Echidna Log Scraper](./tools/echidna_scraper.md)
 - [Invariants Builder](./tools/builder.md)
 - [Bytecode Compare](./tools/bytecode_compare.md)
 - [Bytecode To Interface](./tools/bytecode_to_interface.md)
-<!-- [Recon Extension](./recon_extension.md) -->
 --- 
 
 # OSS Repos
