@@ -65,11 +65,11 @@ The actor mode for each target function can later be changed in the generated ta
 ![Actor Mode Codelense](./images/extension/actor_mode_codelense.png)
 
 ## Auto Mocking
-The Recon extension allows you to auto-mock your target functions using the Auto Mock tool. This tool will generate a mock of system contracts based on the contract's parameters and return values. Auto Mocking is useful for quickly getting to coverage on the core contracts of your project that you target with your target functions while simulating functionality of periphery contracts.
+The Recon extension allows you to auto-mock specific contracts needed for your setup using the [ABI to Mock](../oss/abi_to_mock.md) tool. This tool will generate a mock of system contracts based on the contract's parameters and return values. This is useful for quickly getting coverage on the core contracts of your project that you target with your target functions while simulating functionality of periphery contracts whose behavior is unimportants.
 
 ![Auto Mocking Section](./images/extension/auto_mocking_section.png)
 
-Auto Mocking is triggered by right clicking on the ABI file or a Contract file of the contract you'd like to mock in the `out` directory and selecting _Generate Solidity Mock_. This will generate a mock of the contract in the path specified in the _RECON COCKPIT_ settings in the _Mocks Folder Path_ field as `ContractName + Mocks.sol` (e.g. `Counter.sol`'s mocks will be called `CounterMocks.sol`).
+Auto Mocking is triggered by right clicking on a contract's ABI file in the `out` directory or directly via the Contract file of the contract you'd like to mock and selecting _Generate Solidity Mock_. This will generate a mock of the contract in the path specified in the _RECON COCKPIT_ settings in the _Mocks Folder Path_ field as `ContractName + Mocks.sol` (e.g. `Counter.sol`'s mocks will be called `CounterMocks.sol`).
 
 ![Mocks Folder Path](./images/extension/mocks_folder_path.png)
 
@@ -98,21 +98,21 @@ If a property breaks, the extension will automatically generate a Foundry unit t
 
 ![Prompt Repro](./images/extension/prompt_repro.png)
 
-Clicking yes will add the reproducer to the `CryticToFoundry` contract created when you generate a Chimera template. 
+Clicking yes will add the reproducer to the `CryticToFoundry` contract that's created when you generate a Chimera template. 
 
 ![Crytic To Foundry](./images/extension/crytic_to_foundry.png)
 
 
-The Recon extension also provides a codelense utility for running the Foundry test function above the function via the _Run Test_ button. 
+The Recon extension also provides a codelense utility for running the Foundry reproducer unit test above the function via the _Run Test_ button. 
 ![Run Tests](./images/extension/run_test.png)
 
 
 ## Coverage Report Compressor 
 - Right click on the coverage report and select "Clean Up Coverage Report"
-- This will compress the report by removing irrelevant contracts from the coverage report
+- This will compress the report by removing contracts not touched by the fuzzer from the coverage report
 
 ## Display coverage report as overlay with coverage gutters
-- To do this you just need to have the coverage gutters extension installed and click the report in the _COVERAGE REPORT_ section
+- To do this you just need to have the [coverage gutters](https://marketplace.visualstudio.com/items?itemName=ryanluker.vscode-coverage-gutters) extension installed and click the report in the _COVERAGE REPORT_ section
 - This will display the coverage report as an overlay using coverage gutters
 - To remove the coverage gutters you can click the _File Uncovered_ button on the bottom of your VS code window
 
