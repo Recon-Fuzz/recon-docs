@@ -1,140 +1,97 @@
-# Introduction
+# Advanced Fuzzing Tips
 
-These are a few notes at the bleeding edge of using the Chimera framework.
-
-Many of these are being used in our engagements, but we have yet to fully formalize them.
+This is a compilation of best practices that the Recon team has developed while using the [Chimera framework](src/tutorial/chimera_framework.md).
 
 ## Target Functions
 
-For each contract, for each function, grab each input, and have the fuzzer generate said input.
+For each contract you want to fuzz, select the state-changing functions (target functions) you want to include in your fuzzing suite. Wrap the function in a handler which passes in the input to the function call and allows the fuzzer to test random values. 
 
-Prank the current actor (if necessary)
+**TODO: add snippet of contract function and handler that wraps the function**
 
-Call the contract and function with the parameters.
+The easiest way to do this is with our [Invariants Builder](../free_recon_tools/builder.md) tool or with the [Recon Extension](../free_recon_tools/recon_extension.md) directly in your code editor.
+
+By using the `asActor` or `asAdmin` modifiers in combination with an [Actor Manager](../oss/setup_helpers.md#actor-manager) with the target handler you can ensure efficient fuzzing by not wasting tests that should be executed only by an admin getting execute by a non-admin actor. These modifiers prank the call to the target contract as the given actor, ensuring that the call is made with the actor as the `msg.sender`
+
+**TODO: add example of privileged function that should only be called by an admin and explain why it wouldn't get called if using asActor**
 
 ### Clamping Target Functions
 
-Clamped handlers must be a subset of all target functions.
+Clamping reduces the search space for the fuzzer, making it more likely that you'll explore interesting states in your system. 
 
-They reduce the amount of inputs and add conditionality to call the unclamped handlers.
+Clamped handlers should be a subset of all target functions by calling the unclamped handlers with the reduced input space. 
+This ensures that the fuzzer doesn't become overbiased and is prevented from exploring potentially interesting states and also ensures checks for inlined properties which are implemented in the unclamped handlers are always performed. 
+
+**TODO: snippet of clamped and unclamped handler with inline property check**
 
 ### Disabling Target Functions
 
-It's completely fine to disable a target function.
+Certain state-changing function in your target contract may not actually explore interesting state or introduce so many false positives into properties being tested that it's better to ignore them. 
+Doing so is perfectly okay even though it will reduce overall coverage of the targeted contracts. 
 
-As of now we either delete or comment on it, or you could add a `alwaysRevert` modifier that just reverts
+To make sure it's understood by others looking at the test suite that you purposefully meant to ignore a function we tend to prefer commenting out the handler or including a `alwaysRevert` modifier that causes the handler to revert every time it's called by the fuzzer.
 
-### Conditional Disabling
-
-You can set conditional disabling by creating a `bool constant FEATURE_ENABLED = bool(false)`
-
-You can then go into the specific handlers and prefix the external call with:
-```solidity
-function handler(inputs...) public {
-    require(FEATURE_ENABLED, "Feature Enabled");
-}
-```
-
-This will allow you to use Dynamic Replacement to toggle the value on the run setup and effectively test both variants of the suite, without creating massive complications.
+**TODO: snippet of function that doesn't add interesting exploration like updateContract**
 
 ## Setup
+This section covers a few rules we've come to follow in our engagements regarding setting up invariant testing suites. 
 
-A few rules we use in our engagements
+1. Create your own test setup
+2. Estimating interactions and coverage
+3. Define programmatic deployments
+4. Figure out "implicit" clamping and base your properties on this
 
-- Estimating Interactions and Coverage
-- Define programmatic deployments
-- Figure out "implicit" clamping and base your properties on this
+### Create Your Own Test Setup
+If you're working on a codebase which you didn't originally develop, it's tempting to use the Foundry test setup that they've used for their unit tests, however this can lead to introducing any of the biases present in the existing setup into the invariant testing suite. 
 
-### Don't blindly trust the dev
+We've found that it's best to create the simplest setup possible, where you only deploy the necessary contracts of interest and periphery contracts. 
 
-At the beginning of an engagement, "the code is perfect"
+Periphery contracts can also often be mocked (see [this section](../free_recon_tools/recon_extension.md#auto-mocking) on how to automatically generate mocks using the Recon Extension) if their behavior is irrelevant to the contracts of interest. 
+This further reduces complexity, making the suite more easily understood by collaborators and making it more likely you will get full line coverage over the contracts of interest more quickly.
 
-Mostly because the developer understands the code better than you
+### State Exploration and Coverage
 
-Similarly, the tests and their setup may look great, but over time you may find out that's not the case.
+The most important aspect of invariant testing is what you actually test, and what you actually test is implied by the target functions you define in your test suite setup.
 
-It's always best to set the simplest setup possible, introducing complexity only as necessary.
+Some contracts, like oracles, may be too complex to fully model (e.g. having to reach 3 signers quorum and updating) because they would add overhead in terms of function handlers that require specific clamping and test suite setup. 
 
-Additionally, some methods of deployment or configurations may create issues with the fuzzer
+In these cases, mocking is preferred because it simplifies the process for the fuzzer to change return values (price in the case of the oracle example) or allow more straightforward interactions to be made by your targeted contracts (without requiring things like input validation on the mocked contract's side). 
 
-Generally speaking, you're always better off starting from scratch, and only if you realize you're basically redoing the same thing, then use the Developer setup.
+Mocking is a destructive operation because it causes a loss of information, but the simplification it provides leads fuzzing and formal verification tools to explore possible system states much faster.
 
-### Estimating Interactions and Coverage
-
-The most important aspect of Invariant Testing is what you test.
-
-This is implied by the relation between the Contracts and the Target Functions.
-
-Some contracts, for example, an oracle, may be too complex to fully model (e.g. having to reach 3 signers quorum and updating)
-
-In those cases, mocking is preferred.
-
-Mocking is a destructive operation, it causes a loss of information.
-
-But it's also a simplification of the real system, leading the tools to be a lot faster.
-
-Overall you should be mindful of how the State is explored.
-
-Based on these decisions you should decide if you want to lean into them or not.
-
-e.g. donation tests only make sense if you track all token balances
-
-Your handles can influence who receives donations.
-
-Based on this your property will be very different.
+Adding additional handlers for things like token donations (transfering/minting tokens directly to one of your targeted contracts) can allow you to explore interesting states that otherwise wouldn't be possible if you only had handlers for your contracts of interest. 
 
 ### Programmatic Deployment
 
-Most developers tend to write a "straightforward" deployment.
+Most developers tend to write static deployments for their test suites where specific contract are deployed with some default values. 
 
-A specific contract, with some defaults, etc.
+However, this can lead to missing a vast amount of possible system states, some of which would be considered admin mistakes (because they're related to deployment configurations), others which could be considered meaningful because they're valid system configurations.
 
-This can lead to missing a vast amount of possible states, some of which would be considered admin mistakes, others which would be considered meaningful.
+This is why we've tended to prefer using programmatic deployments because they allow us to use the randomness of the fuzzer to introduce randomness into the system configuration that's tested against. Although programmatic deployments make running a suite slower (because the fuzzer needs to find a valid deployment configuration before achieving meaningful coverage), they turn simple suites into multi-dimensional ones.
 
-Whenever you find yourself in such a scenario you should consider using a Programmatic Deployment.
+This is best understood with an example of a system made to accept multiple tokens. With a programmatic deployment, instead of testing an individual ERC20 token configuration (say with the standard 18 decimals), you can test many token configurations (say all tokens with 6-24 decimals) to ensure that your system works with all of them. 
 
-Programmatic Deployments by definition make the fuzzer a lot slower, however, they turn simple suites into multi-dimensional ones.
+We've standardized these ideas around programmatic deployments in our [Manager](https://github.com/Recon-Fuzz/setup-helpers/blob/main/src/AssetManager.sol) contracts. 
 
-This is because instead of testing "a token", you can test "many tokens"
+Programmatic deployment consists of adding 4 general function types:
+- A `deploy` handler, which will deploy a new version of the target (e.g a token via [`_newAsset`](https://github.com/Recon-Fuzz/setup-helpers/blob/9120629af5b6e8f22c78d596b1e1b00aac47bc5b/src/AssetManager.sol#L45-L50) in the `AssetManager`)
+- A `switchTo` handler, to change the current target being used (e.g the [`_switchAsset`](https://github.com/Recon-Fuzz/setup-helpers/blob/9120629af5b6e8f22c78d596b1e1b00aac47bc5b/src/AssetManager.sol#L74-L77) function in the `AssetManager`)
+- A `getCurrent` internal function, to know which is the current active target (e.g the [`_getAsset`](https://github.com/Recon-Fuzz/setup-helpers/blob/9120629af5b6e8f22c78d596b1e1b00aac47bc5b/src/AssetManager.sol#L29-L35) function in the `AssetManager`)
+- A `getAll` internal function, to retrieve all deployments (e.g the [`_getAssets`](https://github.com/Recon-Fuzz/setup-helpers/blob/9120629af5b6e8f22c78d596b1e1b00aac47bc5b/src/AssetManager.sol#L38-L40) function in the `AssetManager`)
 
-We have pretty much standardized the usage of Programmatic Deployments through our work done with [Managers](https://github.com/Recon-Fuzz/setup-helpers/blob/main/src/AssetManager.sol)
-
-Roughly speaking programmatic deployment consists of adding 4 functions:
-- A `deployed` handler, which will deploy a new version of the target
-- A `switchTo` handler, to change the current target being used (which allows writing simpler tests while having multi-dimensionality)
-- A `getCurrent` internal function, to know which is the current active target (typically implied by a storage value)
-- A `getAll` internal function, to retrieve all deployments, which can be used to make all properties "scale" in a multi-dimensional way
-
-We're pretty confident in this pattern and believe you should be rolling your own Managers whenever you need to add multi-dimensionality
-
-The day Solidity adds generics, we will have a more expressive way to handle them.
+Using the pattern of managers can help you add multi-dimensionality to your test setup and make tracking deployed components simpler. 
 
 ### Dealing with Implicit Clamping
 
-Based on your deployments, config, and target functions some states will be possible and others won't be
+Based on your deployments, configuration, and the target functions you expose some states will be possible and others won't be. This leads to what we call _implicit clamping_ as the states not allowed by your test suite setup will obviously not be tested. 
 
-This is a fairly under-discussed issue with all forms of testing and formal verification.
+This makes it necessary therefore to map out what behavior is and isn't possible given your suite setup.
 
-You can only test states that are feasible given your setup.
+Based on this you can write properties that define what behaviors _should_ and _shouldn't_ be possible given your setup.
+Checking these properties with fuzzing or formal verification won't necessarily prove they're always true, simply that they're true for the setup you've created.
 
-A contract fuzzer has a statistical likelihood of hitting all states.
+You should document all possible states along with the properties to make it easier for yourself and collaborators to understand what's actually being tested.
 
-A symbolic fuzzer should guarantee that they will hit those states, however, it may never terminate.
-
-Anyhow, you should map out what behavior is possible and what's not possible.
-
-Based on this you will be able to write properties.
-
-These properties won't be necessarily "true", they will be true for the system you set
-
-This tends to be why people miss bugs with fuzzing, as ultimately you can only detect what you test.
-
-It's very important you keep a mental map of all possible states, and document them as well as the properties you're writing.
-
-This implicit clamping can create a lot of false positives once a suite is changed to have different implicit clamping.
-
-For this reason, you should document all properties and note what they assume.
-
+This tends to be why people miss bugs with fuzzing, as ultimately you can only detect what you test and if your system is not configured so that it can reach a certain case, you won't ever be able to test against it.
 
 ## Ghost Variables
 
