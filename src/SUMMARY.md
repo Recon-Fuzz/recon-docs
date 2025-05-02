@@ -8,7 +8,7 @@
 - [Example Project](./writing_invariant_tests/sample_project.md)
 - [Chimera Framework](./writing_invariant_tests/chimera_framework.md)
 - [Invariant Testing Bootcamp](./writing_invariant_tests/bootcamp.md)
-- [Advanced Ideas](./extra/advanced.md)
+- [Advanced Fuzzing Tips](./extra/advanced.md)
 
 --- 
 

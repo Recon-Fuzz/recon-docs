@@ -6,13 +6,50 @@ This is a compilation of best practices that the Recon team has developed while 
 
 For each contract you want to fuzz, select the state-changing functions (target functions) you want to include in your fuzzing suite. Wrap the function in a handler which passes in the input to the function call and allows the fuzzer to test random values. 
 
-**TODO: add snippet of contract function and handler that wraps the function**
+```solidity
+// contract to target
+contract Counter {
+       uint256 public number;
+
+       function increment() public {
+              number++;
+       }
+}
+
+abstract contract TargetFunctions {
+       // function handler that targets our contract of interest
+       function counter_increment() public asActor {
+              counter.increment();
+       }
+}
+```
 
 The easiest way to do this is with our [Invariants Builder](../free_recon_tools/builder.md) tool or with the [Recon Extension](../free_recon_tools/recon_extension.md) directly in your code editor.
 
-By using the `asActor` or `asAdmin` modifiers in combination with an [Actor Manager](../oss/setup_helpers.md#actor-manager) with the target handler you can ensure efficient fuzzing by not wasting tests that should be executed only by an admin getting execute by a non-admin actor. These modifiers prank the call to the target contract as the given actor, ensuring that the call is made with the actor as the `msg.sender`
+By using the `asActor` or `asAdmin` modifiers in combination with an [Actor Manager](../oss/setup_helpers.md#actor-manager) ensures efficient fuzzing by not wasting tests that should be executed only by an admin getting execute by a non-admin actor. [These modifiers](https://github.com/Recon-Fuzz/create-chimera-app/blob/97036ad908633de6e59d576765a1b08b9e1ba6ff/test/recon/Setup.sol#L39-L47) prank the call to the target contract as the given actor, ensuring that the call is made with the actor as the `msg.sender`.
 
-**TODO: add example of privileged function that should only be called by an admin and explain why it wouldn't get called if using asActor**
+```solidity
+// contract to target
+contract Yield {
+       address admin;
+       uint256 yield;
+
+       modifier onlyAdmin() {
+              require(msg.sender == admin);
+       }
+
+       function resetYield(address _newAdmin) public onlyAdmin {
+              yield = 0;
+       }
+}
+
+abstract contract TargetFunctions {
+       // calling this as an actor would waste fuzz calls because it would always revert so we use the asAdmin modifier
+       function yield_resetYield() public asAdmin {
+              yield.resetYield();
+       }
+}
+```
 
 ### Clamping Target Functions
 
@@ -21,21 +58,50 @@ Clamping reduces the search space for the fuzzer, making it more likely that you
 Clamped handlers should be a subset of all target functions by calling the unclamped handlers with the reduced input space. 
 This ensures that the fuzzer doesn't become overbiased and is prevented from exploring potentially interesting states and also ensures checks for inlined properties which are implemented in the unclamped handlers are always performed. 
 
-**TODO: snippet of clamped and unclamped handler with inline property check**
+```solidity
+
+contract Counter {
+    uint256 public number = 1;
+
+    function setNumber(uint256 newNumber) public {
+        if (newNumber != 0) {
+            number = newNumber;
+        }
+    }
+}
+
+abstract contract TargetFunctions {
+       function counter_setNumber(uint256 newNumber) public asActor {
+              // unclamped handler explores the entire search space; allows the input to be 0
+              counter.setNumber(newNumber);
+
+              // inlined property check in the handler always gets executed
+              if (newNumber != 0) {
+                     t(counter.number == newNumber, "number != newNumber");
+              }
+       }
+
+       function counter_setNumber_clamped(uint256 newNumber) public asActor {
+              // clamping prevents the newNumber passed into setNumber from ever being 0
+              newNumber = between(newNumber, 1, type(uint256).max);
+              // clamped handler calls the unclamped handler
+              counter_setNumber(newNumber);
+       }
+}
+```
 
 ### Disabling Target Functions
 
-Certain state-changing function in your target contract may not actually explore interesting state or introduce so many false positives into properties being tested that it's better to ignore them. 
+Certain state-changing function in your target contract may not actually explore interesting state or introduce so many false positives into properties (usually via things like contract upgrades or token sweeping functions) being tested that it's better to ignore them. 
 Doing so is perfectly okay even though it will reduce overall coverage of the targeted contracts. 
 
 To make sure it's understood by others looking at the test suite that you purposefully meant to ignore a function we tend to prefer commenting out the handler or including a `alwaysRevert` modifier that causes the handler to revert every time it's called by the fuzzer.
-
-**TODO: snippet of function that doesn't add interesting exploration like updateContract**
 
 ## Setup
 This section covers a few rules we've come to follow in our engagements regarding setting up invariant testing suites. 
 
 1. Create your own test setup
+2. Keep the story clean
 2. Estimating interactions and coverage
 3. Define programmatic deployments
 4. Figure out "implicit" clamping and base your properties on this
@@ -47,6 +113,34 @@ We've found that it's best to create the simplest setup possible, where you only
 
 Periphery contracts can also often be mocked (see [this section](../free_recon_tools/recon_extension.md#auto-mocking) on how to automatically generate mocks using the Recon Extension) if their behavior is irrelevant to the contracts of interest. 
 This further reduces complexity, making the suite more easily understood by collaborators and making it more likely you will get full line coverage over the contracts of interest more quickly.
+
+### Keep The Story Clean 
+
+We call the "story" the view of the state changes made by a given call sequence in a tester. By maintaining only one state-changing operation per target function handler, it makes it much simpler to understand what's happening within a call sequence when a tool generates a reproducer that breaks a property that you've defined. 
+
+If you include multiple state-changing operations within a single handler it adds additional mental overhead when trying to debug a breaking call sequence because you not only need to identify which handler is the source of the issue, but the individual operation within the handler as well. 
+
+```solidity
+       // having multiple state-changing operations in one handler makes it difficult to understand what's happening in the story
+       function vault_deposit_and_redeem(uint256 assets) public asActor {
+              uint256 sharesReceived = vault.deposit(assets);
+
+              vault.redeem(sharesReceived);
+       }
+
+       // having separate target function handlers makes it easier to understand the logical flow that lead to a broken property in a reproducer call sequence
+       function vault_deposit(uint256 assets) public asActor {
+              uint256 sharesReceived = vault.deposit(assets);
+       }
+
+       function vault_redeem(uint256 assets) public asActor {
+              uint256 sharesReceived = vault.deposit(assets);
+
+              vault.redeem(sharesReceived);
+       }
+```
+
+If you need to perform multiple state-changing operations to test a given property, consider making the function stateless as discussed in the [inlined fuzz properties](#inlined-fuzz-properties) section
 
 ### State Exploration and Coverage
 
@@ -80,84 +174,233 @@ Programmatic deployment consists of adding 4 general function types:
 
 Using the pattern of managers can help you add multi-dimensionality to your test setup and make tracking deployed components simpler. 
 
-### Dealing with Implicit Clamping
+### Implicit Clamping
 
-Based on your deployments, configuration, and the target functions you expose some states will be possible and others won't be. This leads to what we call _implicit clamping_ as the states not allowed by your test suite setup will obviously not be tested. 
+Based on your deployments, configuration, and the target functions you expose, a subset of all possible system states will be reachable. This leads to what we call _implicit clamping_ as the states not reachable by your test suite setup will obviously not be tested. 
 
-This makes it necessary therefore to map out what behavior is and isn't possible given your suite setup.
+Mapping out what behavior is and isn't possible given your suite setup can therefore be helpful for understanding the limitations of your suite.
 
-Based on this you can write properties that define what behaviors _should_ and _shouldn't_ be possible given your setup.
+With these limitations outlined, you can write properties that define what behaviors _should_ and _shouldn't_ be possible given your setup.
 Checking these properties with fuzzing or formal verification won't necessarily prove they're always true, simply that they're true for the setup you've created.
 
-You should document all possible states along with the properties to make it easier for yourself and collaborators to understand what's actually being tested.
-
-This tends to be why people miss bugs with fuzzing, as ultimately you can only detect what you test and if your system is not configured so that it can reach a certain case, you won't ever be able to test against it.
+This tends to be the source of bugs that are missed with fuzzing, as ultimately you can only detect what you test and if your system isn't configured so that it can reach a certain state in which there's a bug, you won't ever be able to detect it.
 
 ## Ghost Variables
 
-Ghost Variables are just a supporting tool to track state over time.
+Ghost variables are a supporting tool that allow you to track system state over time. These can then be used in properties to check if the state has evolved as expected.
 
-In general, you should add calls to your state variables only as necessary
+In the [Chimera Framework](../writing_invariant_tests/chimera_framework.md#beforeafter) we've concretized our prefered method of tracking ghost variables using a `BeforeAfter` contract which exposes an `updateGhosts` modifier that allows you to cache the system state before and after a call to a given target function.
 
-Generally, avoid computation in them as you're asking the fuzzer to perform a bunch of operations you may not need in most loops of the fuzzer
+As a rule of thumb it's best to avoid computation in your updates to the ghost variables as it ends up adding addtional operations that need to be performed for each call executed by the fuzzer, slowing down fuzzing efficiency.
 
-Most importantly: Do NOT put any assertions in your ghost variables.
+Most importantly: do NOT put any assertions in your ghost variables and avoid any operation or call that may cause a revert.
+These cause all operations in the call sequence created by the fuzzer to be undone, leaving the fuzzer with a blindspot because it will be unable to reach certain valid states.
 
-Similarly, avoid reverts at all costs.
-
-A revert causes all operations to be undone, leaving the fuzzer with a blindspot.
-
-Overcomplicating GhostVariables is a common mistake beginners make, this has the nasty side effect of making the coverage report look all green but can make testing for certain properties impossible since a revert will end execution.
-
-### Grouping Function types
-
-A good, first-principle-based pattern is the idea of grouping operations by their effects.
-
-For example, you may have a bunch of deposit/mint operations that "add" and others that "remove"
-
-For these, you can write an elegant:
+Overcomplicating ghost variables is a common mistake beginners make, this has the unfortunate side effect of making the coverage report look promising as it will show certain lines fully covered but in reality might be applying implicit clamping by causing reverts that prevent edge cases for certain properties being explored since an update that reverts before the property is checked will not generate a reproducer call sequence.
 
 ```solidity
+contract Counter {
+    uint256 public number = 1;
 
+    function setNumber(uint256 newNumber) public {
+        if (newNumber != 0) {
+            number = newNumber;
+        }
+    }
+}
+
+abstract contract TargetFunctions {
+       // updateGhosts updates the ghost variables before and after the call to the target function
+       function counter_setNumber1(uint256 newNumber) public updateGhosts asActor {
+              counter.setNumber(newNumber);
+       }
+}
+
+abstract contract BeforeAfter is Setup {
+    struct Vars {
+       uint256 counter_difference;
+       uint256 counter_number;
+    }
+
+    Vars internal _before;
+    Vars internal _after;
+
+    modifier updateGhosts {
+       __before();
+       _;
+       __after();
+    }
+
+    function __before() internal {
+       // this line would revert for any value where the number before < the new number
+       _before.counter_difference = _before.counter_number - counter.number();
+    }
+
+    function __after() internal {
+       _after.counter_difference = _before.counter_number - counter.number();
+    }
+}
+```
+In the above example we can see that the `__before()` function would revert for any values where the `newNumber` is greater than the value stored in `_before.counter_number`. This would still allow the coverage report to show the function as covered however because for all `newNumber` values less than or equal to `_before.counter_number` the update would succeed. This means that fundamentally we'd be limiting the search space of the fuzzer, preventing it from exploring any call sequences where `newNumber` is greater than the value stored in `_before.counter_number` and potentially missing bugs because of it.
+
+### Grouping Function Types
+
+A simple pattern for grouping function types to easily use as a precondition to a global property check is to group operations by their effects.
+
+For example, you may have multiple deposit/mint operations that "add" and others that "remove"
+
+For these, you can group these using an enum type as follows:
+
+```solidity
 enum OpType {
     GENERIC,
     ADD,
     REMOVE
 }
 
-    modifier updateGhostsWithType(OpType op) {
- currentOperation = op;
-        __before();
- _;
-        __after();
- }
+modifier updateGhostsWithType(OpType op) {
+       currentOperation = op;
+       __before();
+       _;
+       __after();
+}
+
+modifier updateGhosts() {
+       currentOperation = OpType.GENERIC;
+       __before();
+       _;
+       __after();
+}
 ```
 
-Which allows you to track what's the current operation
+And add the `updateGhostsWithType` modifier only to handlers which perform one of the operations of interest. All other handlers using the standard `updateGhosts` modifier will default to the `GENERIC` operation type so that you don't have to refactor any existing modifiers. 
 
-This will allow you to write very elegant properties.
+Now with the ability to elegantly track the current operation you can easily use the operation type to write a global property for it like so:
+
+```solidity
+contract Counter {
+       uint256 public number = 1;
+
+       function increment() public {
+              number++;
+       }
+
+       function decrement() public {
+              number--;
+       }
+}
+
+abstract contract TargetFunctions {
+       // we set the respective operation type on our target function handlers
+       function counter_increment() public updateGhostsWithType(OpType.INCREASE) asActor {
+              counter.setNumber(newNumber);
+       }
+
+       function counter_increment() public updateGhostsWithType(OpType.DECREASE) asActor {
+              counter.setNumber(newNumber);
+       }
+}
+
+abstract contract BeforeAfter is Setup {
+       enum OpType {
+              INCREASE,
+              DECREASE
+       }
+
+       struct Vars {
+              uint256 counter_number;
+       }
+
+       Vars internal _before;
+       Vars internal _after;
+
+       modifier updateGhosts {
+              __before();
+              _;
+              __after();
+       }
+
+       modifier updateGhostsWithType(OpType op) {
+              currentOperation = op;
+              __before();
+              _;
+              __after();
+       }
+
+       function __before() internal {
+              _before.counter_number = counter.number();
+       }
+
+       function __after() internal {
+              _after.counter_number = counter.number();
+       }
+}
+
+abstract contract Properties is BeforeAfter, Asserts {
+       function propert_number_decreases() public {
+              // we can use the operation type as a precondition to a check in a global property
+              if(currentOperation == OpType.DECREASE)
+                     gte(_before.counter_number, _after.counter_number, "number does not decrease");
+              }
+       }
+}
+```
+
 
 ## Inlined Fuzz Properties
 
-Avoid repeating the same property in multiple places.
+Inlined properties allow you to make an assertion about the system state immediately after a given state-changing target function call:
 
-This massively de-optimizes the tool and is semantically a waste.
+```solidity
+contract Counter {
+    uint256 public number = 1;
 
-You're asking the fuzzer to break the property once and then to "not change the state" to break it in other places.
+    function setNumber(uint256 newNumber) public {
+       if (newNumber != 0) {
+           number = newNumber;
+       }
+    }
+}
 
-Repeated inline properties should be refactored to only be assessed once, either as inlined properties or as Ghost Variable Properties.
+abstract contract TargetFunctions
+{
+    function counter_setNumber(uint256 newNumber) public updateGhosts asActor {
+       try counter.setNumber(newNumber) {
+              // if the call to the target contract was successful, we make an assertion about the expected system state after
+              if (newNumber != 0) {
+                     t(counter.number() == newNumber, "number != newNumber");
+              }
+       }
+    }
+}
+```
 
-Whenever you're making a mess with inlined tests and ghost variables, consider making your handler `stateless`
+Repeating the same inlined property in multiple places should be avoided whenever possible.
 
-A `stateless` handler will revert at the end.
+Implementing the same inlined property in multiple places is essentially asking the fuzzer to break the property, not change the state (as an assertion failure prevents the call to the handler from completing), then to break the same property in a different way via another handler while already knowing that the property breaks. This is a waste of computational resources as you're asking the fuzzer to prove a fact that you already know instead of asking it to prove a new fact for which you're not sure if there's a proof (in the sense of a broken property, not a mathematical proof) or not.  
 
-Because of how to revert and assertions are handled this still counts for the coverage and still triggers assertion failures
+If you find yourself implementing the same inline property multiple times, you should refactor them to only be assessed in one handler or checked as a global property using ghost variables. 
+
+If you can only implement a property as an inlined test but don't want multiple state changes to be maintained as it would make the story difficult to read, you can make your handler stateless using a `stateless` modifier. 
+
+```solidity
+modifier stateless() {
+       _;
+       // the revert is only made after the handler function execution completes
+       revert("stateless")
+}
+```
+
+This causes the handler to revert only at the end of execution, meaning any coverage exploration will be maintained and any assertion failures will happen before the revert.
 
 ## Exploring Rounding Errors
 
-Give me a division line and a fuzz run long enough and I'll give you a crit.
+Fuzzing is a particularly useful technique for finding precision loss related issues, as highlighted by [@DevDacian](https://x.com/DevDacian) in [this](https://dacian.me/exploiting-precision-loss-via-fuzz-testing) blog post.
 
-- Start by using exact checks
-- Change to Optimization
-- Improve work and explore further
+Simply put the approach for finding such issues is as follows, for any place where there is a division operation which you believe may lead to potential loss of precision:
+- Start by using and exact check in a property assertion to check if the return value of a variable/function is as expected.
+- Run the fuzzer and allow it to find a case where the return value is not what's expected via a falsified assertion.
+- Create an [Echidna optimization test](https://secure-contracts.com/program-analysis/echidna/advanced/optimization_mode.html?highlight=optimization#optimizing-with-echidna) to increase the difference with the expected value. 
+
+The results of the optimization run will allow you to determine the severity of any potential precision loss and how it may be used as part of an exploit path. 
 
