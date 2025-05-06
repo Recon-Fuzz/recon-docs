@@ -8,6 +8,7 @@
 - [Example Project](./writing_invariant_tests/sample_project.md)
 - [Chimera Framework](./writing_invariant_tests/chimera_framework.md)
 - [Invariant Testing Bootcamp](./writing_invariant_tests/bootcamp.md)
+- [Advanced Fuzzing Tips](./extra/advanced.md)
 
 --- 
 
@@ -50,7 +51,6 @@
 
 <!-- # Extra
 - [Roadmap](./extra/roadmap.md)
-- [Advanced Ideas](./extra/advanced.md)
 - [The Recon Invariant Audit Process](./extra/audit_process.md) -->
 
 
