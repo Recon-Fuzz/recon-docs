@@ -4,7 +4,7 @@ This is a compilation of best practices that the Recon team has developed while 
 
 ## Target Functions
 
-For each contract you want to fuzz, select the state-changing functions (target functions) you want to include in your fuzzing suite. Wrap the function in a handler which passes in the input to the function call and allows the fuzzer to test random values. 
+For each contract you want to fuzz (your target contract), select the state-changing functions (target functions) you want to include in your fuzzing suite. Wrap the function in a handler which passes in the input to the function call and allows the fuzzer to test random values. 
 
 ```solidity
 // contract to target
@@ -26,7 +26,7 @@ abstract contract TargetFunctions {
 
 The easiest way to do this is with our [Invariants Builder](../free_recon_tools/builder.md) tool or with the [Recon Extension](../free_recon_tools/recon_extension.md) directly in your code editor.
 
-By using the `asActor` or `asAdmin` modifiers in combination with an [Actor Manager](../oss/setup_helpers.md#actor-manager) ensures efficient fuzzing by not wasting tests that should be executed only by an admin getting execute by a non-admin actor. [These modifiers](https://github.com/Recon-Fuzz/create-chimera-app/blob/97036ad908633de6e59d576765a1b08b9e1ba6ff/test/recon/Setup.sol#L39-L47) prank the call to the target contract as the given actor, ensuring that the call is made with the actor as the `msg.sender`.
+By using the `asActor` or `asAdmin` modifiers in combination with an [Actor Manager](../oss/setup_helpers.md#actor-manager) ensures efficient fuzzing by not wasting tests that should be executed only by an admin getting executed by a non-admin actor. [These modifiers](https://github.com/Recon-Fuzz/create-chimera-app/blob/97036ad908633de6e59d576765a1b08b9e1ba6ff/test/recon/Setup.sol#L39-L47) prank the call to the target contract as the given actor, ensuring that the call is made with the actor as the `msg.sender`.
 
 ```solidity
 // contract to target
@@ -55,8 +55,8 @@ abstract contract TargetFunctions {
 
 Clamping reduces the search space for the fuzzer, making it more likely that you'll explore interesting states in your system. 
 
-Clamped handlers should be a subset of all target functions by calling the unclamped handlers with the reduced input space. 
-This ensures that the fuzzer doesn't become overbiased and is prevented from exploring potentially interesting states and also ensures checks for inlined properties which are implemented in the unclamped handlers are always performed. 
+Clamped handlers should be a subset of all target functions by calling the unclamped handlers with the clamped inputs. 
+This ensures that the fuzzer doesn't become overbiased, preventing it from exploring potentially interesting states, and also ensures checks for inlined properties which are implemented in the unclamped handlers are always performed. 
 
 ```solidity
 
@@ -92,7 +92,7 @@ abstract contract TargetFunctions {
 
 ### Disabling Target Functions
 
-Certain state-changing function in your target contract may not actually explore interesting state or introduce so many false positives into properties (usually via things like contract upgrades or token sweeping functions) being tested that it's better to ignore them. 
+Certain state-changing functions in your target contract may not actually explore interesting state transitions and therefore waste calls made by the fuzzer which is why our [ABI to invariants](../oss/abi_to_invariants.md) tool only scrapes functions from the targeted contract ABI that are non-view/pure. Other functions (generally admin privileged ones) introduce so many false positives into properties being tested (usually via things like contract upgrades or token sweeping functions) that it's better to ignore them. 
 Doing so is perfectly okay even though it will reduce overall coverage of the targeted contracts. 
 
 To make sure it's understood by others looking at the test suite that you purposefully meant to ignore a function we tend to prefer commenting out the handler or including a `alwaysRevert` modifier that causes the handler to revert every time it's called by the fuzzer.
@@ -102,17 +102,17 @@ This section covers a few rules we've come to follow in our engagements regardin
 
 1. Create your own test setup
 2. Keep the story clean
-2. Estimating interactions and coverage
-3. Define programmatic deployments
-4. Figure out "implicit" clamping and base your properties on this
+2. State exploration and coverage
+3. Programmatic deployment
+4. Implicit clamping
 
 ### Create Your Own Test Setup
-If you're working on a codebase which you didn't originally develop, it's tempting to use the Foundry test setup that they've used for their unit tests, however this can lead to introducing any of the biases present in the existing setup into the invariant testing suite. 
+If you're working on a codebase which you didn't originally develop, it's tempting to use the Foundry test setup that the developers used for their unit tests, however this can lead to introducing any of the biases present in the existing setup into the invariant testing suite. 
 
-We've found that it's best to create the simplest setup possible, where you only deploy the necessary contracts of interest and periphery contracts. 
+We've found that it's best to create the simplest setup possible starting from scratch, where you only deploy the necessary contracts of interest and periphery contracts. 
 
 Periphery contracts can also often be mocked (see [this section](../free_recon_tools/recon_extension.md#auto-mocking) on how to automatically generate mocks using the Recon Extension) if their behavior is irrelevant to the contracts of interest. 
-This further reduces complexity, making the suite more easily understood by collaborators and making it more likely you will get full line coverage over the contracts of interest more quickly.
+This further reduces complexity, making the suite more easily understood by collaborators and making it more likely you'll get full line coverage over the contracts of interest more quickly.
 
 ### Keep The Story Clean 
 
@@ -120,6 +120,7 @@ We call the "story" the view of the state changes made by a given call sequence 
 
 If you include multiple state-changing operations within a single handler it adds additional mental overhead when trying to debug a breaking call sequence because you not only need to identify which handler is the source of the issue, but the individual operation within the handler as well. 
 
+Take the following example of handlers defined for an ERC4626 vault:
 ```solidity
        // having multiple state-changing operations in one handler makes it difficult to understand what's happening in the story
        function vault_deposit_and_redeem(uint256 assets) public asActor {
@@ -139,6 +140,7 @@ If you include multiple state-changing operations within a single handler it add
               vault.redeem(sharesReceived);
        }
 ```
+Although this is a simplified example we can see that maintaining separate handlers for each state-changing function makes our story much simpler to read. 
 
 If you need to perform multiple state-changing operations to test a given property, consider making the function stateless as discussed in the [inlined fuzz properties](#inlined-fuzz-properties) section
 
@@ -146,7 +148,7 @@ If you need to perform multiple state-changing operations to test a given proper
 
 The most important aspect of invariant testing is what you actually test, and what you actually test is implied by the target functions you define in your test suite setup.
 
-Some contracts, like oracles, may be too complex to fully model (e.g. having to reach 3 signers quorum and updating) because they would add overhead in terms of function handlers that require specific clamping and test suite setup. 
+Some contracts, like oracles, may be too complex to fully model (e.g. having to reach a quorom of 3 signers to update the price) because they would add overhead in terms of function handlers that require specific clamping and test suite setup. 
 
 In these cases, mocking is preferred because it simplifies the process for the fuzzer to change return values (price in the case of the oracle example) or allow more straightforward interactions to be made by your targeted contracts (without requiring things like input validation on the mocked contract's side). 
 
@@ -158,11 +160,11 @@ Adding additional handlers for things like token donations (transfering/minting 
 
 Most developers tend to write static deployments for their test suites where specific contract are deployed with some default values. 
 
-However, this can lead to missing a vast amount of possible system states, some of which would be considered admin mistakes (because they're related to deployment configurations), others which could be considered meaningful because they're valid system configurations.
+However, this can lead to missing a vast amount of possible system states, some of which would be considered admin mistakes (because they're related to deployment configurations), others which are valid system configurations that are never tested with fixed deployment parameters.
 
-This is why we've tended to prefer using programmatic deployments because they allow us to use the randomness of the fuzzer to introduce randomness into the system configuration that's tested against. Although programmatic deployments make running a suite slower (because the fuzzer needs to find a valid deployment configuration before achieving meaningful coverage), they turn simple suites into multi-dimensional ones.
+This is why we now prefer using programmatic deployments because they allow us to use the randomness of the fuzzer to introduce randomness into the system configuration that's being tested against. Although programmatic deployments make running a suite slower (because the fuzzer needs to find a valid deployment configuration before achieving meaningful line coverage), they turn simple suites into multi-dimensional ones.
 
-This is best understood with an example of a system made to accept multiple tokens. With a programmatic deployment, instead of testing an individual ERC20 token configuration (say with the standard 18 decimals), you can test many token configurations (say all tokens with 6-24 decimals) to ensure that your system works with all of them. 
+This is best understood with an example of a system designed to accept multiple tokens. With a static deployment you may end up testing tokens with 6 and 18 decimals (the two most common extremes). However, with a programmatic deployment, you can test many token configurations (say all tokens with 6-24 decimals) to ensure that your system works with all of them. 
 
 We've standardized these ideas around programmatic deployments in our [Manager](https://github.com/Recon-Fuzz/setup-helpers/blob/main/src/AssetManager.sol) contracts. 
 
@@ -176,7 +178,7 @@ Using the pattern of managers can help you add multi-dimensionality to your test
 
 ### Implicit Clamping
 
-Based on your deployments, configuration, and the target functions you expose, a subset of all possible system states will be reachable. This leads to what we call _implicit clamping_ as the states not reachable by your test suite setup will obviously not be tested. 
+Based on your deployments, configuration, and the target functions you expose, a subset of all possible system states will be reachable. This leads to what we call _implicit clamping_ as the states not reachable by your test suite setup will obviously not be tested and therefore have a similar effect as if they were excluded via clamping. 
 
 Mapping out what behavior is and isn't possible given your suite setup can therefore be helpful for understanding the limitations of your suite.
 
@@ -193,10 +195,9 @@ In the [Chimera Framework](../writing_invariant_tests/chimera_framework.md#befor
 
 As a rule of thumb it's best to avoid computation in your updates to the ghost variables as it ends up adding addtional operations that need to be performed for each call executed by the fuzzer, slowing down fuzzing efficiency.
 
-Most importantly: do NOT put any assertions in your ghost variables and avoid any operation or call that may cause a revert.
-These cause all operations in the call sequence created by the fuzzer to be undone, leaving the fuzzer with a blindspot because it will be unable to reach certain valid states.
+> Do NOT put any assertions in your ghost variables and avoid any operation or call that may cause a revert.These cause all operations in the call sequence created by the fuzzer to be undone, leaving the fuzzer with a blindspot because it will be unable to reach certain valid states.
 
-Overcomplicating ghost variables is a common mistake beginners make, this has the unfortunate side effect of making the coverage report look promising as it will show certain lines fully covered but in reality might be applying implicit clamping by causing reverts that prevent edge cases for certain properties being explored since an update that reverts before the property is checked will not generate a reproducer call sequence.
+Overcomplicating ghost variables has the unfortunate side effect of making the coverage report look promising as it will show certain lines fully covered but in reality might be applying implicit clamping by causing reverts that prevent edge cases for certain properties being explored since an update that reverts before the property is checked will not generate a reproducer call sequence.
 
 ```solidity
 contract Counter {
@@ -241,15 +242,15 @@ abstract contract BeforeAfter is Setup {
     }
 }
 ```
-In the above example we can see that the `__before()` function would revert for any values where the `newNumber` is greater than the value stored in `_before.counter_number`. This would still allow the coverage report to show the function as covered however because for all `newNumber` values less than or equal to `_before.counter_number` the update would succeed. This means that fundamentally we'd be limiting the search space of the fuzzer, preventing it from exploring any call sequences where `newNumber` is greater than the value stored in `_before.counter_number` and potentially missing bugs because of it.
+In the above example we can see that the `__before()` function would revert for any values where the `newNumber` passed into `setNumber` is greater than the value stored in `_before.counter_number`. This would still allow the coverage report to show the function as covered however because for all `newNumber` values less than or equal to `_before.counter_number` the update would succeed. This means that fundamentally we'd be limiting the search space of the fuzzer, preventing it from exploring any call sequences where `newNumber` is greater than the value stored in `_before.counter_number` and potentially missing bugs because of it.
 
 ### Grouping Function Types
 
-A simple pattern for grouping function types to easily use as a precondition to a global property check is to group operations by their effects.
+A simple pattern for grouping function types using ghost variables so they can easily be used as a precondition to a global property check is to group operations by their effects.
 
-For example, you may have multiple deposit/mint operations that "add" and others that "remove"
+For example, you may have multiple deposit/mint operations that have the effect of "adding" and others of "removing".
 
-For these, you can group these using an enum type as follows:
+You can group these effects using an enum type as follows:
 
 ```solidity
 enum OpType {
@@ -397,7 +398,7 @@ This causes the handler to revert only at the end of execution, meaning any cove
 
 Fuzzing is a particularly useful technique for finding precision loss related issues, as highlighted by [@DevDacian](https://x.com/DevDacian) in [this](https://dacian.me/exploiting-precision-loss-via-fuzz-testing) blog post.
 
-Simply put the approach for finding such issues is as follows, for any place where there is a division operation which you believe may lead to potential loss of precision:
+Simply put the approach for finding such issues is as follows. For any place where there is a division operation which you believe may lead to potential loss of precision:
 - Start by using and exact check in a property assertion to check if the return value of a variable/function is as expected.
 - Run the fuzzer and allow it to find a case where the return value is not what's expected via a falsified assertion.
 - Create an [Echidna optimization test](https://secure-contracts.com/program-analysis/echidna/advanced/optimization_mode.html?highlight=optimization#optimizing-with-echidna) to increase the difference with the expected value. 
