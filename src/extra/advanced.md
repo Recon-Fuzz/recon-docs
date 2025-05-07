@@ -195,7 +195,7 @@ In the [Chimera Framework](../writing_invariant_tests/chimera_framework.md#befor
 
 As a rule of thumb it's best to avoid computation in your updates to the ghost variables as it ends up adding addtional operations that need to be performed for each call executed by the fuzzer, slowing down fuzzing efficiency.
 
-> Do NOT put any assertions in your ghost variables and avoid any operation or call that may cause a revert.These cause all operations in the call sequence created by the fuzzer to be undone, leaving the fuzzer with a blindspot because it will be unable to reach certain valid states.
+> Do NOT put any assertions in your ghost variables and avoid any operation or call that may cause a revert. These cause all operations in the call sequence created by the fuzzer to be undone, leaving the fuzzer with a blindspot because it will be unable to reach certain valid states.
 
 Overcomplicating ghost variables has the unfortunate side effect of making the coverage report look promising as it will show certain lines fully covered but in reality might be applying implicit clamping by causing reverts that prevent edge cases for certain properties being explored since an update that reverts before the property is checked will not generate a reproducer call sequence.
 
