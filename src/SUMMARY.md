@@ -1,34 +1,35 @@
 # Summary
 
-[Introduction](./base/introduction.md)
+[Introduction](./introduction/introduction.md)
 
 # Writing Invariant Tests
 
-- [First Steps](./tutorial/first_steps.md)
-- [Example Project](./tutorial/sample_project.md)
-- [Chimera Framework](./tutorial/chimera_framework.md)
-- [Invariant Testing Bootcamp](./tutorial/bootcamp.md)
+- [First Steps](./writing_invariant_tests/first_steps.md)
+- [Example Project](./writing_invariant_tests/sample_project.md)
+- [Chimera Framework](./writing_invariant_tests/chimera_framework.md)
+- [Invariant Testing Bootcamp](./writing_invariant_tests/bootcamp.md)
+- [Advanced Fuzzing Tips](./extra/advanced.md)
 
 --- 
 
 # Using Recon (Coming Soon)
-<!-- - [Building Handlers](./recon/building_handlers.md)
-- [Running Jobs](./recon/running_jobs.md)
-- [Recipes](./recon/recipes.md)
-- [Alerts](./recon/alerts.md)
-- [Dynamic Replacement](./recon/dynamic_replacement.md)
-- [Governance Fuzzing](./recon/governance_fuzzing.md)
-- [Recon Tricks](./recon/recon_tricks.md) -->
+<!-- - [Building Handlers](./using_recon/building_handlers.md)
+- [Running Jobs](./using_recon/running_jobs.md)
+- [Recipes](./using_recon/recipes.md)
+- [Alerts](./using_recon/alerts.md)
+- [Dynamic Replacement](./using_recon/dynamic_replacement.md)
+- [Governance Fuzzing](./using_recon/governance_fuzzing.md)
+- [Recon Tricks](./using_recon/recon_tricks.md) -->
 
 --- 
 
 # Free Recon Tools
-- [Recon Extension](./recon_extension.md)
-- [Medusa Log Scraper](./tools/medusa_scraper.md)
-- [Echidna Log Scraper](./tools/echidna_scraper.md)
-- [Invariants Builder](./tools/builder.md)
-- [Bytecode Compare](./tools/bytecode_compare.md)
-- [Bytecode To Interface](./tools/bytecode_to_interface.md)
+- [Recon Extension](./free_recon_tools/recon_extension.md)
+- [Medusa Log Scraper](./free_recon_tools/medusa_scraper.md)
+- [Echidna Log Scraper](./free_recon_tools/echidna_scraper.md)
+- [Invariants Builder](./free_recon_tools/builder.md)
+- [Bytecode Compare](./free_recon_tools/bytecode_compare.md)
+- [Bytecode To Interface](./free_recon_tools/bytecode_to_interface.md)
 --- 
 
 # OSS Repos
@@ -50,7 +51,6 @@
 
 <!-- # Extra
 - [Roadmap](./extra/roadmap.md)
-- [Advanced Ideas](./extra/advanced.md)
 - [The Recon Invariant Audit Process](./extra/audit_process.md) -->
 
 
