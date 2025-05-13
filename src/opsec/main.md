@@ -3,7 +3,10 @@
 These are a few resources, stemming from this talk we did to help founders ship safely:
 [https://docs.google.com/presentation/d/1Tzcj7FPj8QmvjdO79vPqPsRxyyyEwFhWl6SoRzFZ_do/edit?usp=sharing](https://docs.google.com/presentation/d/1Tzcj7FPj8QmvjdO79vPqPsRxyyyEwFhWl6SoRzFZ_do/edit?usp=sharing)
 
-Recon offers ongoing security retainers to review multisig operations and transactions, get in touch here: [https://tally.so/r/3jpV6E](https://tally.so/r/3jpV6E)
+
+## 1 Hour Consultation
+
+Recon offers ongoing security retainers to review multisig operations and transactions, to see if it's a fit and get some free advice, get in touch here: [https://tally.so/r/3jpV6E](https://tally.so/r/3jpV6E)
 
 ## Smart Contracts
 
