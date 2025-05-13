@@ -12,6 +12,11 @@
 
 --- 
 
+# Opsec
+- [Opsec Resources](./opsec/main.md)
+
+---
+
 # Using Recon (Coming Soon)
 <!-- - [Building Handlers](./using_recon/building_handlers.md)
 - [Running Jobs](./using_recon/running_jobs.md)
