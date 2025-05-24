@@ -17,7 +17,7 @@
 
 ---
 
-# Using Recon (Coming Soon)
+# Using Recon
 - [Building Handlers](./using_recon/building_handlers.md)
 - [Running Jobs](./using_recon/running_jobs.md)
 - [Recipes](./using_recon/recipes.md)
