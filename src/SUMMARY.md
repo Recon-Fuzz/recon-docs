@@ -18,13 +18,13 @@
 ---
 
 # Using Recon (Coming Soon)
-<!-- - [Building Handlers](./using_recon/building_handlers.md)
+- [Building Handlers](./using_recon/building_handlers.md)
 - [Running Jobs](./using_recon/running_jobs.md)
 - [Recipes](./using_recon/recipes.md)
 - [Alerts](./using_recon/alerts.md)
 - [Dynamic Replacement](./using_recon/dynamic_replacement.md)
 - [Governance Fuzzing](./using_recon/governance_fuzzing.md)
-- [Recon Tricks](./using_recon/recon_tricks.md) -->
+- [Recon Tricks](./using_recon/recon_tricks.md)
 
 --- 
 

@@ -2,9 +2,13 @@
 
 Recipes allow you to save job configurations for easy reuse when running jobs on Recon.
 
+
+
 ## Creating A Recipe
 
 To create a recipe, you can use the _Recipes_ page. 
+
+![Create Recipe](../images/using_recon/create_recipe.png)
 
 1. First you need to select the tool you want to create the recipe for (Echidna, Medusa, Foundry, Halmos, or Kontrol). 
 
@@ -21,5 +25,7 @@ To create a recipe, you can use the _Recipes_ page.
 Your recipe will then appear in the list of recipes at the bottom of the page. Recipes can be edited (using the _Edit this Recipe_ button) or deleted (using the _Delete this Recipe_ button) at any time. 
 
 ## Using A Recipe
+
+![Recipes](../images/using_recon/recipes.png)
 
 To use a recipe, you can select the recipe from the list of recipes at the top of the _Jobs_ page. This will prefill all the form fields for the job configuration and you can then edit any of the values as needed. The job can then be run as normal using the _Run Job_ button. 

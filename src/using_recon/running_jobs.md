@@ -6,6 +6,8 @@ Using Reconâ€™s Job running feature you can offload long-duration jobs to Reconâ
 
 ## How To Run A Fuzzing Job
 
+![Jobs](../images/using_recon/job.png)
+
 On the _Jobs_ tab you'll see a form for running a job. 
 
 1. First select the tool you'd like to use to run your job. The Echidna, Medusa, and Foundry options use fuzzing. The Halmos and Kontrol options use formal verification. 

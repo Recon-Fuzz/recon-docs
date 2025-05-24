@@ -1,4 +1,4 @@
-# Governance Fuzzing
+# Governance Fuzzing - WIP
 
 Governance fuzzing allows us to simulate on-chain changes that modify the system state (function calls) or system configuration (governance function calls) in our forked testing setup to determine if the change causes a break in the existing properties.
 
