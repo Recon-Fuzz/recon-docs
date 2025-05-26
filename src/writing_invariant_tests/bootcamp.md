@@ -9,6 +9,15 @@ Alex & the Remedy Team on Stateful Fuzzing for Security:
 
 - Fuzzing a Rewards Manager with Recon Extension [https://www.youtube.com/watch?v=-d2rLOQB3l0](https://www.youtube.com/watch?v=-d2rLOQB3l0)
 
+Alex & Secureum on Fuzzing For Security Research:
+
+In this workshop we go from a simple foundry test to a full blown critical exploit thanks to fuzzing
+
+This is the simplest intro you’ll find on the topic which covers most key aspects when deciding whether you’re done with fuzzing or whether you should keep going
+
+[https://www.youtube.com/embed/3A7aa5B8aak](https://www.youtube.com/embed/3A7aa5B8aak)
+
+
 Alex & Shafu on Invariant Testing:
 
 - Fuzzing Sablier with the Recon Extension: [https://www.youtube.com/watch?v=Sl2rz-y8_xg](https://www.youtube.com/watch?v=Sl2rz-y8_xg)
