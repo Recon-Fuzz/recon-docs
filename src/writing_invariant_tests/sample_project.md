@@ -41,7 +41,7 @@ Next, we need to fix some imports.
 
 ### 1. Delete all handlers in the TargetFunctions, AdminTargets and DoomsdayTargets
 
-After deleting all the [handler](../recon/building_handlers.md#what-are-handlers) functions in the `TargetFunctions` your contract should look like:
+After deleting all the [handler](../using_recon/building_handlers.md#what-are-handlers) functions in the `TargetFunctions` your contract should look like:
 ```solidity
 abstract contract TargetFunctions is
     AdminTargets,
@@ -202,7 +202,7 @@ slither . --ignore-compile --print echidna --json -
 
 At this point, we expect close to no lines to be covered (indicated by the `corpus` value in the output). You can now stop medusa with `CTRL + C`.
 
-We can note that because the `corpus` value is nonzero, something is being covered, in our case these are the only exposed functions in the [`ManagerTargets`](../tutorial/setup_helpers.md) which can help you setup tests with multiple tokens and multiple actors.
+We can note that because the `corpus` value is nonzero, something is being covered, in our case these are the only exposed functions in the [`ManagerTargets`](../oss/setup_helpers.md) which can help you setup tests with multiple tokens and multiple actors.
 
 We can now pen the coverage report located at `/medusa/coverage/coverage_report.html` to confirm that none of the lines in the `Points` contract are actually being covered.
 
@@ -345,7 +345,7 @@ We can say that the `Points` contract's `power` should be monotonically increasi
 
 Let's prove this with a global property and ghost variables.
 
-To keep things simple, let's we'll just test this property on the current actor (handled by the [`ActorManager`](./setup_helpers.md#actormanager)).
+To keep things simple, let's we'll just test this property on the current actor (handled by the [`ActorManager`](../oss/setup_helpers.md#actormanager)).
 
 Next go to the `BeforeAfter` contract and add a way to fetch the `power` for the deposited user before and after each call to the target function:
 

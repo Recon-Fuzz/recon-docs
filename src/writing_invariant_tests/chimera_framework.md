@@ -40,7 +40,7 @@ abstract contract Setup is BaseSetup {
 
 ### `TargetFunctions`
 
-This is perhaps the most important file in your fuzzing suite, it defines the target [function handlers](./building_handlers.md#what-are-handlers) that will be called by the fuzzer to manipulate the state of your target contracts. 
+This is perhaps the most important file in your fuzzing suite, it defines the target [function handlers](../using_recon/building_handlers.md#what-are-handlers) that will be called by the fuzzer to manipulate the state of your target contracts. 
 
 **Note: These are the _only_ functions that will be called by the fuzzer**. 
 

@@ -6,7 +6,7 @@ We also maintain a suite of tools that help with invariant testing and security 
 
 ## Creating An Account
 
-To get started using Recon's free tools, you don't need to create an account and can use any of the tools in the [Free Recon Tools](../tools/medusa_scraper.md) section. 
+To get started using Recon's free tools, you don't need to create an account and can use any of the tools in the [Free Recon Tools](../free_recon_tools/recon_extension.md) section. 
 
 To use more advanced features (running jobs in the cloud, alerts, etc.) you'll need to [create an account](https://getrecon.xyz/auth/signin?callbackUrl=https%3A%2F%2Fgetrecon.xyz%2Fdashboard) using your GitHub account and sign up for Recon Pro. 
 
@@ -26,7 +26,7 @@ If you're new to invariant testing, we recommend you starting with the following
 
 If you prefer a full end-to-end video bootcamp, checkout [this series](https://getrecon.xyz/bootcamp) on everything you need to know about invariant testing.
 
-Once you've grasped the basics of invariant testing you can setup your first suite and run it on Recon. For a step-by-step guide on how to do this, check out the [First Steps](./first_steps.md) guide.
+Once you've grasped the basics of invariant testing you can setup your first suite and run it on Recon. For a step-by-step guide on how to do this, check out the [First Steps](../writing_invariant_tests/first_steps.md) guide.
 
 <!-- or use the documentation in the _Using Recon_ section to help guide you.  -->
 

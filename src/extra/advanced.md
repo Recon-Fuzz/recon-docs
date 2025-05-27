@@ -1,6 +1,6 @@
 # Advanced Fuzzing Tips
 
-This is a compilation of best practices that the Recon team has developed while using the [Chimera framework](src/tutorial/chimera_framework.md).
+This is a compilation of best practices that the Recon team has developed while using the [Chimera framework](../writing_invariant_tests/chimera_framework.md).
 
 ## Target Functions
 

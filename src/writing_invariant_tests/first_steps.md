@@ -2,10 +2,10 @@
 
 To make getting started with Invariant Testing as easy as possible, we created the [create-chimera-app](https://github.com/Recon-Fuzz/create-chimera-app/tree/main) repository which serves as a template that you can use to create a new project with invariant testing built in. 
 
-This template uses our [Chimera framework](./chimera_framework.md) to let you run invariant tests with Echidna and Medusa that can be easily debugged using Foundry. We've also incorporated contracts from our [Setup Helpers](./setup_helpers.md) repo which make managing the test suite setup much simpler.
+This template uses our [Chimera framework](./chimera_framework.md) to let you run invariant tests with Echidna and Medusa that can be easily debugged using Foundry. We've also incorporated contracts from our [Setup Helpers](../oss/setup_helpers.md) repo which make managing the test suite setup much simpler.
 
 ### Creating A New Project
-If you haven't already, first create a recon account as described in the [create an account](./introduction.md#creating-an-account) section and install either [Echidna](https://github.com/crytic/echidna) or [Medusa](https://github.com/crytic/medusa). 
+If you haven't already, first create a recon account as described in the [create an account](../introduction/introduction.md#creating-an-account) section and install either [Echidna](https://github.com/crytic/echidna) or [Medusa](https://github.com/crytic/medusa). 
 
 Next you'll need to create a new project using the create-chimera-app template. You can use the _Use this template_ button on GitHub to do this. This will automatically create a new repository using the create-chimera-app template on your GitHub account. 
 
@@ -36,7 +36,7 @@ Create-chimera-app is meant to be a starting point for your own project. You can
 
 To add new contracts just delete the existing `Counter.sol` and `Counter.t.sol` files and add your own. 
 
-After adding your new contracts, you can add handlers for the contracts you want to test using invariant testing by using the _Build Handlers_ page on Recon (see [this section](./building_handlers.md) for how to do this). 
+After adding your new contracts, you can add handlers for the contracts you want to test using invariant testing by using the _Build Handlers_ page on Recon (see [this section](../using_recon/building_handlers.md) for how to do this). 
 
 
 
