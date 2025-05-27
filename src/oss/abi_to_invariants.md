@@ -6,4 +6,4 @@ Given a contract ABI and options it creates:
 - Target functions
 - [Create Chimera App](../oss/create_chimera_app.md) Boilerplate
 
-Available in an easy to use UI in our [Invariants Builder](../tools/builder.md)
+Available in an easy to use UI in our [Invariants Builder](../free_recon_tools/builder.md)

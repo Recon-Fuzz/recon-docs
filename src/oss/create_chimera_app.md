@@ -1,7 +1,7 @@
 # <a href="https://github.com/Recon-Fuzz/create-chimera-app" target="_blank" rel="noopener noreferrer">Create Chimera App</a>
 
 A Foundry template that allows you to bootstrap an invariant fuzz testing suite the [Chimera Framework](./chimera.md) that works out of the box with:
-- Foundry for invariant testing and debugging of [broken property reproducers](../tools/echidna_scraper.md)
+- Foundry for invariant testing and debugging of [broken property reproducers](../free_recon_tools/echidna_scraper.md)
 - Echidna and Medusa for stateful fuzzing
 - Halmos for invariant testing
 
@@ -59,4 +59,4 @@ Simply run `halmos` on the root of this repository to run Halmos for Invariant T
 ## Expanding Target Functions
 After you've added new contracts in the `src` directory, they can then be deployed in the `Setup` contract.
 
-The ABIs of these contracts can be taken from the `out` directory and added to Recon's [Invariants Builder](../tools/builder.md). The target functions that the sandbox generates can then be added to the existing `TargetFunctions` contract. 
+The ABIs of these contracts can be taken from the `out` directory and added to Recon's [Invariants Builder](../free_recon_tools/builder.md). The target functions that the sandbox generates can then be added to the existing `TargetFunctions` contract. 
