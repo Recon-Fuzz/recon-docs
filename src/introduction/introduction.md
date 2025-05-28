@@ -1,6 +1,6 @@
 # Introduction 
 
-Recon is a tool for automatically scaffolding and running invariant testing in the cloud.
+Recon Pro is a tool for automatically scaffolding and running invariant testing in the cloud.
 
 We also maintain a suite of tools that help with invariant testing and security research more generally.
 
