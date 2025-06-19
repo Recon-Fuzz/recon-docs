@@ -37,6 +37,7 @@
 - [Bytecode To Interface](./free_recon_tools/bytecode_to_interface.md)
 - [Bytecode Static Deployment](./free_recon_tools/bytecode_static_deployment.md)
 - [Bytecode Formatter](./free_recon_tools/bytecode_formatter.md)
+- [String To Bytes](./free_recon_tools/bytecode_string.md)
 --- 
 
 # OSS Repos

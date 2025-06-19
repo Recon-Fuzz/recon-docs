@@ -1,4 +1,4 @@
-# <a href="https://getrecon.xyz/tools/bytecode-static-deployment-tool" target="_blank" rel="noopener noreferrer">Echidna Log Scraper</a>
+# <a href="https://getrecon.xyz/tools/bytecode-static-deployment-tool" target="_blank" rel="noopener noreferrer">Bytecode Static Deployment</a>
 
 ![Bytecode Static Deployment](../images/tools/bytecode_static_deployment.png)
 
