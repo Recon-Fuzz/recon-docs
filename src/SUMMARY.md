@@ -35,7 +35,7 @@
 - [Invariants Builder](./free_recon_tools/builder.md)
 - [Bytecode Compare](./free_recon_tools/bytecode_compare.md)
 - [Bytecode To Interface](./free_recon_tools/bytecode_to_interface.md)
-- [Bytecode Formatter](./free_recon_tools/bytecode_formatter.md)
+- [Bytecode Static Deployment](./free_recon_tools/bytecode_static_deployment.md)
 --- 
 
 # OSS Repos
