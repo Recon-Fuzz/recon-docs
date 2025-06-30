@@ -8,11 +8,11 @@ Deploy the Contract
 
 Build them with Extension / UI
 
-## Why no Ghost Variables
+## Why No Ghost Variables
 
 Explain
 
-## Running the suite and ensuring you reach coverage
+## Running the Suite and Ensuring You Reach Coverage
 
 ## Adding Canaries
 
@@ -20,6 +20,6 @@ Explain
 
 ## Exploring the Precision Property with Optimization Mode
 
-## Chaining a loss of Precision into an exploit
+## Chaining a Loss of Precision into an Exploit
 
 ## Thinking
