@@ -8,3 +8,5 @@ title = "Recon Docs"
 [output.html]
 default-theme = "navy"
 preferred-dark-theme = "navy"
+additional-css = ["theme/toc.css"]
+additional-js = ["theme/toc.js"]
