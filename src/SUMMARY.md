@@ -4,20 +4,17 @@
 
 # Writing Invariant Tests
 
-- [First Steps](./writing_invariant_tests/first_steps.md)
-- [Example Project](./writing_invariant_tests/sample_project.md)
+- [Learn Invariant Testing](./writing_invariant_tests/learn_invariant_testing.md)
+- [Example Project](./writing_invariant_tests/example_project.md)
 - [Chimera Framework](./writing_invariant_tests/chimera_framework.md)
+- [Create Chimera App](./writing_invariant_tests/create_chimera_app.md)
 - [Invariant Testing Video Tutorials](./writing_invariant_tests/bootcamp.md)
-- [Advanced Fuzzing Tips](./extra/advanced.md)
-
---- 
-
-# Opsec
-- [Opsec Resources](./opsec/main.md)
+- [Advanced Fuzzing Tips](./writing_invariant_tests/advanced.md)
 
 ---
 
 # Using Recon
+<!-- - [Getting Started] -->
 - [Building Handlers](./using_recon/building_handlers.md)
 - [Running Jobs](./using_recon/running_jobs.md)
 - [Recipes](./using_recon/recipes.md)
@@ -32,7 +29,7 @@
 - [Recon Extension](./free_recon_tools/recon_extension.md)
 - [Medusa Log Scraper](./free_recon_tools/medusa_scraper.md)
 - [Echidna Log Scraper](./free_recon_tools/echidna_scraper.md)
-- [Invariants Builder](./free_recon_tools/builder.md)
+- [Handler Builder](./free_recon_tools/builder.md)
 - [Bytecode Compare](./free_recon_tools/bytecode_compare.md)
 - [Bytecode To Interface](./free_recon_tools/bytecode_to_interface.md)
 --- 
@@ -46,6 +43,11 @@
 - [Setup Helpers](./oss/setup_helpers.md)
 - [Properties Table](./oss/properties.md)
 - [ERC7540 Reusable Properties](./oss/erc7540.md)
+
+--- 
+
+# OpSec
+- [OpSec Resources](./opsec/op_sec.md)
 
 --- 
 
