@@ -7,7 +7,7 @@ This section outlines the learning path for mastering invariant testing with Rec
 1. **Start Here**: [First Steps](./first_steps.md) - Set up your first invariant testing suite
 2. **Practice**: [Sample Project](./sample_project.md) - Work through a complete example
 3. **Learn the Framework**: [Chimera Framework](./chimera_framework.md) - Understand the testing framework
-4. **Watch & Learn**: [Bootcamp Videos](./bootcamp.md) - Video tutorials and workshops
+<!-- 4. **Watch & Learn**: [Bootcamp Videos](./bootcamp.md) - Video tutorials and workshops -->
 
 ## Intermediate Path
 

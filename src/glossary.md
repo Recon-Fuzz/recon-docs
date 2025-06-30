@@ -10,11 +10,11 @@ The invariant testing contract that's deployed in the [Chimera Framework](../tut
 
 ## CryticToFoundry
 
-A Foundry test contract used to implement unit tests of property breaking call sequences (reproducers) obtained with testing tools (i.e. Echidna, Medusa, Halmos, etc.).
+A Foundry test contract used to implement unit tests of property-breaking call sequences (reproducers) obtained with testing tools (i.e. Echidna, Medusa, Halmos, etc.).
 
 ## Invariant Testing
 
-The act of testing logical statements about smart contracts using tools that manipulate their state randomly (fuzzers) or following all possible paths (formal verifiers).
+The act of testing logical statements about smart contracts using tools that manipulate their state randomly (fuzzers) or by following all possible paths (formal verifiers).
 
 ## Property
 
@@ -32,7 +32,7 @@ A property that should always hold for a smart contract or system.
 
 An engine/solver, a program that can perform stateful tests on a smart contract or system.
 
-Some fuzzes are concrete, others concolyc, and others symbolic.
+Some fuzzers are concrete, others concolic, and others symbolic.
 
 ## Handler
 
@@ -48,7 +48,7 @@ The set of smart contracts put into place to organize the code and tell the fuzz
 
 ## <a href="https://github.com/crytic/echidna" target="_blank" rel="noopener noreferrer">Echidna</a>
 
-A concrete fuzzer written in Haskell, using HEVM as its EVM engine
+A concrete fuzzer written in Haskell, using HEVM as its EVM engine.
 
 ## <a href="https://github.com/crytic/medusa" target="_blank" rel="noopener noreferrer">Medusa</a>
 
@@ -56,4 +56,4 @@ A concrete fuzzer written in Go, using GETH for the EVM engine.
 
 ## <a href="https://github.com/a16z/halmos" target="_blank" rel="noopener noreferrer">Halmos</a>
 
-A symbolic fuzzer written in Python, using its own SEVM for the EVM engine
+A symbolic fuzzer written in Python, using its own SEVM for the EVM engine.
