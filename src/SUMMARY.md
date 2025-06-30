@@ -6,6 +6,7 @@
 
 - [Learn Invariant Testing](./writing_invariant_tests/learn_invariant_testing.md)
 - [Example Project](./writing_invariant_tests/example_project.md)
+- [Implementing Properties](./writing_invariant_tests/implementing_properties.md)
 - [Chimera Framework](./writing_invariant_tests/chimera_framework.md)
 - [Create Chimera App](./writing_invariant_tests/create_chimera_app.md)
 - [Invariant Testing Video Tutorials](./writing_invariant_tests/bootcamp.md)
