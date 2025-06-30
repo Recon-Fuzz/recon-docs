@@ -62,8 +62,8 @@
   background-color: var(--active-bg);
 }
 
-/* Adjust content layout to prevent overlap */
-.content {
+/* Adjust content layout to prevent overlap ONLY when TOC is present */
+body:has(#right-toc) .content {
   margin-right: 300px !important;
   max-width: calc(100% - 300px) !important;
 }
@@ -74,7 +74,7 @@
     display: none;
   }
   
-  .content {
+  body:has(#right-toc) .content {
     margin-right: auto !important;
     max-width: 100% !important;
   }
