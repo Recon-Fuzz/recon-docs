@@ -48,9 +48,18 @@ Deep dives into the work we've done with our elite customers with tips and trick
 - [Centrifuge Retrospective part 2](https://getrecon.substack.com/p/lessons-learned-from-fuzzing-centrifuge-059)
 
 
-### Suggested Office Hours (Video)
+### Videos
 
-Office hours are improvised live recordings of useful tips and tricks for invariant testing. They provide a lot of hot takes and insights based on what the Recon Team was working on at the time.
+#### Podcasts
+- [Fuzzing a RewardsManager with the Recon Extension](https://www.youtube.com/watch?v=-d2rLOQB3l0) | Alex & the Remedy Team on Stateful Fuzzing for Security
+- [Workshop](https://www.youtube.com/embed/3A7aa5B8aak) on how to go from a simple foundry test to a full blown critical exploit with fuzzing | Alex & Secureum on fuzzing for security research
+- [Fuzzing Sablier with the Recon Extension](https://www.youtube.com/watch?v=Sl2rz-y8_xg) | Alex & Shafu on Invariant Testing
+- [Fuzzing MicroStable with Echidna](https://www.youtube.com/watch?v=WYqyZG8itb0) | Alex & Shafu on Invariant Testing
+- [How can I run my Fuzz tests longer? Getrecon interview with Alex](https://www.youtube.com/watch?v=K6_SJ-39Sdc) | Alex & Patrick Collins (Cyfrin Audits)
+- [Using Recon Pro to test invariants in the cloud](https://www.youtube.com/watch?v=cUAgLUra3Zw) | Alex & Austin Griffith
+
+#### Office Hours
+Office hours are live recordings of useful tips and tricks for invariant testing. 
 
 - [Fuzz Fest](https://www.youtube.com/watch?v=Cqmu-mhSLt8) | The best Talks of 2024 on Fuzzing for Security
 - [The Dangers of Arbitrary Calls](https://www.youtube.com/watch?v=8-qWL2Dcgpc) | How to write safe contracts that use arbitrary calls and the risk tied to them
@@ -63,3 +72,4 @@ Office hours are improvised live recordings of useful tips and tricks for invari
 ## <a href="https://getrecon.xyz/#trophies" target="_blank" rel="noopener noreferrer">Trophies</a>
 
 A sample of some publicly disclosed bugs we've found using invariant testing. You can use these to understand what kinds of properties will help you find issues that manual review sometimes can't.
+
