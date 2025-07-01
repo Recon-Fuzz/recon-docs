@@ -1,79 +1,53 @@
-# Introduction 
+# Introduction
+
+[Recon](https://getrecon.xyz/#team) is a team of invariant testing engineers and security researchers that provide invariant testing as a service while also developing tools and educational content to make it easier for anyone to test invariants on their smart contracts.
 
 Recon Pro is a tool for automatically scaffolding and running invariant testing in the cloud.
 
-We also maintain a suite of tools that help with invariant testing and security research more generally.
+## Navigating the Book
 
-## Creating An Account
+### Writing Invariant Tests
+If you're new to invariant testing with fuzzing, use the [Learn Invariant Testing](../writing_invariant_tests/learn_invariant_testing.md) section to learn the background info you'll need to get started.
 
-To get started using Recon's free tools, you don't need to create an account and can use any of the tools in the [Free Recon Tools](../free_recon_tools/recon_extension.md) section. 
+You can then follow along with the [Example Project](../writing_invariant_tests/example_project.md) to see how to set up a project using the [Chimera Framework](../writing_invariant_tests/chimera_framework.md) and [Create Chimera App](../writing_invariant_tests/create_chimera_app.md) template.
 
-To use more advanced features (running jobs in the cloud, alerts, etc.) you'll need to [create an account](https://getrecon.xyz/auth/signin?callbackUrl=https%3A%2F%2Fgetrecon.xyz%2Fdashboard) using your GitHub account and sign up for Recon Pro. 
+Once you've gotten the hang of writing invariants and are using them in real projects, check out the [Advanced Fuzzing Tips](../writing_invariant_tests/advanced.md) section for best practices we've developed after using our Chimera framework for over a year on dozens of engagements.
 
-Once you've created an account, you'll be redirected to the dashboard where you'll have access to all of the tools in the Recon suite.
+### Building Handlers
+Learn how to use the Recon UI to [add a test harness](../using_recon/building_handlers.md) to your Foundry project.
 
-## Learn Invariant Testing
+### Running Jobs
+Learn how to offload a fuzzing job using the [Recon cloud runner](../using_recon/running_jobs.md).
 
-Most of our guides and documentation are focused on using fuzzing tools, primarily [Echidna](https://github.com/crytic/echidna) and [Medusa](https://github.com/crytic/medusa) because we use them internally at Recon. However, we also support running other tools on our cloud infrastructure such as [Foundry](https://github.com/foundry-rs/foundry) (fuzzing), [Halmos](https://github.com/a16z/halmos) (formal verification), and [Kontrol](https://github.com/runtimeverification/kontrol) (formal verification). 
+### Using Recipes
+Learn how to reuse fuzzer configurations when running jobs on the Recon cloud runner using [recipes](../using_recon/recipes.md).
 
-After having chosen a tool best suited to your needs and downloading it locally, you can get started by running jobs directly on the jobs pge.
+### Adding Alerts
+Learn how to [add alerts](../using_recon/alerts.md) for jobs run on the Recon cloud runner that can notify you of broken properties via Telegram or webhook.
 
-If you're new to invariant testing, we recommend you starting with the following posts: 
+### Dynamic Replacement
+You can test your existing invariant suite with different setup configurations without having to modify the existing setup using [dynamic replacement](../using_recon/dynamic_replacement.md).
 
-1. [First Day At Invariant School](https://getrecon.substack.com/p/first-day-at-invariant-school?r=34r2zr)
-2. [How To Define Invariants](https://getrecon.substack.com/p/how-to-define-invariants?r=34r2zr)
-3. [Implementing Your First Smart Contract Invariants: A Practical Guide](https://getrecon.substack.com/p/implementing-your-first-few-invariants?r=34r2zr)
+### Governance Fuzzing
+Simulate on-chain changes that modify the system state (function calls) or system configuration (governance function calls) in a forked testing environment so you can preview changes and their side effects before they happen on-chain using [governance fuzzing](../using_recon/governance_fuzzing.md).
 
-If you prefer a full end-to-end video bootcamp, checkout [this series](https://getrecon.xyz/bootcamp) on everything you need to know about invariant testing.
+### Useful Tips
+Learn how to make the most of Recon's features so that you can [fuzz more effectively](../using_recon/recon_tricks.md).
 
-Once you've grasped the basics of invariant testing you can setup your first suite and run it on Recon. For a step-by-step guide on how to do this, check out the [First Steps](../writing_invariant_tests/first_steps.md) guide.
+### Recon Extension
+The Visual Studio Code extension that combines our most useful fuzzing tools into one so you can get to fuzzing faster. Learn how to use it [here](../free_recon_tools/recon_extension.md).
 
-<!-- or use the documentation in the _Using Recon_ section to help guide you.  -->
+### Recon Tools
+Recon's free tools can help you turn fuzzer logs into Foundry reproducers ([Echidna](../free_recon_tools/echidna_scraper.md)/[Medusa](../free_recon_tools/medusa_scraper.md)).
 
-If you have any questions about how to use Recon or invariant testing in general, you can reach out to our team on [Discord](https://discord.gg/aCZrCBZdFd).
+Our bytecode tools can help you [compare the bytecode](../free_recon_tools/bytecode_compare.md) of two different contracts and [generate an interface](../free_recon_tools/bytecode_to_interface.md) for a given contract's bytecode.
 
-## Additional Learning Resources
+### Open Source Contributions
+Recon has created a number of open source tools to make invariant testing easier. These can be found in the OSS Repos section.
 
-### Invariant Testing In General
-If you're looking for more resources to help you get started with invariant testing, see the following: 
+### OpSec
+Learn about [best practices](../opsec/op_sec.md) for operational security for web3 teams and the services that Recon provides to help projects with this.
 
-- [Recon Substack](https://getrecon.substack.com)
-- [Recon Video Tutorials](https://getrecon.xyz/media)
-- [Recon Twitter](https://x.com/getrecon)
-- [Recon GitHub](https://github.com/Recon-Fuzz)
-- [EVM Fuzzing Resources](https://github.com/perimetersec/evm-fuzzing-resources)
+### Glossary
+See the [glossary](./glossary.md) for terminology used throughout the book.
 
-### Fuzzers
-For more resources on our favorite fuzzers (Echidna and Medusa) see the following: 
-
-- [Echidna Documentation](https://secure-contracts.com/program-analysis/echidna/index.html)
-- [Medusa Documentation](https://secure-contracts.com/program-analysis/medusa/docs/src/index.html)
-- [Echidna Fuzzing Series](https://youtube.com/playlist?list=PLciHOL_J7Iwqdja9UH4ZzE8dP1IxtsBXI&si=Mar9xYrg4Ie-vc_0)
-
-
-
-### Retrospectives
-
-Deep dives into the work we've done with our elite customers with tips and tricks on building effective invariant testing suites:
-
-- [Corn Retrospective](https://getrecon.substack.com/p/corn-engagement-retrospective)
-- [eBTC Retrospective](https://getrecon.substack.com/p/ebtc-retrospective)
-- [Centrifuge Retrospective part 1](https://getrecon.substack.com/p/lessons-learned-from-fuzzing-centrifuge)
-- [Centrifuge Retrospective part 2](https://getrecon.substack.com/p/lessons-learned-from-fuzzing-centrifuge-059)
-
-
-### Suggested Office Hours (Video)
-
-Office hours are improvised live recordings of useful tips and tricks for invariant testing. They provide a lot of hot takes and insights based on what the Recon Team was working on at the time.
-
-- [Fuzz Fest](https://www.youtube.com/watch?v=Cqmu-mhSLt8) | The best Talks of 2024 on Fuzzing for Security
-- [The Dangers of Arbitrary Calls](https://www.youtube.com/watch?v=8-qWL2Dcgpc) | How to write safe contracts that use arbitrary calls and the risk tied to them
-- [Centrifuge Retrospective Pt1](https://www.youtube.com/watch?v=AT3fMhPDZFU) | On scaffolding and getting to coverage
-- [Centrifuge Retrospective Pt2](https://www.youtube.com/watch?v=eBVp6WyEIx4) | On breaking properties and the importance of understanding the system you're testing
-- [How we missed a bug with fuzzing!](https://www.youtube.com/watch?v=fXG2JwvoFZ0&t=8s) | On the dangers of clamping
-- [Finding bugs with Differential Fuzzing](https://www.youtube.com/watch?v=AMCN1HP84BQ) | Using differential fuzzing to find bugs
-- [Fuzzing Bytecode Directly](https://www.youtube.com/watch?v=RWvA9myV_LQ)
-
-## <a href="https://getrecon.xyz/#trophies" target="_blank" rel="noopener noreferrer">Trophies</a>
-
-A sample of some publicly disclosed bugs we've found using invariant testing. You can use these to understand what kinds of properties will help you find issues that manual review sometimes can't.

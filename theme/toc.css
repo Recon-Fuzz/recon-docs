@@ -1,0 +1,112 @@
+/* Right-hand Table of Contents Styles */
+#right-toc {
+  position: fixed;
+  top: 100px;
+  right: 30px;
+  width: 250px;
+  max-height: 70vh;
+  overflow-y: auto;
+  background: transparent;
+  border: none;
+  border-radius: 8px;
+  padding: 16px;
+  z-index: 1000;
+  font-size: 14px;
+  line-height: 1.4;
+  color: #bcbdd0 !important;
+}
+
+#right-toc h3 {
+  margin-top: 0;
+  margin-bottom: 12px;
+  font-size: 16px;
+  font-weight: 600;
+  color: #bcbdd0 !important;
+  border-bottom: 1px solid var(--border-color);
+  padding-bottom: 8px;
+}
+
+#right-toc ul {
+  list-style: none;
+  padding-left: 0;
+  margin: 0;
+}
+
+#right-toc li {
+  margin-bottom: 8px;
+  position: relative;
+}
+
+#right-toc a,
+#right-toc a:link,
+#right-toc a:visited {
+  text-decoration: none;
+  color: #bcbdd0 !important;
+  display: block;
+  padding: 4px 0;
+  transition: all 0.2s ease;
+  border-left: 3px solid transparent;
+  padding-left: 8px;
+}
+
+#right-toc a:hover {
+  color: var(--link-color) !important;
+  background-color: var(--hover-bg);
+  border-left-color: var(--link-color);
+}
+
+#right-toc a.active {
+  color: var(--link-color) !important;
+  font-weight: 600;
+  border-left-color: var(--link-color);
+  background-color: var(--active-bg);
+}
+
+/* Adjust content layout to prevent overlap ONLY when TOC is present */
+body:has(#right-toc) .content {
+  margin-right: 300px !important;
+  max-width: calc(100% - 300px) !important;
+}
+
+/* Hide TOC on smaller screens and restore normal content width */
+@media (max-width: 1200px) {
+  #right-toc {
+    display: none;
+  }
+  
+  body:has(#right-toc) .content {
+    margin-right: auto !important;
+    max-width: 100% !important;
+  }
+}
+
+/* CSS Variables for consistent theming - using mdBook default colors */
+:root {
+  --link-color: #0074d9;
+  --border-color: #e0e0e0;
+  --hover-bg: rgba(0, 116, 217, 0.05);
+  --active-bg: rgba(0, 116, 217, 0.1);
+}
+
+/* Dark theme support - using mdBook navy theme colors */
+[data-theme="navy"] #right-toc {
+  background: transparent;
+  color: #bcbdd0 !important;
+}
+
+[data-theme="navy"] #right-toc h3 {
+  color: #bcbdd0 !important;
+}
+
+[data-theme="navy"] #right-toc a,
+[data-theme="navy"] #right-toc a:link,
+[data-theme="navy"] #right-toc a:visited {
+  color: #bcbdd0 !important;
+}
+
+[data-theme="navy"] {
+  --link-color: #4a9eff;
+  --border-color: #333333;
+  --hover-bg: rgba(74, 158, 255, 0.1);
+  --active-bg: rgba(74, 158, 255, 0.15);
+} 
