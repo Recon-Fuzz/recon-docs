@@ -118,7 +118,7 @@ This property is explicitly stating that the check should only be made for the `
             
             // precondition: we only care about reverts for things other than insufficient balance or allowance
             if (!expectedError) {
-                revert("deposit should not revert");
+                t(false, "deposit should not revert");
             }
         }
     }
