@@ -17,7 +17,7 @@ Use `forge init --template https://github.com/Recon-Fuzz/create-chimera-app-no-b
 
 First, in the `src/` directory we'll create a simple `Points` contract that allows users to make a deposit and earn points proportional to the amount of time that they've deposited for, where longer deposits equal more points:
 
-```solidity
+```javascript
 
 // SPDX-License-Identifier: UNLICENSED
 pragma solidity ^0.8.13;
@@ -54,7 +54,7 @@ contract Points {
 
 Now with a contract that we can test, we can deploy it in the `Setup` contract:
 
-```solidity
+```javascript
 abstract contract Setup is BaseSetup, ActorManager, AssetManager, Utils {
     Points points;
 
@@ -166,7 +166,7 @@ Make sure to add the `updateGhosts` and `asActor` modifiers to the `points_depos
 
 Your `TargetFunctions` contract should now look like:
 
-```solidity
+```javascript
 abstract contract TargetFunctions is
     AdminTargets,
     DoomsdayTargets,
@@ -198,7 +198,7 @@ A standard [property](../writing_invariant_tests/implementing_properties.md#what
 
 Reverts due to over/underflow are not detected by default in Medusa and Echidna, so to explicitly test for this we can use a try-catch block in our `DoomsdayTargets` contract (this contract is meant for us to define things that should never happen in the system):
 
-```solidity
+```javascript
 ...
 import {Panic} from "@recon/Panic.sol";
 
@@ -239,7 +239,7 @@ To keep things simple, we'll only test this property on the current actor (handl
 
 Next we'll need a way to fetch the `power` for the deposited user before and after each call to our `points_deposit` target function using the `BeforeAfter` contract:
 
-```solidity
+```javascript
 abstract contract BeforeAfter is Setup {
     struct Vars {
         uint256 power;
@@ -270,7 +270,7 @@ This will update the `power` value in the `_before` and `_after` struct when the
 
 Now that we can know the state of the system before our state changing call, we can specify the property in the `Properties` contract:
 
-```solidity
+```javascript
 abstract contract Properties is BeforeAfter, Asserts {
     function property_powerIsMonotonic() public {
         gte(_after.power, _before.power, "property_powerIsMonotonic");
@@ -319,7 +319,7 @@ So instead of debugging our broken property from the Medusa logs directly, we'll
 8. Open the `CryticToFoundry` contract and paste the reproducer unit test
 10. Run it with Foundry using the `forge test --match-test test_doomsday_deposit_revert_0 -vvv` command in the comment above it
 
-```solidity
+```javascript
 // forge test --match-contract CryticToFoundry -vv
 contract CryticToFoundry is Test, TargetFunctions, FoundryAsserts {
     function setUp() public {
@@ -379,7 +379,7 @@ Running the reproducer for the `doomsday_deposit_revert` property we can clearly
 
 We can add console logs to the `Points` contract and the reproducer to see where exactly it overflows:
 
-```solidity
+```javascript
     function deposit(uint88 amt) external {
         console2.log("here 1");
         depositAmount[msg.sender] += amt;
@@ -393,7 +393,7 @@ We can add console logs to the `Points` contract and the reproducer to see where
     }
 ```
 
-```solidity
+```javascript
     function test_doomsday_deposit_revert_0() public {
         console2.log("=== Before Deposit ===");
         vm.roll(2);
@@ -421,7 +421,7 @@ Which gives us the following console logs when we run the test:
 
 This indicates to us that the issue is in the second increment of `depositAmount`. If we check the type of `depositAmount` we see that it's a `uint88`. 
 
-```solidity
+```javascript
 contract Points {
     mapping (address => uint88) depositAmount;
     ...
@@ -430,7 +430,7 @@ contract Points {
 
 This indicates that we must be depositing more than `type(uint88).max`, and if we check if the sum of the deposited amounts in the test is greater than `type(uint88).max`, we get the following:
 
-```solidity
+```javascript
   sum of deposits 337741135874217285619080788
   type(uint88).max 309485009821345068724781055
   sum of deposits > type(uint88).max true
@@ -438,7 +438,7 @@ This indicates that we must be depositing more than `type(uint88).max`, and if w
 
 So we can see that the issue happens because in our `Setup` we initially mint `type(uint256).max` to the actor so they can deposit more than `type(uint88).max` over multiple calls: 
 
-```solidity
+```javascript
     function setup() internal virtual override {
         ...
         _finalizeAssetDeployment(_getActors(), approvalArray, type(uint256).max);

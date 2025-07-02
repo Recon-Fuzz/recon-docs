@@ -6,7 +6,7 @@ Handlers are functions that help you test invariants by wrapping a call to a tar
 
 For example, if we want to test the deposit function of an ERC4626 vault, we can build a handler that will call the deposit function and then assert some property about the state of the vault after the deposit is complete.
 
-```solidity
+```javascript
 //This is the handler
 function vault_deposit(uint256 assets, address receiver) public {  
     //We can add clamping here to reduce the search space of the fuzzer    

@@ -28,7 +28,7 @@ For more info on understanding these different types of properties, see [this po
 After having implementing many suites ourselves we realized that methods to implement properties fall into major categories: inlined and global. 
 
 We call properties defined inside a function handler **inlined**, like the following from the [Create Chimera App](../oss/create_chimera_app.md) template:
-```solidity
+```javascript
     function counter_setNumber2(uint256 newNumber) public asActor {
         // same example assertion test as counter_setNumber1 using ghost variables
         __before();
@@ -45,7 +45,7 @@ We call properties defined inside a function handler **inlined**, like the follo
 Because these properties are defined within the handlers themselves they are only checked after the call to the target handler, this means that by definition they aren't required to hold for other function calls.
 
 We call properties defined in the [Properties](../writing_invariant_tests/chimera_framework.md#properties) contract **global**, also from the Create Chimera App template:
-```solidity
+```javascript
     function invariant_number_never_zero() public {
         gt(counter.number(), 0, "number is zero");
     }
@@ -77,7 +77,7 @@ Looking at the property definition we can see that it doesn't specify any operat
 
 Since this property only requires that we know the value of state variables after a given operation we can just read these state values directly from the contract and make an assertion: 
 
-```solidity
+```javascript
 /// @dev Property: The `totalSupply` of the vault's shares must be greater than or equal to the shares accounted to each user
     function property_total_supply_solvency() public {
         uint256 totalSupply = vault.totalSupply();
@@ -100,7 +100,7 @@ We use the less-than-or-equal-to (`lte`) assertion in this case because we only 
 #### 2. Vault `deposit` never fails
 This property is explicitly stating that the check should only be made for the `deposit` function, this means we can implement this property as an inlined property inside the `vault_deposit` function.  
 
-```solidity
+```javascript
     /// @dev Property: The `deposit` function should never revert for a depositor that has sufficient balance and approvals
     function vault_deposit(uint256 assets) public updateGhosts asActor {  
         try vault.deposit(assets, _getActor()) {
@@ -125,7 +125,7 @@ This property is more open ended but we can conclude from the definition that th
 
 To allow us to track the operation of interest we add the `updateGhostsWithModidier` modifier to the `vault_redeem` and `vault_withdraw` handlers:
 
-```solidity
+```javascript
     function vault_redeem(uint256 shares) public updateGhostsWithOpType(OpType.REMOVE) asActor {
         vault.redeem(shares, _getActor(), _getActor());
     }
@@ -137,7 +137,7 @@ To allow us to track the operation of interest we add the `updateGhostsWithModid
 
 We then define the following update in the `BeforeAfter` contract which allows us to track the price per share before and after any operation using the `updateGhostsWithOpType`/`updateGhosts` modifiers:
 
-```solidity
+```javascript
     function __before() internal {
         _before.pricePerShare = vault.previewMint(10**vault.decimals());
     }
@@ -149,7 +149,7 @@ We then define the following update in the `BeforeAfter` contract which allows u
 
 We can then define a global property that checks that removal operations do not change the price per share: 
 
-```solidity
+```javascript
     function property_price_per_share_change() public {
         if (currentOperation == OpType.REMOVE) {
             eq(_after.pricePerShare, _before.pricePerShare, "pricePerShare must not change after a remove operation");
