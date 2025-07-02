@@ -1,179 +1,96 @@
 
 # Introduction
 
-In this section, we'll use [Create Chimera App](../oss/create_chimera_app.md) to create a simple contract and run invariant tests on it.
+In this section, we'll use the [Create Chimera App](../oss/create_chimera_app.md) template to create a simple contract and run invariant tests on it.
 
 ## Getting started
 
-Clone the [create-chimera-app](https://github.com/Recon-Fuzz/create-chimera-app) repo.
+Clone the [create-chimera-app-no-boilerplate](https://github.com/Recon-Fuzz/create-chimera-app-no-boilerplate) repo.
 
 Or 
 
-Use `forge init --template https://github.com/Recon-Fuzz/create-chimera-app`
+Use `forge init --template https://github.com/Recon-Fuzz/create-chimera-app-no-boilerplate`
 
 ## Writing the contract
 
-First we'll create a simple contract that given a deposit will give you points proportional to the amount of time you've deposited for, where longer deposits equals more points:
+First, in the `src/` directory we'll create a simple `Points` contract that allows users to make a deposit and earn points proportional to the amount of time that they've deposited for, where longer deposits equal more points:
 
 ```solidity
+
+// SPDX-License-Identifier: UNLICENSED
+pragma solidity ^0.8.13;
+
+import {MockERC20} from "@recon/MockERC20.sol";
 
 contract Points {
     mapping (address => uint256) depositAmount;
     mapping (address => uint256) depositTime;
 
+    MockERC20 public token;
+
+    constructor(address _token) {
+        token = MockERC20(_token);
+    }
+
     function deposit(uint256 amt) external {
         depositAmount[msg.sender] += amt;
         depositTime[msg.sender] = block.timestamp;
+
+        token.transferFrom(msg.sender, address(this), amt);
     }
 
-    function power(address who) external view returns (uint256) {
+    function power() external view returns (uint256) {
         return depositAmount[msg.sender] * (block.timestamp - depositTime[msg.sender]);
     }
 }
     
 ```
 
-## Dealing with the boilerplate
+## Adding to `Setup`
 
-We can delete `Counter.t.sol` since we won't be writing unit tests and rename `Counter.sol` to `Points.sol`
-
-Next, we need to fix some imports.
-
-### 1. Delete all handlers in the TargetFunctions, AdminTargets and DoomsdayTargets
-
-After deleting all the [handler](../using_recon/building_handlers.md#what-are-handlers) functions in the `TargetFunctions` your contract should look like:
-```solidity
-abstract contract TargetFunctions is
-    AdminTargets,
-    DoomsdayTargets,
-    ManagersTargets
-{ }
-```
-
-Similarly for `AdminTargets`:
-```solidity
-abstract contract AdminTargets is
-    BaseTargetFunctions,
-    Properties
-{ }
-```
-
-Similarly for `DoomsdayTargets`
-```solidity
-abstract contract DoomsdayTargets is
-    BaseTargetFunctions,
-    Properties
-{
-    ...
-
-    modifier stateless() {
-        _;
-        revert("stateless");
-    }
-}
-```
-
-### 2. Delete the calls for ghost variables
+Now with a contract that we can test, we just have to deploy it in the `Setup` contract:
 
 ```solidity
-abstract contract BeforeAfter is Setup {
-    struct Vars {
-        uint256 counter_number;
-    }
-
-    Vars internal _before;
-    Vars internal _after;
-
-    modifier updateGhosts {
-        __before();
-        _;
-        __after();
-    }
-
-    function __before() internal {
-    }
-
-    function __after() internal {
-    }
-}
-
-```
-
-
-### 3. Delete the `targetContract` line from `CryticToFoundry`
-
-```solidity
-// forge test --match-contract CryticToFoundry -vv
-contract CryticToFoundry is Test, TargetFunctions, FoundryAsserts {
-    function setUp() public {
-        setup();
- }
-
-    // forge test --match-test test_crytic -vvv
-    function test_crytic() public {
-        // TODO: add failing property tests here for debugging
-    }
-}
-```
-
-### 4. Delete the properties
-
-```solidity
-abstract contract Properties is BeforeAfter, Asserts {
-}
-```
-
-### 5. Fixing the `Setup` contract
-
-The code should fail to compile due to:
-
-```python
-Error: Compiler run failed:
-Error (6275): Source "src/Counter.sol" not found: File not found. Searched the following locations: "/temp/example-recon".
-ParserError: Source "src/Counter.sol" not found: File not found. Searched the following locations: "/temp/example-recon".
-  --> test/recon/Setup.sol:16:1:
- |
-16 | import "src/Counter.sol";
-```
-
-To resolve this, we just have to change the import and deploy the new `Points` contract, the rest of the setup remains the same:
-
-```solidity
-...
-
-/// @notice we change the import to include the Points contract 
-import "src/Points.sol";
-
 abstract contract Setup is BaseSetup, ActorManager, AssetManager, Utils {
     Points points;
 
     /// === Setup === ///
     function setup() internal virtual override {
-        ...
+        _newAsset(18); // deploys an 18 decimal token
 
-        /// @notice we deploy the Points contract 
-        points = new Points();
+        // Deploy Points contract
+        points = new Points(_getAsset()); // uses the asset deployed above and managed by the AssetManager
 
-        ...
+        // Mints the deployed asset to all actors and sets max allowances for the points contract
+        address[] memory approvalArray = new address[](1);
+        approvalArray[0] = address(points);
+        _finalizeAssetDeployment(_getActors(), approvalArray, type(uint88).max);
     }
 
-    ...
+    /// === MODIFIERS === ///
+    modifier asAdmin {
+        vm.prank(address(this));
+        _;
+    }
+
+    modifier asActor {
+        vm.prank(address(_getActor()));
+        _;
+    }
 }
 ```
 
+The [AssetManager](../oss/setup_helpers.md#assetmanager) allows us to add assets that we can use in our deployed contract with simplified fetching of the currently set asset using `_getAsset()`. We then use the `_finalizeAssetDeployment` utility function provided by the `AssetManager` to approve the deployed asset for all actors (tracked in the [ActorManager](../oss/setup_helpers.md#actormanager)) to the `Points` contract.
+
 ## Running the fuzzer
 
-We should now be able to run the fuzzer with no state exploration since we haven't added handler functions.
+We can now run the fuzzer with no state exploration since we haven't added [handler](../using_recon/building_handlers.md#what-are-handlers) functions.
 
-Before we commit to using the fuzzer (better tool but slower feedback cycle), we'll use Foundry to check that everything compiles.
+Before we run the fuzzer however we'll use Foundry to check that the project compiles correctly because it provides faster feedback for.
 
-Running `forge build` we see that it passes, meaning the deployment in the `Setup` contract is working.
+Running `forge build` we see that it compiles successfully, meaning the deployment in the `Setup` contract is working.
 
-We can now run the [Medusa](https://github.com/crytic/medusa) fuzzer using:
-
-`medusa fuzz`
-
-which gives us the following output:
+We can now run the [Medusa](https://github.com/crytic/medusa) fuzzer using `medusa fuzz`, which gives us the following output:
 
 ```bash
 medusa fuzz
@@ -200,38 +117,39 @@ slither . --ignore-compile --print echidna --json -
 ⇾ fuzz: elapsed: 6s, calls: 141341 (236
 ```
 
-At this point, we expect close to no lines to be covered (indicated by the `corpus` value in the output). You can now stop medusa with `CTRL + C`.
+You can now stop medusa with `CTRL + C`.
 
-We can note that because the `corpus` value is nonzero, something is being covered, in our case these are the only exposed functions in the [`ManagerTargets`](../oss/setup_helpers.md) which can help you setup tests with multiple tokens and multiple actors.
+At this point, we expect almost no lines to be covered (indicated by the `corpus` value in the console logs). We can note that because the `corpus` value is nonzero, something is being covered, in our case this is the only exposed functions in the [`ManagerTargets`](../oss/setup_helpers.md) which provide handlers for the functions in the `AssetManager` and `ActorManager`.
 
-We can now pen the coverage report located at `/medusa/coverage/coverage_report.html` to confirm that none of the lines in the `Points` contract are actually being covered.
+We can now open the coverage report located at `/medusa/coverage/coverage_report.html` to confirm that none of the lines in the `Points` contract are actually being covered.
 
 In our coverage report a line highlighted in green means the line was hit, a line highlighted in red means the line was not hit.
 
+**TODO: update this image** 
 ![Medusa Coverage](../images/sample_project/medusa_coverage.png)
 
 Let's rectify the lack of coverage in our `Points` contract by adding target function handlers.
 
 ## Building target functions
 
-Foundry produces an `/out` folder any time you compile your project, this contains the ABI of the `Points` contract.
+Foundry produces an `/out` folder any time you compile your project which contains the ABI of the `Points` contract.
 
-We'll use this in conjunction with our ABI builder to quickly generate target function handlers for our `TargetFunctions` contract:
+We'll use this in conjunction with our [Invariants builder](../free_recon_tools/builder.md) to quickly generate target function handlers for our `TargetFunctions` contract using the following steps:
 1. Open `out/Points.sol/Points.json`
-2. Copy the entire content
-3. Navigate to the [ABI Builder](https://getrecon.xyz/tools/sandbox)
+2. Copy the entire contents
+3. Navigate to the <a href="https://getrecon.xyz/tools/sandbox" target="_blank" rel="noopener noreferrer">Invariants Builder</a>
 4. Paste the ABI
 5. Rename the contract to `points` replacing the text in the "Your_contract" form field
 
-This generates the `TargetFunctions` for `Points`. In our case we'll first just add the handler created for the `deposit` function:
+This generates a `TargetFunctions` contract for `Points`. In our case we'll first just add the handler created for the `deposit` function:
 
 ![Target Function For Points](../images/sample_project/points_targets.png)
 
-For simplicity you can just copy the individual handler into your `TargetFunctions.sol` contract. When working on a larger project however you can use the "Download All Files" button to add these directly into your project.
+For this case you can just copy the `points_deposit` handler into your `TargetFunctions.sol` contract. When working on a larger project however you can use the _Download All Files_ button to add these directly into your project.
 
-Make sure to add the `updateGhosts` and `asActor` modifiers to this function if they are not present:
+Make sure to add the `updateGhosts` and `asActor` modifiers to the `points_deposit` function if they are not present:
 - `updateGhosts` - will update all ghost variables before and after the call to the function
-- `asActor` - will ensure that the call is done by the currently active actor (returned by `_getActor()`)
+- `asActor` - will ensure that the call is made by the currently active actor (returned by `_getActor()`)
 
 Your `TargetFunctions` contract should now look like:
 
@@ -249,21 +167,16 @@ abstract contract TargetFunctions is
 
 We can now run Medusa again to see how our newly added target function has changed our coverage. The coverage report is effectively our eyes into what the fuzzer is doing.
 
+**TODO: update this image**
 ![Better Coverage](../images/sample_project/medusa_better_coverage.png)
 
-We now see that the `deposit` function is fully covered, but the `power` function is not since we haven't added a handler for it.
+We now see that the `deposit` function is fully covered, but the `power` function is not since we haven't added a handler for it. Since the power function is non-state-changing (indicated by the `view` decorator) we'll leave it without a handler for now as it won't affect our ability to test properties.
 
-We can now start defining some properties to see if there are any edge cases in our `Points` contract that we may not have expected.
-
-<!-- ## Writing Global Properties
-
-2 very simple properties are:
-- Monotonicity -> Since we cannot remove points, they should increase over time
-- Solvency of Accounting -> The Sum of each user's points must match the total points -->
+We can now start defining properties to see if there are any edge cases in our `Points` contract that we may not have expected.
 
 ## Checking for overflow
 
-Reverts are not detected by default by Medusa and Echidna, so to explicitly test for this we can use a try catch in our `DoomsdayTargets.sol` contract (this contract is meant for us to define things that should never happen in a system):
+Reverts are not detected by default by Medusa and Echidna, so to explicitly test for this we can use a try catch in our `DoomsdayTargets` contract (this contract is meant for us to define things that should never happen in the system):
 
 ```solidity
 ...
@@ -273,24 +186,27 @@ abstract contract DoomsdayTargets is
     Properties
 {
     /// Makes a handler have no side effects
-    /// The fuzzer will call this anyway, and because it reverts it will be removed from shrinking
-    /// Replace the "withGhosts" with "stateless" to make the code clean
+    /// The fuzzer will call this and because it reverts it will be removed from call sequences during shrinking
     modifier stateless() {
         _;
         revert("stateless");
     }
 
     function doomsday_deposit_revert(uint256 amt) public stateless asActor {
-        try points.deposit(amt) {} catch {
-            t(false, "Should never revert");
+        try points.deposit(amt) {
+            // success
+        } catch (bytes memory err) {
+            expectedError = checkError(err, Panic.arithmeticPanic); // catches the specific revert we're interested in
+            t(!expectedError, "should never revert due to under/overflow");
         }
     }
 }
 ```
+> we use the `checkError` function from the [Utils](../oss/setup_helpers.md#utils) contract to allow us to check for a particular rever message
 
 The handler `doomsday_deposit_revert` is what we call a doomsday test, a property that should never fail as a failure indicates the system breaking in some way.
 
-We use the `stateless` modifier to make it so that we don't need to track ghost variables for this test by undoing any state changes made by the function call.
+We use the `stateless` modifier so that state changes made by this function call aren't preserved because they make the same changes as the `points_deposit` function. Not having two handlers that make the same state changes makes it easier to debug when we have a broken call sequence because we can easily tell what the `points_deposit` function does but it's not as clear from the name what the `doomsday_deposit_revert` does. This ensures that the `doomsday_deposit_revert` only gets executed as a test in a call sequence for specific behavior that should never happen. 
 
 This pattern is very useful if you want to perform extremely specific tests that would make your code more complex.
 
