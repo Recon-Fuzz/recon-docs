@@ -6,7 +6,7 @@ This is a compilation of best practices that the Recon team has developed while 
 
 For each contract you want to fuzz (your target contract), select the state-changing functions (target functions) you want to include in your fuzzing suite. Wrap the function in a handler which passes in the input to the function call and allows the fuzzer to test random values. 
 
-```solidity
+```javascript
 // contract to target
 contract Counter {
        uint256 public number;
@@ -28,7 +28,7 @@ The easiest way to do this is with our [Invariants Builder](../free_recon_tools/
 
 By using the `asActor` or `asAdmin` modifiers in combination with an [Actor Manager](../oss/setup_helpers.md#actor-manager) ensures efficient fuzzing by not wasting tests that should be executed only by an admin getting executed by a non-admin actor. [These modifiers](https://github.com/Recon-Fuzz/create-chimera-app/blob/97036ad908633de6e59d576765a1b08b9e1ba6ff/test/recon/Setup.sol#L39-L47) prank the call to the target contract as the given actor, ensuring that the call is made with the actor as the `msg.sender`.
 
-```solidity
+```javascript
 // contract to target
 contract Yield {
        address admin;
@@ -58,7 +58,7 @@ Clamping reduces the search space for the fuzzer, making it more likely that you
 Clamped handlers should be a subset of all target functions by calling the unclamped handlers with the clamped inputs. 
 This ensures that the fuzzer doesn't become overbiased, preventing it from exploring potentially interesting states, and also ensures checks for inlined properties which are implemented in the unclamped handlers are always performed. 
 
-```solidity
+```javascript
 
 contract Counter {
     uint256 public number = 1;
@@ -121,7 +121,7 @@ We call the "story" the view of the state changes made by a given call sequence 
 If you include multiple state-changing operations within a single handler it adds additional mental overhead when trying to debug a breaking call sequence because you not only need to identify which handler is the source of the issue, but the individual operation within the handler as well. 
 
 Take the following example of handlers defined for an ERC4626 vault:
-```solidity
+```javascript
        // having multiple state-changing operations in one handler makes it difficult to understand what's happening in the story
        function vault_deposit_and_redeem(uint256 assets) public asActor {
               uint256 sharesReceived = vault.deposit(assets);
@@ -199,7 +199,7 @@ As a rule of thumb it's best to avoid computation in your updates to the ghost v
 
 Overcomplicating ghost variables has the unfortunate side effect of making the coverage report look promising as it will show certain lines fully covered but in reality might be applying implicit clamping by causing reverts that prevent edge cases for certain properties being explored since an update that reverts before the property is checked will not generate a reproducer call sequence.
 
-```solidity
+```javascript
 contract Counter {
     uint256 public number = 1;
 
@@ -252,7 +252,7 @@ For example, you may have multiple deposit/mint operations that have the effect 
 
 You can group these effects using an enum type as follows:
 
-```solidity
+```javascript
 enum OpType {
     GENERIC,
     ADD,
@@ -278,7 +278,7 @@ And add the `updateGhostsWithType` modifier only to handlers which perform one o
 
 Now with the ability to elegantly track the current operation you can easily use the operation type to write a global property for it like so:
 
-```solidity
+```javascript
 contract Counter {
        uint256 public number = 1;
 
@@ -352,7 +352,7 @@ abstract contract Properties is BeforeAfter, Asserts {
 
 Inlined properties allow you to make an assertion about the system state immediately after a given state-changing target function call:
 
-```solidity
+```javascript
 contract Counter {
     uint256 public number = 1;
 
@@ -384,7 +384,7 @@ If you find yourself implementing the same inline property multiple times, you s
 
 If you can only implement a property as an inlined test but don't want multiple state changes to be maintained as it would make the story difficult to read, you can make your handler stateless using a `stateless` modifier. 
 
-```solidity
+```javascript
 modifier stateless() {
        _;
        // the revert is only made after the handler function execution completes

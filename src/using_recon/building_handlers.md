@@ -6,7 +6,7 @@ Handlers are functions that help you test invariants by wrapping a call to a tar
 
 For example, if we want to test the deposit function of an ERC4626 vault, we can build a handler that will call the deposit function and then assert some property about the state of the vault after the deposit is complete.
 
-```solidity
+```javascript
 //This is the handler
 function vault_deposit(uint256 assets, address receiver) public {  
     //We can add clamping here to reduce the search space of the fuzzer    
@@ -38,19 +38,20 @@ You can then unzip these files and add the recon folder as a child of your test 
 
 ## Adding Dependencies To Your Project
 
-Recon uses the Chimera dependency under the hood for all of the handlers generated using the builder, so you'll need to add Chimera as a dependency to your project. 
+Recon uses the Chimera and setup-helpers dependencies in the standard template that gets generated when you build handlers so you'll need to add these to your project. 
 
-To do this, install Chimera with the following command:
+Do this with the following command:
 
 ```bash
-forge install Recon-Fuzz/chimera --no-commit
+forge install Recon-Fuzz/chimera Recon-Fuzz/setup-helpers --no-commit
 ```
 
 You'll then need to add chimera to your remappings. If your project does this in the `foundry.toml` file, you can just add the following to the `remappings` array:
 
 ```toml
 remappings = [
- '@chimera/=lib/chimera/src/'
+ '@chimera/=lib/chimera/src/',
+ '@recon/=lib/setup-helpers/src/'
 ]
 ```
 
@@ -58,6 +59,7 @@ If your project uses a remappings.txt file instead you can similarly add the fol
 
 ```
 @chimera/=lib/chimera/src/
+@recon/=lib/setup-helpers/src/
 ```
 
 ## Running The Project

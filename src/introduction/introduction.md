@@ -1,5 +1,7 @@
 # Introduction
 
+![Recon Text Logo](../images/recon_text_logo.png)
+
 [Recon](https://getrecon.xyz/#team) is a team of invariant testing engineers and security researchers that provide invariant testing as a service while also developing tools and educational content to make it easier for anyone to test invariants on their smart contracts.
 
 Recon Pro is a tool for automatically scaffolding and running invariant testing in the cloud.

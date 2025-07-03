@@ -28,7 +28,7 @@ Any contracts you want to track in your fuzzing suite should live here.
 
 In our `create-chimera-app` template project, the `Setup` contract is used to deploy the `Counter` contract:
 
-```solidity
+```javascript
 abstract contract Setup is BaseSetup {
     Counter counter;
 
@@ -50,7 +50,7 @@ Target functions make calls to the target contracts deployed in the `Setup` cont
 
 In our `create-chimera-app` template project, the `TargetFunctions` contract is used to define the `increment` and `setNumber` functions:
 
-```solidity
+```javascript
 abstract contract TargetFunctions is
     BaseTargetFunctions,
     Properties
@@ -96,7 +96,7 @@ At Recon our preference is to define these as Echidna/Medusa assertion propertie
 
 In our `create-chimera-app` template project, the `Properties` contract is used to define a property that states that the number can never be 0:
 
-```solidity
+```javascript
 abstract contract Properties is BeforeAfter, Asserts {
     // example property test
     function invariant_number_never_zero() public {
@@ -117,7 +117,7 @@ In our `create-chimera-app` template project, the `CryticToFoundry` contract doe
 
 The `test_crytic` function demonstrates the template for adding a reproducer test:
 
-```solidity
+```javascript
 contract CryticToFoundry is Test, TargetFunctions, FoundryAsserts {
     function setUp() public {
         setup();
@@ -139,7 +139,7 @@ These variables can be used in property definitions to check if function calls h
 
 In our `create-chimera-app` template project, the `BeforeAfter` contract is used to track the `counter_number` variable:
 
-```solidity
+```javascript
 // ghost variables for tracking state variable values before and after function calls
 abstract contract BeforeAfter is Setup {
     struct Vars {
@@ -165,7 +165,7 @@ This is the entrypoint for the fuzzer into the suite. All target functions will 
 
 In our `create-chimera-app` template project, the `CryticTester` contract is used to call the `counter_increment` and `counter_setNumber1` functions:
 
-```solidity
+```javascript
 // echidna . --contract CryticTester --config echidna.yaml
 // medusa fuzz
 contract CryticTester is TargetFunctions, CryticAsserts {
@@ -181,7 +181,7 @@ When using assertions from Chimera in your properties, they use a different inte
 
 The following assertions are available in Chimera's `Asserts` contract:
 
-```solidity
+```javascript
 abstract contract Asserts {
     // greater than
     function gt(uint256 a, uint256 b, string memory reason) internal virtual;

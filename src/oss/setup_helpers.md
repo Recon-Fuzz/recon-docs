@@ -32,7 +32,7 @@ Provides utilities for invariant testing
 ## [Panic](https://github.com/Recon-Fuzz/setup-helpers/blob/main/src/Panic.sol)
 A library that provides named variables corresponding to compiler panic messages. Used to more easily access these messages when using the `checkError` utility.
 
-```solidity
+```javascript
 library Panic {
     // compiler panics
     string constant assertionPanic = "Panic(1)";
