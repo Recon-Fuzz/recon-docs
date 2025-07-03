@@ -82,6 +82,31 @@ body:has(#right-toc) .content main {
   }
 }
 
+/* Sidebar logo styling */
+.sidebar-logo {
+  display: block;
+  width: 180px;
+  height: 180px;
+  margin: 20px auto 30px auto;
+  border-radius: 12px;
+  background-color: var(--sidebar-bg);
+  padding: 12px;
+  box-sizing: border-box;
+  position: relative;
+  z-index: 10;
+}
+
+.sidebar-logo img {
+  width: 100%;
+  height: 100%;
+  object-fit: contain;
+}
+
+/* Adjust sidebar content to account for logo */
+.sidebar .sidebar-scrollbox {
+  top: 220px !important;
+}
+
 /* CSS Variables for consistent theming - using mdBook default colors */
 :root {
   --link-color: #0074d9;

@@ -1,5 +1,29 @@
+// Add logo to sidebar
+function addSidebarLogo() {
+  const sidebar = document.querySelector('.sidebar');
+  const sidebarScrollbox = document.querySelector('.sidebar-scrollbox');
+  
+  if (sidebar && sidebarScrollbox) {
+    // Check if logo already exists
+    if (!document.querySelector('.sidebar-logo')) {
+      const logoContainer = document.createElement('div');
+      logoContainer.className = 'sidebar-logo';
+      
+      const logoImg = document.createElement('img');
+      // Use the path_to_root variable that mdbook provides
+      logoImg.src = (typeof path_to_root !== 'undefined' ? path_to_root : '') + 'favicon.png';
+      logoImg.alt = 'Recon Logo';
+      
+      logoContainer.appendChild(logoImg);
+      sidebar.insertBefore(logoContainer, sidebarScrollbox);
+    }
+  }
+}
+
 // Right-hand Table of Contents Generator
 window.addEventListener('DOMContentLoaded', function() {
+  // Add logo to sidebar on all pages
+  addSidebarLogo();
   // Only create TOC for the introduction page
   const isIntroductionPage = window.location.pathname.includes('introduction/introduction.html') || 
                             window.location.pathname.endsWith('introduction.html') ||
