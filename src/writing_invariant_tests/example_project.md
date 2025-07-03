@@ -1,5 +1,5 @@
 
-# Introduction
+# Example Project
 
 In this section, we'll use the [Create Chimera App](../oss/create_chimera_app.md) template to create a simple contract and run invariant tests on it.
 
