@@ -2,13 +2,13 @@
 
 The Chimera framework lets you run invariant tests with Echidna and Medusa that can be easily debugged using Foundry. 
 
-The framework is made up of the following files:
-- `Setup.sol`
-- `TargetFunctions.sol`
-- `Properties.sol`
-- `CryticToFoundry.sol`
-- `BeforeAfter.sol`
-- `CryticTester.sol`
+The framework is made up of the following contracts:
+- [`Setup`](#setup)
+- [`TargetFunctions`](#targetfunctions)
+- [`Properties`](#properties) 
+- [`CryticToFoundry`](#cryticfoundry)
+- [`BeforeAfter`](#beforeafter)
+- [`CryticTester`](#cryticTester)
 
 When you build your handlers using Recon these files get automatically generated and populated for you. To use the framework in your project, you just need to download these files that get generated for you and add the [Chimera dependency](https://github.com/Recon-Fuzz/chimera) to your project: 
 
@@ -18,16 +18,15 @@ forge install Recon-Fuzz/chimera
 
 ## The Contracts 
 
-We'll now look at the role each of the above contracts serve in building an extensible and maintainable fuzzing suite. We'll be looking at examples using the [create-chimera-app](https://github.com/Recon-Fuzz/create-chimera-app/tree/main) template project. 
+We'll now look at the role each of the above-mentioned contracts serve in building an extensible and maintainable fuzzing suite. We'll be looking at examples using the [create-chimera-app](https://github.com/Recon-Fuzz/create-chimera-app/tree/main) template project. 
 
-### `Setup`
+### <a href="https://github.com/Recon-Fuzz/create-chimera-app/blob/main/test/recon/Setup.sol" target="_blank" rel="noopener noreferrer">Setup</a>
 
 This contract is used to deploy and initialize the state of your target contracts. It's called by the fuzzer before any of the target functions are called. 
 
 Any contracts you want to track in your fuzzing suite should live here.
 
 In our `create-chimera-app` template project, the `Setup` contract is used to deploy the `Counter` contract:
-
 ```javascript
 abstract contract Setup is BaseSetup {
     Counter counter;
@@ -38,7 +37,7 @@ abstract contract Setup is BaseSetup {
 }
 ```
 
-### `TargetFunctions`
+### <a href="https://github.com/Recon-Fuzz/create-chimera-app/blob/main/test/recon/TargetFunctions.sol" target="_blank" rel="noopener noreferrer">TargetFunctions</a>
 
 This is perhaps the most important file in your fuzzing suite, it defines the target [function handlers](../using_recon/building_handlers.md#what-are-handlers) that will be called by the fuzzer to manipulate the state of your target contracts. 
 
@@ -88,7 +87,7 @@ abstract contract TargetFunctions is
 }
 ```
 
-### `Properties`
+### <a href="https://github.com/Recon-Fuzz/create-chimera-app/blob/main/test/recon/Properties.sol" target="_blank" rel="noopener noreferrer">Properties</a>
 
 This contract is used to define the properties that will be checked after the target functions are called. 
 
@@ -105,7 +104,7 @@ abstract contract Properties is BeforeAfter, Asserts {
 }
 ```
 
-### `CryticToFoundry`
+### <a href="https://github.com/Recon-Fuzz/create-chimera-app/blob/main/test/recon/CryticToFoundry.sol" target="_blank" rel="noopener noreferrer">CryticToFoundry</a>
 
 This contract is used to debug broken properties by converting the breaking call sequence from Echidna/Medusa into a Foundry unit test. When running jobs on Recon this is done automatically for all broken properties using the fuzzer logs. 
 
@@ -131,7 +130,7 @@ contract CryticToFoundry is Test, TargetFunctions, FoundryAsserts {
 }
 ```
 
-### `BeforeAfter`
+### <a href="https://github.com/Recon-Fuzz/create-chimera-app/blob/main/test/recon/BeforeAfter.sol" target="_blank" rel="noopener noreferrer">BeforeAfter</a>
 
 This contract is used to store the state of the target contract before and after the target functions are called in a `Vars` struct. 
 
@@ -159,7 +158,7 @@ abstract contract BeforeAfter is Setup {
 }
 ```
 
-### `CryticTester`
+### <a href="https://github.com/Recon-Fuzz/create-chimera-app/blob/main/test/recon/CryticTester.sol" target="_blank" rel="noopener noreferrer">CryticTester</a>
 
 This is the entrypoint for the fuzzer into the suite. All target functions will be called on an instance of this contract since it inherits from the `TargetFunctions` contract.
 
@@ -175,7 +174,7 @@ contract CryticTester is TargetFunctions, CryticAsserts {
 }
 ```
 
-## Assertions 
+### <a href="https://github.com/Recon-Fuzz/create-chimera-app/blob/main/test/recon/Assertions.sol" target="_blank" rel="noopener noreferrer">Assertions</a>
 
 When using assertions from Chimera in your properties, they use a different interface than the standard assertions from foundry's `forge-std`.
 
