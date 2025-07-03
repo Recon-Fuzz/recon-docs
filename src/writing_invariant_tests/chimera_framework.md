@@ -10,10 +10,44 @@ The framework is made up of the following contracts:
 - [`BeforeAfter`](#beforeafter)
 - [`CryticTester`](#cryticTester)
 
-When you build your handlers using Recon these files get automatically generated and populated for you. To use the framework in your project, you just need to download these files that get generated for you and add the [Chimera dependency](https://github.com/Recon-Fuzz/chimera) to your project: 
+When you [build your handlers](../using_recon/building_handlers.md) using Recon these files get automatically generated and populated for you. To use the framework in your project, you just need to download these files that get generated for you and add the [Chimera dependency](https://github.com/Recon-Fuzz/chimera) to your project: 
 
 ```bash
 forge install Recon-Fuzz/chimera
+```
+
+## How It Works
+The Chimera Framework uses an inheritance structure that allows all the supporting contracts to be inherited by the `CryticTester` contract so you can add target function [handlers](../using_recon/building_handlers.md#what-are-handlers) for multiple contracts all with a single point of entry for the fuzzer via `CryticTester`:
+
+```bash
+⇾ Fuzzer stopped, test results follow below ...
+⇾ [PASSED] Assertion Test: CryticTester.add_new_asset(uint8)
+⇾ [PASSED] Assertion Test: CryticTester.asset_approve(address,uint128)
+⇾ [PASSED] Assertion Test: CryticTester.asset_mint(address,uint128)
+⇾ [PASSED] Assertion Test: CryticTester.counter_increment()
+⇾ [PASSED] Assertion Test: CryticTester.counter_increment_asAdmin()
+⇾ [PASSED] Assertion Test: CryticTester.counter_setNumber1(uint256)
+⇾ [PASSED] Assertion Test: CryticTester.counter_setNumber2(uint256)
+⇾ [PASSED] Assertion Test: CryticTester.invariant_number_never_zero()
+⇾ [PASSED] Assertion Test: CryticTester.switch_asset(uint256)
+⇾ [PASSED] Assertion Test: CryticTester.switchActor(uint256)
+⇾ [FAILED] Assertion Test: CryticTester.doomsday_increment_never_reverts()
+```
+
+> The above output is taken from a run on the [create-chimera-app](https://github.com/Recon-Fuzz/create-chimera-app/tree/main) template and we can see that we can call handlers for multiple contracts all through the interface of the `CryticTester` contract.
+
+Ultimately this allows you to have one `Setup` contract that can deploy multiple contracts that you'll be targeting and make the debugging process easier because each broken property can be turned into an easily testable unit test that can be run in the `CryticToFoundry` contract.
+
+This also simplifies the testing process, allowing you to use the following commands to run fuzz tests without having to modify any configurations. 
+
+For Echidna: 
+```bash
+echidna . --contract CryticTester --config echidna.yaml
+```
+
+For Medusa: 
+```bash
+medusa fuzz
 ```
 
 ## The Contracts 

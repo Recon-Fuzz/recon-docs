@@ -1,56 +1,46 @@
 # Dynamic Replacement
 
-Demo: [https://getrecon.xyz/dynamic-replacement-demo](https://getrecon.xyz/dynamic-replacement-demo)
+Dynamic replacement allows you to replace the value of any variable in your contracts.
 
-Use it: [https://getrecon.xyz/dashboard/dynamic-replacement](https://getrecon.xyz/dashboard/dynamic-replacement)
+> To see an interactive demo of how dynamic replacement works see [here](https://getrecon.xyz/dynamic-replacement-demo), to use dynamic replacement on a real project with a Recon pro account click [here](https://getrecon.xyz/dashboard/dynamic-replacement).
 
+The key idea of dynamic replacement is to allow you to test multiple setup configuration variations or behaviors in your code.
 
-Dynamic Replacement allows you to replace the value of any variable in your contracts.
+You may be accustomed to creating separate "config" files that allow you to test different suite setup parameters such as:
+- Maximum precision loss
+- Number of actors
 
+and other aspects of the suite.
 
-![Dynamic Replacement Field](../images/using_recon/dynamic_replacement.png)
-
-
-This can be extremely useful if you're exploring multiple variants or behaviors in your code.
-
-Many engineers write config files to track:
-- Max Precision Loss
-- Number of Actors
-
-And other aspects of the suite
-
-With Dynamic Replacement you can change one line, click a button, and run multiple jobs that have different configurations, without needing to manage multiple branches.
-
-The code is replaced before running the fuzzer, with every other config remaining the same.
-
-## Using Dynamic Replacement
-
-Dynamic Replacement applies only to the `Setup.sol` file in your repository
-
-- Inp
-
+With dynamic replacement you can change one line, click a button, and run multiple jobs that have different setup configurations, without needing to create and manage multiple branches. The chosen variables are replaced before running the fuzzer and every other part of the setup remains the same, allowing you to fine tune your testing approach for different scenarios.
 
 ## When to use Dynamic Replacement
 
+### Toggle behavior via a boolean or by adding specific calldata
+
 ![Dynamic Replacement Constant](../images/using_recon/dynamic_replacement_constant.png)
 
-- You want to toggle certain behaviour via a boolean or by adding specific calldata
+In the example above we want to allow certain unsafe ERC4626 operations via the `ALLOWS_REKT` constant. We can use dynamic replacement in this case to toggle the boolean to true or false so that we don't need to maintain two forked branches to test this minor change.
 
-In the example we want to allow certain unsafe ERC4626 Operations
+### Using constants for precision, decimals, hardcoded addresses
+![Token Replacement](../images/using_recon/dynamic_replacement_token.png)
 
-We explicitly toggle them so that we don't need to maintain two forked branches
+In the example above the suite was written to target a 18 decimal token. However, if the business requirements change and we want to be able to use the same suite for testing tokens of different decimal values, we can use dynamic replacement to reuse the suite with a different decimal value setup.
 
-- You are using constants for Precision, Decimals, Hardcoded Addresses and want to test other configurations
-
-In the example above we wrote the suite for an 18 decimal target.
-
-The business requirements changed, so we used Dynamic Replacement to reuse the suite with an 18 decimals setup
-
-
+### Fork testing
 ![Dynamic Replacement Addresses](../images/using_recon/dynamic_replacement_addresses.png)
 
-- You are performing fork testing and need to update addresses or targets
+In the example above we can see the common practice of hardcoding multiple addresses on a fork test for a given chain. Using dynamic replacement we can replace these in the same branch, performing fork testing on new targets, or new chains.
 
-In the example you can see the common practice of hardcoding various addresses on a fork test
+## Using Dynamic Replacement
 
-With Dynamic Replacement you can replace these in the same branch, performing fork testing on new targets, or new chains
+Dynamic Replacement applies only to the `Setup.sol` file in your repository. 
+
+To use:
+- add the name of the variable you want to replace
+- specify the interface/type of the variable 
+- specify the value you want to replace the existing value with
+- (optional) add additional values you'd like to replace
+
+![Dynamic Replacement Field](../images/using_recon/dynamic_replacement.png)
+
