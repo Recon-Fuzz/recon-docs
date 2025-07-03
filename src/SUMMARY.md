@@ -9,7 +9,6 @@
 - [Implementing Properties](./writing_invariant_tests/implementing_properties.md)
 - [Chimera Framework](./writing_invariant_tests/chimera_framework.md)
 - [Create Chimera App](./writing_invariant_tests/create_chimera_app.md)
-- [Invariant Testing Video Tutorials](./writing_invariant_tests/bootcamp.md)
 - [Advanced Fuzzing Tips](./writing_invariant_tests/advanced.md)
 
 ---
@@ -33,6 +32,9 @@
 - [Handler Builder](./free_recon_tools/builder.md)
 - [Bytecode Compare](./free_recon_tools/bytecode_compare.md)
 - [Bytecode To Interface](./free_recon_tools/bytecode_to_interface.md)
+- [Bytecode Static Deployment](./free_recon_tools/bytecode_static_deployment.md)
+- [Bytecode Formatter](./free_recon_tools/bytecode_formatter.md)
+- [String To Bytes](./free_recon_tools/bytecode_string.md)
 --- 
 
 # OSS Repos
