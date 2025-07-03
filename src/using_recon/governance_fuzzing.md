@@ -4,10 +4,10 @@ Governance fuzzing allows us to simulate on-chain changes that modify the system
 
 ## How It Works
 
-To execute governance fuzzing on a system we first need to have a fork testing setup that achieves full coverage. 
+To execute governance fuzzing on a system we first need to have a fork testing setup that achieves full line coverage over the contracts of interest. 
 
-The fork setup must include calls to the `vm.roll` and `vm.warp` cheatcodes because echidna does not automatically warp to the timestamp at the block that it’s forking from. This works around this by ensuring that echidna only makes calls after the relevant block timestamp from which it’s forking using Dynamic Block Replacement.
+The fork setup must include calls to the `vm.roll` and `vm.warp` cheatcodes because Echidna does not automatically warp to the timestamp at the block that it’s forking from. This works around this by ensuring that Echidna only makes calls after the relevant block timestamp from which it’s forking using dynamic block replacement.
 
-Governance fuzzing is triggered by listening to an event emitted on a contract of interest. This event then sets off a chain where a forked fuzzing job is executed and any values in the system setup that need to be replaced can be replaced with new values from the event or the forked chain state. 
+Once governance fuzzing is setup, it's triggered by listening to an event emitted on a contract of interest. This event then sets off a chain where a forked fuzzing job is started. Additionally, any values in the system setup that need to be replaced for effective testing can be replaced with new values from the triggering event or the forked chain state. 
 
-The fuzzing job that's run is a normal fuzzing job except and will show up on the jobs page. 
+The fuzzing job that's run is a normal cloud fuzzing job and will show up on the jobs page. 
