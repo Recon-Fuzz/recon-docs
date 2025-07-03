@@ -62,7 +62,9 @@ The same global property in the example above could be rewritten as an Echidna b
         return counter.number() == 0;
     }
 ```
-Any property that can be written as a boolean property however can also be writen using an assertion, simplifying the test writing process and allowing us to run only one job with Echidna in assertion mode rather than one job in assertion and one in property mode, because Echidna doesn't support using two testing modes at the same time.
+Any property that can be written as a boolean property however can also be writen using an assertion, simplifying the test writing process and allowing us to run only one job with Echidna in assertion mode rather than one job in assertion and one in property mode, since Echidna doesn't support using two testing modes at the same time.
+
+> Most professionals write all properties as assertions to run them with echidna
 
 --- 
 
