@@ -34,7 +34,7 @@ The Chimera Framework uses an inheritance structure that allows all the supporti
 ⇾ [FAILED] Assertion Test: CryticTester.doomsday_increment_never_reverts()
 ```
 
-> The above output is taken from a run on the [create-chimera-app](https://github.com/Recon-Fuzz/create-chimera-app/tree/main) template and we can see that we can call handlers for multiple contracts all through the interface of the `CryticTester` contract
+> The above output is taken from a run on the [create-chimera-app](https://github.com/Recon-Fuzz/create-chimera-app/tree/main) template and we can see that we can call handlers for multiple contracts all through the interface of the `CryticTester` contract.
 
 Ultimately this allows you to have one `Setup` contract that can deploy multiple contracts that you'll be targeting and make the debugging process easier because each broken property can be turned into an easily testable unit test that can be run in the `CryticToFoundry` contract.
 
