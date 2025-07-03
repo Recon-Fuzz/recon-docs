@@ -3,7 +3,7 @@ authors = ["Alex The Entreprenerd", "nican0r"]
 language = "en"
 multilingual = false
 src = "src"
-title = "Recon Docs"
+title = "Recon Book"
 
 [output.html]
 default-theme = "navy"
