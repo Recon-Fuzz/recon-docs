@@ -63,9 +63,10 @@
 }
 
 /* Adjust content layout to prevent overlap ONLY when TOC is present */
-body:has(#right-toc) .content {
-  margin-right: 300px !important;
-  max-width: calc(100% - 300px) !important;
+body:has(#right-toc) .content main {
+  margin-right: 300px;
+  margin-inline-start: 0;
+  margin-inline-end: auto;
 }
 
 /* Hide TOC on smaller screens and restore normal content width */
@@ -74,9 +75,10 @@ body:has(#right-toc) .content {
     display: none;
   }
   
-  body:has(#right-toc) .content {
-    margin-right: auto !important;
-    max-width: 100% !important;
+  body:has(#right-toc) .content main {
+    margin-right: auto;
+    margin-inline-start: auto;
+    margin-inline-end: auto;
   }
 }
 
