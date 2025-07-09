@@ -7,9 +7,10 @@
 - [Learn Invariant Testing](./writing_invariant_tests/learn_invariant_testing.md)
 - [Example Project](./writing_invariant_tests/example_project.md)
 - [Implementing Properties](./writing_invariant_tests/implementing_properties.md)
+- [Optimizing Broken Properties](./writing_invariant_tests/optimizing_broken_properties.md)
+- [Advanced Fuzzing Tips](./writing_invariant_tests/advanced.md)
 - [Chimera Framework](./writing_invariant_tests/chimera_framework.md)
 - [Create Chimera App](./writing_invariant_tests/create_chimera_app.md)
-- [Advanced Fuzzing Tips](./writing_invariant_tests/advanced.md)
 
 ---
 
