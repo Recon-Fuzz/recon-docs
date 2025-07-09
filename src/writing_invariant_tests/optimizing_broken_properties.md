@@ -23,9 +23,9 @@ In the above example the `maxPriceDifference` value would be set by one of our t
 We'll now look at an example of how we can use optimization mode to increase the severity of a finding discovered by a broken property using [this ERC4626 vault](https://github.com/Recon-Fuzz/vaults-fuzzing-example/tree/optimization-example) as an example.  
 
 ### Defining the property
-First, because this is an ERC4626 vault without the possibility of accumulating yield or taking losses we can define a standard property that states: **a user should not not be able to change the price per share when adding or removing**. 
+First, because this is an ERC4626 vault without the possibility of accumulating yield or taking losses we can define a standard property that states: **a user should not be able to change the price per share when adding or removing**. 
 
-This check ensures that a malicious user can't perform actions that would make it favorable for them to perform arbitrage operations or allow them to steal funds from other users by giving themselves a more favorable exchange rate. 
+This check ensures that a malicious user cannot perform actions that would make it favorable for them to perform arbitrage operations or allow them to steal funds from other users by giving themselves a more favorable exchange rate. 
 
 > We specify **when adding or removing** in the property because these are the only operations that change the balance of underlying assets and shares in the vault so these are the ones that would affect the share price.
 
@@ -112,7 +112,7 @@ Since we want to optimize the difference between the price per share, we can def
 
 We can then define two separate optimization tests to optimize each of these values, because if we were to only define one, we'd be losing information on other potential issue paths as the call sequence given at the end of the fuzzing run will only give us one maximized value. So if the price increase is greater than the price decrease, we'd only be able to analyze issues where it increases instead of decreases.
 
-So we define the following two optimization tests in our `Properties` contract: 
+So we define the following two optimization tests for the difference in price before and after a call to one of our handlers of interest in our `Properties` contract: 
 
 ```javascript
     function optimize_user_increases_price_per_share() public returns (int256) {
@@ -134,7 +134,9 @@ So we define the following two optimization tests in our `Properties` contract:
     }
 ```
 
-which will set each of the respective `maxPriceDifference` variables accordingly. 
+which will set each of the respective `maxPriceDifference` variables accordingly.
+
+> Note that the tests above are optimizing the _difference_ in price so they will allow us to confirm if we are able to change the price by more than the 1 wei which we know is possible from the initial property break. 
 
 ### Running the optimization tests
 We can then run the tests using optimization mode by either modifying the `testMode` parameter in the `echidna.yaml` config file or by passing the `--test-mode optimization` flag to the command we use to run Echidna. For our case we'll use the latter: 
@@ -147,7 +149,7 @@ Note that we also increased the `testLimit` so that we can give the fuzzer plent
 
 Typically when we've found a value that's sufficient to prove an increase in the severity of the vulnerability, by demonstrating that the value can be made greater than a small initial value in the original property break we'll stop the optimization run. 
 
-Conversely, if the optimization run shows no increase after a few million tests it typically means it was incorrectly specified or there is in-fact no way to increase the value further. 
+Conversely, if the optimization run shows no increase after a few million tests it typically means it was incorrectly specified or there is in fact no way to increase the value further. 
 
 > Note: stopping an Echidna optimization run early doesn't allow the call sequence that increased the value to be properly shrunk as of the time of writing (see this [issue](https://github.com/crytic/echidna/issues/839)). If you've already found a sufficiently optimized value and don't want to wait until the run completes, you can stop the run and start a new run with a shorter `testLimit` and reuse the corpus from the previous run to force Echidna to shrink the reproducer in the corpus.
 
@@ -284,4 +286,4 @@ For the `test_optimize_user_increases_price_per_share_1` we can see that multipl
 The root cause of this issue is the same but can you identify why it increases the price instead of decreasing it? What would the impact of being able to manipulate the price in this way?
 
 ## Continue learning
-To see how the Recon team used optimization mode in a real world project to escalate the severity of a vulnerability to critical during an audit of the Beraborrow codebase, checkout [this article](https://getrecon.substack.com/p/the-dark-side-of-the-lp).
+To see how the Recon team used optimization mode in a real world project to escalate the severity of a vulnerability to critical during an audit of the Beraborrow codebase, check out [this article](https://getrecon.substack.com/p/the-dark-side-of-the-lp).
