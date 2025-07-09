@@ -289,3 +289,5 @@ The root cause of this issue is the same but can you identify why it increases t
 
 ## Continue learning
 To see how the Recon team used optimization mode in a real world project to escalate the severity of a vulnerability to critical during an audit of the Beraborrow codebase, check out [this article](https://getrecon.substack.com/p/the-dark-side-of-the-lp).
+
+To see how optimization mode was used to escalate the severity of a QA vulnerability discovered in the Liquity V2 governance codebase to a high severity, see [this presentation](https://docs.google.com/presentation/d/1B5NSailT7b9zQMfk72SNjYE21PBH7BjPgqu5RSO6Eww/edit?usp=sharing).  
