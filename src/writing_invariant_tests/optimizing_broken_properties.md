@@ -7,7 +7,7 @@ Optimization mode often allows you to determine if the impact of a vulnerability
 > As of the time of writing, optimization mode is only available in Echidna, not Medusa
 
 ## What is optimization mode?
-Optimization mode allows you to define a test function that starts with a special prefix (we tend to set this to `optimize_`), takes no arguments and returns an `int256` value:
+Optimization mode allows you to define a test function that starts with a special prefix (we tend to set this to `optimize_` in the `echidna.yaml`), takes no arguments and returns an `int256` value:
 
 ```javascript
     function optimize_price_per_share_difference() public view returns (int256) {
@@ -15,7 +15,7 @@ Optimization mode allows you to define a test function that starts with a specia
     }
 ```
 
-In the above example the `maxPriceDifference` value would be set by one of our target function handlers and the Echidna would call all other function handlers as well in an attempt to maximize the value returned by `optimize_price_per_share_difference`.
+In the above example the `maxPriceDifference` value would be set by one of our target function handlers, then Echidna would call all the function handlers with random values in an attempt to maximize the value returned by `optimize_price_per_share_difference`.
 
 --- 
 
@@ -25,11 +25,11 @@ We'll now look at an example of how we can use optimization mode to increase the
 ### Defining the property
 First, because this is an ERC4626 vault without the possibility of accumulating yield or taking losses we can define a standard property that states: **a user should not be able to change the price per share when adding or removing**. 
 
-This check ensures that a malicious user cannot perform actions that would make it favorable for them to perform arbitrage operations or allow them to steal funds from other users by giving themselves a more favorable exchange rate. 
+This check ensures that a malicious user cannot perform actions that would make it favorable for them to arbitrage the share token/underlying asset or allow them to steal funds from other users by giving themselves a more favorable exchange rate. 
 
-> We specify **when adding or removing** in the property because these are the only operations that change the balance of underlying assets and shares in the vault so these are the ones that would affect the share price.
+> We specify **when adding or removing** in the property because these are the only operations that change the amount of underlying assets and shares in the vault so these are the ones that would affect the share price.
 
-Given that an ERC4626 vault has user operations that don't exclusively add or remove shares and assets from the vault, we can use the `OpType` `enum` in the `updateGhostsWithOpType` modifier in our target handlers to only check the property after a call to one of our [target functions](https://github.com/Recon-Fuzz/vaults-fuzzing-example/blob/f576f1e69f197c18cf1889282e8e0a5f14f970cc/test/recon/targets/VaultTargets.sol#L20-L34) of interest: 
+Given that an ERC4626 vault has user operations that don't exclusively add or remove shares and assets from the vault (`tranfer` and `approve`), we can use the `OpType` `enum` in the `updateGhostsWithOpType` modifier in our target handlers to only check the property after a call to one of our [target functions](https://github.com/Recon-Fuzz/vaults-fuzzing-example/blob/f576f1e69f197c18cf1889282e8e0a5f14f970cc/test/recon/targets/VaultTargets.sol#L20-L34) of interest: 
 
 ```javascript
     function vault_deposit(uint256 assets) public updateGhostsWithOpType(OpType.ADD) asActor {        
@@ -61,7 +61,7 @@ We can then add updates to the price per share in the [`BeforeAfter` contract](h
     }
 ```
 
-The above checks how many shares would be received for a deposit of 1 unit of the underlying asset using the `underlyingAsset`'s decimal precision, giving us an implicit price per share. 
+The above checks how many shares would be received for a deposit of 1 unit of the underlying asset (using the `underlyingAsset`'s decimal precision) giving us an implicit price per share. 
 
 Finally, we can implement our property as: 
 
@@ -100,7 +100,7 @@ Logs:
   price per share difference 1
 ```
 
-Given that any price manipulation by an attacker would allow them to perform arbitrage on the vault, we know this is already a vulnerability, but we can now create an optimization test to determine if the maximum price change is limited to this 1 wei value or if it can be made greater, potentially allowing an attacker to steal funds from other users as well. 
+Given that any price manipulation by an attacker would allow them to perform arbitrage on the vault, we know this is already a vulnerability, but we can now create an optimization test to determine if the maximum price change is limited to this 1 wei value or if it can be made greater, potentially allowing an attacker to directly steal funds from other users as well. 
 
 ### Creating the optimization tests
 Since we want to optimize the difference between the price per share, we can define two separate variables in our `Setup` contract for tracking this, one which tracks increases to the price per share and one that tracks decreases to it: 
@@ -110,9 +110,11 @@ Since we want to optimize the difference between the price per share, we can def
     int256 maxPriceDifferenceDecrease;
 ```
 
-We can then define two separate optimization tests to optimize each of these values, because if we were to only define one, we'd be losing information on other potential issue paths as the call sequence given at the end of the fuzzing run will only give us one maximized value. So if the price increase is greater than the price decrease, we'd only be able to analyze issues where it increases instead of decreases.
+We can then define two separate optimization tests to optimize each of these values. If we were to only define one optimization test, we'd be losing information on other potential issue paths as the call sequence given at the end of the fuzzing run will only give us one maximized value. 
 
-So we define the following two optimization tests for the difference in price before and after a call to one of our handlers of interest in our `Properties` contract: 
+For example, in our scenario if we only had one test for the price increasing and decreasing, if the price decrease was greater than the price increase, we'd only be able to analyze scenarios where it decreases. Given that we already knew from the initial property break that decreasing the price is possible, this would leave us unaware of exploits paths that could be executed with an increasing price.
+
+We therefore define the following two optimization tests for the difference in price before and after a call to one of our handlers of interest in our `Properties` contract: 
 
 ```javascript
     function optimize_user_increases_price_per_share() public returns (int256) {
@@ -136,7 +138,7 @@ So we define the following two optimization tests for the difference in price be
 
 which will set each of the respective `maxPriceDifference` variables accordingly.
 
-> Note that the tests above are optimizing the _difference_ in price so they will allow us to confirm if we are able to change the price by more than the 1 wei which we know is possible from the initial property break. 
+> Note that the tests above are optimizing the _difference_ in price so they will allow us to confirm if we are able to change the price by more than the 1 wei which we already know is possible from the initial property break. 
 
 ### Running the optimization tests
 We can then run the tests using optimization mode by either modifying the `testMode` parameter in the `echidna.yaml` config file or by passing the `--test-mode optimization` flag to the command we use to run Echidna. For our case we'll use the latter: 
@@ -147,7 +149,7 @@ echidna . --contract CryticTester --config echidna.yaml --test-mode optimization
 
 Note that we also increased the `testLimit` so that we can give the fuzzer plenty of chances to find a call sequence that optimizes the value. This is key in allowing you to generate a truly optimized value, in production codebases we tend to run optimization mode for 100,000,000-500,000,000 tests but theoretically for a test suite with many handlers and state variables that influence the value you're trying to optimize, the longer you run the tests for, the higher the possibility of finding an optimized value. 
 
-Typically when we've found a value that's sufficient to prove an increase in the severity of the vulnerability, by demonstrating that the value can be made greater than a small initial value in the original property break we'll stop the optimization run. 
+Typically when we've found a value that's sufficient to prove an increase in the severity of the vulnerability, by demonstrating that the value can be made greater than a small initial value in the original property break, we'll stop the optimization run. 
 
 Conversely, if the optimization run shows no increase after a few million tests it typically means it was incorrectly specified or there is in fact no way to increase the value further. 
 
@@ -173,7 +175,7 @@ optimize_user_increases_price_per_share: max value: 250000000000000000
     CryticTester.vault_withdraw(2)
 ```
 
-from which we can see that an attacker can therefore not only decrease the price per share as our original property break implied, but they can also increase the price using a completely different call sequence. This is why it's key to define separate optimization tests for increases and decreases for whatever value your initial property breaks. 
+from which we can see that an attacker can therefore not only decrease the price per share as our original property break implied, but they can also increase the price using a completely different call sequence. **This is why it's key to define separate optimization tests for increases and decreases for whatever value your initial property breaks.**
 
 ### Investigating the issue
 We can use the above call sequences with our Echidna log scraper tool to generate unit tests that allow us to debug the root cause of the issues by adding the following tests to our `CryticToFoundry` contract: 
@@ -197,7 +199,7 @@ We can use the above call sequences with our Echidna log scraper tool to generat
 ```
 
 #### Decreasing price
-For the `test_optimize_user_decreases_price_per_share_0` test, we see that the `asset_mint` is making a donation. We don't know which of the deployed contracts in the setup is deployed at `0x2e234DAe75C793f67A35089C9d99245E1C58470b` but we can make an educated guess that it's the vault contract because if the test allows us to manipulate the share price it must be affecting the ratio of shares to assets in the vault. 
+For the `test_optimize_user_decreases_price_per_share_0` test, we see that the `asset_mint` is making a donation. We don't know which of the deployed contracts in the setup is deployed at the address to which the donation is made (`0x2e234DAe75C793f67A35089C9d99245E1C58470b`) but we can make an educated guess that it's the vault contract because if the test allows us to manipulate the share price it must be affecting the ratio of shares to assets in the vault. 
 
 Logging the value of the deployed vault in the test we can confirm this: 
 
@@ -278,7 +280,7 @@ Logs:
   balance of actor 2 after deposit 0
 ```
 
-this allows the attacker to steal shares of the other depositor(s) on withdrawal. 
+this allows the attacker to steal shares of the other depositor(s) on withdrawal, an increase in severity of the originally identified bug of arbitraging by deflating the price.
 
 #### Increasing price
 For the `test_optimize_user_increases_price_per_share_1` we can see that multiple small deposits followed by a withdrawal of a small amount allows the user to manipulate the price upward. 
