@@ -29,6 +29,27 @@ The primary functions of interest when setting up a suite are:
 Provides utilities for invariant testing
 - `checkError` - allows checking if a revert reason from a function call is equivalent to the reason passed in as the `expected` argument
 
+The `checkError` function can take multiple string input types that may be thrown in the case of a function revert. 
+- **error string** - the string in revert due to a require statement (ex: `"a does not equal b"` in `require(a == b, "a does not equal b")`)
+- **custom error** - custom errors defined in a contract's interface (ex: `error CustomError()`, `error CustomErrorWithArgs(uint256 val)`); note that when passing in custom errors with arguments the argument name should be excluded (ex: `"CustomErrorWithArgs(uint256)"`)
+- **panic reverts** - panic reverts for any of the reasons defined in the Solidity compiler [here](https://docs.soliditylang.org/en/latest/control-structures.html#panic-via-assert-and-error-via-require)
+
+```javascript
+    function counter_setNumber(uint256 newNumber) public updateGhosts asActor {
+        try counter.setNumber(newNumber) {
+            // passes
+        } catch (bytes memory err) {
+            bool expectedError;
+            // checks for custom errors and panics
+            expectedError = 
+                checkError(err, "abc") || // error string from require statement
+                checkError(err, "CustomError()") || // custom error
+                checkError(err, Panic.arithmeticPanic); // compiler panic errors
+            t(expectedError, "unexpected error");
+        }
+    }
+```
+
 ## [Panic](https://github.com/Recon-Fuzz/setup-helpers/blob/main/src/Panic.sol)
 A library that provides named variables corresponding to compiler panic messages. Used to more easily access these messages when using the `checkError` utility.
 
