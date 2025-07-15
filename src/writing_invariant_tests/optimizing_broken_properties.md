@@ -287,6 +287,35 @@ For the `test_optimize_user_increases_price_per_share_1` we can see that multipl
 
 The root cause of this issue is the same but can you identify why it increases the price instead of decreasing it? What would the impact of being able to manipulate the price in this way?
 
+## Optimization Mode Gotchas
+
+### Coverage
+When using optimization mode it's often best to run an extended job using the Recon cloud runner to increase the probability of finding a high maximized value by letting the fuzzer run for an extended period of time. If you need to stop this run midway through because you've already found a sufficiently high value you'll need to download the corpus so you can generate a shrunken reproducer locally (as mentioned in the [Running the optimization tests](#running-the-optimization-tests) section above). 
+
+To reuse the corpus from a Recon cloud run locally you can download it using the _Download Corpus_ button on the job page: 
+
+![Download Corpus](../images/corpus_download.png)
+
+Unlike normal corpus reuse in Echidna however, when reusing a downloaded corpus for optimization mode you need to copy the contents of the `reproducers-optimization` directory into the `coverage` directory:
+
+![Coverage Directory](../images/repro_to_coverage.png)
+
+You can then run Echidna in optimization mode and you should be able to locally reproduce the maximized value from your cloud run.
+
+### Corpus 
+If the interface of your handlers change, you'll need to delete your old corpus and start with a fresh corpus, otherwise your old corpus will introduce call sequences that are no longer valid and cause your optimization run to be less efficient, possibly not being able to find a true maximum value.
+
+### Zero Call Sequence 
+There's a bug in Echidna optimization mode that causes it to fail to effectively shrink if one of the optimization test functions returns a 0 value as its maximum with an empty call sequence, this causes echidna to crash and the shrinking to fail: 
+
+![Empty Call Sequence](../images/empty_call_seq_opt.png)
+
+In the above image the `optimize_maxRedeem_greater` causes the shrinking for `optimize_maxDeposit_less` to fail.
+
+To work around this issue you can either: 
+- use the `filterBlacklist` configuration option set to `false` with only the function you want to optimize passed to `filterFunctions`
+- comment out all other optimization tests so that you only test the one of interest
+
 ## Continue learning
 To see how the Recon team used optimization mode in a real world project to escalate the severity of a vulnerability to critical during an audit of the Beraborrow codebase, check out [this article](https://getrecon.substack.com/p/the-dark-side-of-the-lp).
 
