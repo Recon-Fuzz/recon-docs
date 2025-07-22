@@ -13,6 +13,11 @@
 - [Create Chimera App](./writing_invariant_tests/create_chimera_app.md)
 
 ---
+# Bootcamp
+- [Day 1 - Scaffolding](./bootcamp/bootcamp_day_1.md)
+
+
+---
 
 # Using Recon
 <!-- - [Getting Started] -->
