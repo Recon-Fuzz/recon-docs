@@ -366,6 +366,24 @@ abstract contract Setup is BaseSetup, ActorManager, AssetManager, Utils {
         // Deploy Morpho
         morpho = new Morpho(address(this)); 
 
+        // Deploy assets
+        _newAsset(18); // asset
+        _newAsset(18); // liability
+    }
+}
+```
+
+In the above we use the `_newAsset` function exposed by the [`AssetManager`](../oss/setup_helpers.md#assetmanager) to deploy a new asset which we can fetch using the `_getAsset()` function.
+
+## Market Creation and Handler Implementation
+
+Now to continue our fixes to our setup we'll need to register a market in the `Morpho` contract which we can do by adding the following to our setup: 
+
+```javascript
+    function setup() internal virtual override {
+        // Deploy Morpho
+        morpho = new Morpho(address(this)); 
+
         // Deploy Mocks
         irm = new MockIRM();
         oracle = new OracleMock();
@@ -374,36 +392,289 @@ abstract contract Setup is BaseSetup, ActorManager, AssetManager, Utils {
         _newAsset(18); // asset
         _newAsset(18); // liability
 
-        // Mints to all actors and approves allowances to the counter
-        address[] memory approvalArray = new address[](1);
-        approvalArray[0] = address(morpho);
-        _finalizeAssetDeployment(_getActors(), approvalArray, type(uint88).max);
+        // Create the market 
+        morpho.enableIrm(address(irm));
+        morpho.enableLltv(8e17); 
+
+        address[] memory assets = _getAssets();
+        MarketParams memory marketParams = MarketParams({
+            loanToken: assets[1],
+            collateralToken: assets[0],
+            oracle: address(oracle),
+            irm: address(irm),
+            lltv: 8e17
+        });
+        morpho.createMarket(params);
+    }
+```
+
+It's important to note that this setup allows us to only test one market with the configurations we've added above, whereas if we want to truly be sure that we're testing all posibilities we could use what we've termed as _dynamic deployment_ to allow the fuzzer to deploy multiple markets with different configurations.
+
+We can then make a further simplifying assumption that will work as a form of clamping to allow us to get to coverage faster by storing the `marketParams` variable as a storage variable:
+
+```javascript
+abstract contract Setup is BaseSetup, ActorManager, AssetManager, Utils {
+    ...
+
+    MarketParams marketParams;
+    
+    /// === Setup === ///
+    /// This contains all calls to be performed in the tester constructor, both for Echidna and Foundry
+    function setup() internal virtual override {
+        ...
+
+        address[] memory assets = _getAssets();
+        marketParams = MarketParams({
+            loanToken: assets[1],
+            collateralToken: assets[0],
+            oracle: address(oracle),
+            irm: address(irm),
+            lltv: 8e17
+        });
+        morpho.createMarket(params);
+    }
+```
+
+which then allows us to pass it directly into our target functions as a form of clamping by deleting the input parameter for `marketParams` and using the storage variable instead: 
+
+```javscript
+abstract contract MorphoTargets is
+    BaseTargetFunctions,
+    Properties
+{
+    function morpho_accrueInterest() public asActor {
+        morpho.accrueInterest(marketParams);
+    }
+
+    function morpho_borrow(uint256 assets, uint256 shares, address onBehalf, address receiver) public asActor {
+        morpho.borrow(marketParams, assets, shares, onBehalf, receiver);
+    }
+
+    function morpho_createMarket() public asActor {
+        morpho.createMarket(marketParams);
+    }
+    
+    ...
+}
+```
+
+This helps us get to coverage faster because instead of the fuzzer trying all possible inputs for the `MarketParams` struct, it uses the `marketParams` from the setup to ensure it always targets the correct market. 
+
+Now to ensure that our setup doesn't revert we can run the default `test_crytic` function in `CryticToFoundry` which is an empty test that will just call the `setup` function and allow us to confirm that our next run of the fuzzer will actually be able to achieve some sort of state exploration (if it reverts in the `setup` function our coverage report is essentially useless): 
+
+```bash
+Ran 1 test for test/recon/CryticToFoundry.sol:CryticToFoundry
+[PASS] test_crytic() (gas: 238)
+Suite result: ok. 1 passed; 0 failed; 0 skipped; finished in 6.46ms (557.00µs CPU time)
+```
+
+At this point we also need to mint the tokens we're using in the system to our actors and approve the `Morpho` contract to spend them: 
+
+```javascript
+abstract contract Setup is BaseSetup, ActorManager, AssetManager, Utils {
+    ...
+    
+    function setup() internal virtual override {
+        ...
+
+        _setupAssetsAndApprovals();
+
+        address[] memory assets = _getAssets();
+        marketParams = MarketParams({
+            loanToken: assets[1],
+            collateralToken: assets[0],
+            oracle: address(oracle),
+            irm: address(irm),
+            lltv: 8e17
+        });
+        morpho.createMarket(params);
+    }
+
+    function _setupAssetsAndApprovals() internal {
+        address[] memory actors = _getActors();
+        uint256 amount = type(uint88).max;
+        
+        // Process each asset separately to reduce stack depth
+        for (uint256 assetIndex = 0; assetIndex < _getAssets().length; assetIndex++) {
+            address asset = _getAssets()[assetIndex];
+            
+            // Mint to actors
+            for (uint256 i = 0; i < actors.length; i++) {
+                vm.prank(actors[i]);
+                MockERC20(asset).mint(actors[i], amount);
+            }
+            
+            // Approve to morpho
+            for (uint256 i = 0; i < actors.length; i++) {
+                vm.prank(actors[i]);
+                MockERC20(asset).approve(address(morpho), type(uint88).max);
+            }
+        }
+    }
+```
+
+The `_setupAssetsAndApprovals` function allows us to mint the deployed assets to the actors (handled by the [`ActorManager`](../oss/setup_helpers.md#assetmanager)) and approves it to the deployed `Morpho` contract. Note that we mint `type(uint88).max` to each user because it's a sufficiently large amount that allows us to realistically test for overflow scenarios.
+
+We can then create a simple unit test to confirm that we can successfully add these tokens to the system as a user: 
+
+```javascript
+    function test_crytic() public {
+        // testing supplying assets to a market as the default actor (address(this))
+        morpho_supply(1e18, 0, address(this), hex"");
+    }
+```
+
+which if we run with `forge test --match-test test_crytic -vvvv --decode-internal` will allow us to see how many shares we get minted: 
+
+```bash
+    │   ├─ emit Supply(id: 0x5914fb876807b8cd7b8bc0c11b4d54357a97de46aae0fbdfd649dd8190ef99eb, caller: CryticToFoundry: [0x7FA9385bE102ac3EAc297483Dd6233D62b3e1496], onBehalf: CryticToFoundry: [0x7FA9385bE102ac3EAc297483Dd6233D62b3e1496], assets: 1000000000000000000 [1e18], shares: 1000000000000000000000000 [1e24])
+    │   ├─ [38795] SafeTransferLib::safeTransferFrom(<unknown>, 0x5615dEB798BB3E4dFa0139dFa1b3D433Cc23b72f, 0x7FA9385bE102ac3EAc297483Dd6233D62b3e1496, 1136628940260574992893479910319181283093952727985 [1.136e48])
+    │   │   ├─ [34954] MockERC20::transferFrom(CryticToFoundry: [0x7FA9385bE102ac3EAc297483Dd6233D62b3e1496], Morpho: [0x5615dEB798BB3E4dFa0139dFa1b3D433Cc23b72f], 1000000000000000000 [1e18])
+    │   │   │   ├─ emit Transfer(from: CryticToFoundry: [0x7FA9385bE102ac3EAc297483Dd6233D62b3e1496], to: Morpho: [0x5615dEB798BB3E4dFa0139dFa1b3D433Cc23b72f], value: 1000000000000000000 [1e18])
+    │   │   │   └─ ← [Return] true
+    │   │   └─ ← 
+    │   └─ ← [Return] 1000000000000000000 [1e18], 1000000000000000000000000 [1e24]
+    └─ ← [Return]
+```
+
+showing that we received 1e24 shares for the 1e18 assets deposited. 
+
+Next we'll expand our test to see if we can supply some collateral:
+
+```javascript
+    function test_crytic() public {
+        morpho_supply(1e18, 0, address(this), hex"");// testing supplying assets to a market as the default actor (address(this))
+        morpho_supplyCollateral(1e18, address(this), hex"");
+    }
+```
+
+## Clamped Handlers
+
+At this point we know that we can get coverage over certain lines but we know that certain input values still have a very large set of possible input values which may not allow them to be successfully covered by the fuzzer, so we can start to apply some simple clamping.
+
+We'll start with the `morpho_supply` function we tested above. Since we know that we only want one of our actors ([`ActorManager`](../oss/setup_helpers.md#actormanager) for more details on the actor setup) in the system to receive shares and the `data` parameter can just be an arbitrary bytes value we can clamp all the values except `assets`. We'll follow a similar approach for the `supplyCollateral` function:
+
+```javascript
+abstract contract MorphoTargets is
+    BaseTargetFunctions,
+    Properties
+{
+    function morpho_supply_clamped(uint256 assets) public {
+        morpho_supply(assets, 0, address(this), hex"");
+    }
+
+    function morpho_supplyCollateral_clamped(uint256 assets) public {
+        morpho_supplyCollateral(assets, address(this), hex"");
     }
 }
 ```
 
-In the above we use the `_newAsset` function exposed by the [`ActorManager`](../oss/setup_helpers.md#actormanager) to deploy a new asset which we can fetch using the `_getAsset()` function.
+Note that clamped handlers should always call the unclamped handlers, this simplifies things when you add inlined tests or variable tracking to the unclamped handlers which ensures that the assertions are always checked and variable tracking updated.
 
-Next up, the Oracle mock. And then, technically speaking, we will want to have two ERC-s. So we probably want to deploy that. We can call it asset and liability.
-
-## Market Creation and Handler Implementation
-
-At this point, let's grab these market params. We're gonna declare here market params and params, memory params equals to market params, where each value is gonna be this. We'll basically put the loan token is gonna be the liability. The collateral token is gonna be the asset the oracle we have up there oracle mock then the irm is mock irm and the lltv is going to be eight seventeen.
-
-And this is going to be cheating because one of our rule is that we don't want to cut out inputs from our handlers. But once we take this type of trade off, we just accept it. So it is what it is.
-
-## Clamped Handlers
-
-At this point, I'm gonna add the following line that says this is automatic handlers. Basically, these are the handlers that explore all of the state, whereas up here, we'll have the clamped handlers. And so whenever we're doing stuff like supply, we will basically define a function more for supply that only receives the assets, for example.
-
-And so this is kind of how you will introduce clamping to your handlers. Because by doing this you're giving the tool a chance to explore more weird stuff but at the same time we're not gonna have to wait until tomorrow to get to coverage.
+Now our clamped handlers can significantly increase the speed with which we can cover certain lines.
 
 > The key insight that we are making as a part of our VTru of our framework is that clamping is always done separately. I'm going to show that today, but this is a really key insight. And we always clamp by having the clamped handlers generate a subset of all possible handlers. This is really key because obviously if once we agree on this, we can actually use other tools and even formal verification techniques to automatically generate a lot of these clamping.
 
+After adding our clamped handlers we can add them to our sanity test and add an additional call to `morpho_borrow` to check if we can successfully borrow: 
+
+```javascript
+    function test_crytic() public {
+        morpho_supply_clamped(1e18)
+        morpho_supplyCollateral(1e18, address(this), hex"");
+
+        morpho_borrow(1e18, 0, address(this), address(this));
+    }
+```
+
+After running the test we see that the call to `morpho_borrow` fails because of insufficient collateral: 
+
+```bash
+[FAIL: insufficient collateral] test_crytic() (gas: 215689)
+Suite result: FAILED. 0 passed; 1 failed; 0 skipped; finished in 6.57ms (761.17µs CPU time)
+```
+
+After digging around for the source of the error we can see that it originates in the `_isHealthy` check in `Morpho`: 
+
+```javascript
+    function _isHealthy(MarketParams memory marketParams, Id id, address borrower, uint256 collateralPrice)
+        internal
+        view
+        returns (bool)
+    {
+        uint256 borrowed = uint256(position[id][borrower].borrowShares).toAssetsUp(
+            market[id].totalBorrowAssets, market[id].totalBorrowShares
+        );
+        uint256 maxBorrow = uint256(position[id][borrower].collateral).mulDivDown(collateralPrice, ORACLE_PRICE_SCALE)
+            .wMulDown(marketParams.lltv);
+        
+        return maxBorrow >= borrowed;
+    }
+```
+
+which causes the `borrow` function to revert due to insufficient collateral at the following line: 
+
+```javascript
+    function borrow(
+        MarketParams memory marketParams,
+        uint256 assets,
+        uint256 shares,
+        address onBehalf,
+        address receiver
+    ) external returns (uint256, uint256) {
+        ...
+
+        require(_isHealthy(marketParams, id, onBehalf), ErrorsLib.INSUFFICIENT_COLLATERAL);
+        ...
+    }
+```
+
+Now we can infer that the `_isHealthy` check always returns false because the `collateralPrice` always returns 0 since the price in our `OracleMock` is unset.
+
+So we can add a target function to allow the fuzzer to set the `collateralPrice`: 
+
+```javascript
+abstract contract TargetFunctions is
+    AdminTargets,
+    DoomsdayTargets,
+    ManagersTargets,
+    MorphoTargets
+{
+    function oracle_setPrice(uint256 price) public {
+        oracle.setPrice(price);
+    }
+}
+```
+
+Note that since we only needed a single handler we just added it to the `TargetFunctions` contract directly but if you're adding more than one handler it's generally a good practice to create a separate contract to inherit into `TargetFunctions` to keep things cleaner.
+
+Now we can add our `oracle_setPrice` to our sanity test to confirm that it works correctly and resolves the previous revert due to insufficient collateral: 
+
+```javascript
+    function test_crytic() public {
+        morpho_supply_clamped(1e18);
+        morpho_supplyCollateral_clamped(1e18);
+
+        oracle_setPrice(1e30);
+
+        morpho_borrow(1e6, 0, address(this), address(this));
+    }
+```
+
+which successfully passes: 
+
+```bash
+[PASS] test_crytic() (gas: 249766)
+Suite result: ok. 1 passed; 0 failed; 0 skipped; finished in 1.54ms (142.25µs CPU time)
+```
+
+With this test passing we can confirm that we have coverage over the primary functions in the `Morpho` contract that will allow us to explore the contract's state. Writing the type of sanity test like we did in the `test_crytic` function allows us to quickly debug simple issues that will prevent the fuzzer from reaching coverage before running it so that we're not stuck in a constant cycle of running and debugging only using the coverage report.
+
+Now with this simple clamping in place we can let the fuzzer run to start building up a corpus and determine if there are any functions where coverage is being blocked.
+
 ## Conclusion and Next Steps
 
-That's fundamentally how you get started with this type of testing. It is not easy. It can be tedious. But at the same time, in about an hour, for some contracts, maybe four hours, maybe a bunch more for more complex ones. But you eventually get to coverage. And once you get to coverage, you can finally look into properties.
+That's fundamentally how you get started with this type of testing. It is not easy and can be tedious. Once you've confirmed coverage on the contracts of interest though you can get into the more interesting part of defining and implementing properties that will help you determine if your systems works correctly. 
 
-I'm gonna wrap up the session like this if you have questions feel free to dm me on twitter or on discord. And tomorrow, we're going to look into our newest version of Create Chimera App, where we add additional ways to explore more interesting states by having standardized assets and standardized colors, meaning that instead of having to set up all of these tokens yourself and also being limited to only having address Ds as the sender, we're actually going to show you how we can add more so that you can explore even more interesting transitions.
+This is the end of part 1 of the bootcamp, in part 2 we'll look at some new improvements to Create Chimera App that make getting to coverage even faster. 
 
-Thank you for joining me today and I'll see you tomorrow, same time, same Twitter account, and have an awesome rest of your day.
+If you have any questions feel free to reach out to us in the [Recon Discord channel](https://discord.gg/aCZrCBZdFd)
