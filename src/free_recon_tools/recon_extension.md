@@ -7,8 +7,6 @@ Install the extension from the Visual Studio Marketplace: [https://marketplace.v
 
 Alternatively build from source and install the vsix: [https://github.com/Recon-Fuzz/recon-extension](https://github.com/Recon-Fuzz/recon-extension)
 
-Or
-
 ## Getting Started
 After installing the extension, your project will automatically be compiled when you open a new window in your code editor. 
 
