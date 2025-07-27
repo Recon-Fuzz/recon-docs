@@ -1,6 +1,14 @@
 # Recon Extension
 The Recon extension is a Visual Studio Code extension that allows you to use Recon's suite of tools directly in your code editor. It requires a Foundry project to be open in your workspace to use.
 
+## Installation
+
+Install the extension from the Visual Studio Marketplace: [https://marketplace.visualstudio.com/items?itemName=Recon-Fuzz.recon](https://marketplace.visualstudio.com/items?itemName=Recon-Fuzz.recon)
+
+Alternatively build from source and install the vsix: [https://github.com/Recon-Fuzz/recon-extension](https://github.com/Recon-Fuzz/recon-extension)
+
+Or
+
 ## Getting Started
 After installing the extension, your project will automatically be compiled when you open a new window in your code editor. 
 
