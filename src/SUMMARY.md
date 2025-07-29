@@ -13,8 +13,10 @@
 - [Create Chimera App](./writing_invariant_tests/create_chimera_app.md)
 
 ---
+
 # Bootcamp
-- [Day 1 - Scaffolding](./bootcamp/bootcamp_day_1.md)
+- [Intro to the Bootcamp](./bootcamp/bootcamp_intro.md)
+- [Part 1 - Invariant Testing with Chimera Framework](./bootcamp/bootcamp_day_1.md)
 
 
 ---
