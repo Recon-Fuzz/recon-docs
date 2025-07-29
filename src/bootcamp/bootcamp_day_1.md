@@ -33,7 +33,7 @@ The `TargetFunctions` contract allows you to explicitly state all the functions 
 To follow along, you can clone this [Morpho repository](https://github.com/morpho-org/morpho-blue). We'll then see how after you've cloned Morpho you can use the [Recon Builder](../free_recon_tools/builder.md) to get all the Chimera scaffoling for our contract of interest. 
 
 Our primary goals for this section are: 
-1. **setup** - create the simplest setup possible that allows you to test all interest state combinations
+1. **setup** - create the simplest setup possible that allows you to test all interesting state combinations
 2. **coverage** - understand how to read a coverage report and resolve coverage issues 
 
 ## Practical Implementation - Setting Up Morpho

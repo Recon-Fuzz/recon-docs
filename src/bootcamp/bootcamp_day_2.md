@@ -6,63 +6,42 @@ In [part 1](./bootcamp/bootcamp_day_1.md) we looked at how to create the setup a
 
 You can pickup using the repo with the changes from part 1 [here](https://github.com/Recon-Fuzz/morpho-blue/tree/day-1).
 
-Today our goals are going to be to get one hundred percent coverage on the Morpho repo. If you're following along or if this is the first live, you can go on my GitHub, github.com and you can grab morpho-live-demo. The commit for F seven is the one from yesterday, and that's exactly where I'm going to get started from.
+Today our goals are going to be to get one hundred percent coverage on the Morpho repo and look at some ways to make our test suite cover more interesting cases.
 
 ## Bug Fix and Setup
 
-There's actually a bug I believe it's in the coverage mappings for echidna medusa where we have to set this bytecode hash to be basically we have to remove it otherwise we're not gonna get the coverage report and that was the bug I was running into yesterday so this is really the only change I applied. I did try to change the imports, but that wasn't necessary. So if you're following along, that's not going to matter.
+From part 1, our `MorphoTargets` contract should have two clamped handlers (for `morpho_supply_clamped` and `morpho_supplyCollateral_clamped`) and the remaining functions should be unclamped. 
 
-As of now, we have a bunch of targets that are all unclamped. And then we have two clamped targets for supplying and for supplying collateral. So for the sake of today, we're going to use Medusa. So I'm just gonna run it with Medusa Fuzz.
-
-What Medusa is gonna do is it's going to explore a bunch of paths. It's gonna build us a coverage report that will actually work. And so we're gonna just wait a few minutes to have it build that, because that's gonna be our eyes to understand how we can improve the state space exploration.
+After having run Medusa with these functions implemented we should now see an increase in the coverage show in our report and Medusa will be able to save these to the corpus which it can reuse for future runs, increasing its efficiency by not causing it to explore paths that are uninteresting. 
 
 ## How to Evaluate Coverage Reports
 
-The first question is, how do we evaluate a coverage report? And the answer is fairly straightforward, although it takes a bit of getting used to. But fundamentally, anytime you see a green line, this means that the line was called. And anytime you see a red line, it means that the line wasn't called.
+As we mentioned in part 1, the coverage report simply shows us which lines were successfully reached by highlighting them in green and shows which lines weren't reached by highlighting them in red:
 
-And so barring any weird issue with coverage, we basically will just trace a bunch of lines that are green, and then eventually we'll find a red line. And that red line means that the fuzzer was reverting there. And because we have these by modality where we can use the fuzzer to explore the state, but we can also use Foundry to debug the same handlers that have the same state, they have the same config, everything matches. 
+**TODO: insert snapshot of latest coverage report**
 
-That means that anytime the fuzzer gets stuck, we can just stop it, figure out the coverage, then build a quick repro in Foundry and then figure out how to get to a higher level of coverage.
-
-## Key Insights for Handler Design
-
-A key insight that we applied yesterday and that it's really important is that you want to reuse your unclamped handlers in your clamp handlers. That's because over time we may make these unclamped handlers such as Liquidate here to have a bunch of tracking and a bunch of pranking and a bunch of other features. You don't want to have to apply all of that stuff to all of your handlers.
-
-As a general rule, the clamped handlers are a subset of the unclamped handlers. They are just calling that with less parameters. And then you want to keep this in mind. But any time we're going to build something too complex, we're going to introduce this simple modifier where we're going to run some sort of a test, and then we're going to revert it.
-
-And that's because for fuzzing, reverting doesn't is not negative it doesn't cause a failure reverting simply means that the handler has no impact on the story it has no impact on the state and so we can do a bunch of crazy stuff like try to deposit and self-liquidate and close all the positions and that we can go back to the previous state so that that way we don't have this sort of a snapshot that new state. We simply go back.
-
-## Avoiding Overly Complex Code
-
-Something that most beginners do, this is literally a screenshot of one of our students at the environment testing boot camp, is they start writing this overly complex code that's really hard to track. And so generally speaking, you want to keep things simple.
-
-The key insight that I'm going to share with you today and going to go deeper on, is this idea of having public handlers to switch a specific configuration so that you can have dynamic configurations that are tried by the buzzer.
-
-## Actor Manager and Asset Manager
-
-Specifically, with our open sourcing of our Create Chimaer App tool, we're going to open source the Actor Manager and the Asset Manager, which are basically these two contracts that completely abstract the need for you to handle multiple actors and for you to handle multiple tokens.
-
-And the reason why we want to do that is because ninety nine percent of our customers they end up having some sort of a system where many addresses can perform calls and they end up having a token or some tokens. And so having a simplified way to manage that ensures that you don't have to waste time repeating the same basic configuration, which at the end of the day always boils down to having some sort of a variable and then having some sort of a function to switch it.
-
-## Future Extensions and Use Cases
-
-At the end of today, I'm going to show an extension that we built that effectively enables all of these use cases. This is going to be the first part talk about something that we're going to do tomorrow, where tomorrow we're going to scaffold a new repo called Rewards Manager. We're going to write some properties. We'll also talk about a critical bug we found when working with Liquity, where we found this critical bug that allowed us to mint hundreds of millions of dollars of forged loads.
-
-So today is the prerequisite for you to be able to understand what we're gonna do tomorrow. So stick around, go through the code with us, and you're gonna have an awesome time.
+And so barring any weird issue with coverage, we basically will just trace a bunch of lines that are green, and then eventually we'll find a red line. And that red line means that the fuzzer was reverting there. Once we find where a line is reverting we can then follow the steps from part 1 of creating a unit test in the `CryticToFoundry` contract to determine why a line may always be reverting and introduce clamping or changes to the setup to allow us to reach the given line.
 
 ## Coverage Analysis - Initial Results
 
-At this point, we've run the fuzzer for a few minutes. I'm gonna stop it and every time medusa will just generate a coverage report we're going to grab it and we only have one contract we're looking into called morpho.sol.
+After having run the fuzzer for a few minutes we can see that the coverage on the `Morpho` contract is at 77%:
 
-This part is very repeated very tedious and we see that we have a seventy six percent coverage on morpho. It's important that when I say one hundred percent coverage, you don't blindly just look for one hundred percent because, for example, we may not need to track this extra load function. So we don't need to have one hundred percent coverage on the contract. We need to have one hundred percent coverage of the meaningful interactions. And so that includes borrowing, liquidating, et cetera.
+![Coverage Percentage](../images/bootcamp/covg_percentage.png)
 
-## Analyzing Specific Coverage Issues
+It's important to note that when we're talking about 100% coverage, this shouldn't be an indication to try and blindly reach 100% coverage over all of a contract's lines because there are almost always certain functions whose behavior won't be of interesting in an invariant testing scenario, like the `extSloads` from the latest run:
 
-Basically, we see a line here that is green, and then we see a line here that is red. The number here is actually indicating that in the corpus, there were twenty-four calls that reached this point, and we have a red line here. My belief is going to be that Medusa is just passing a signature that is invalid, and because of that, this line always reverts, and so we never go here.
+![ExtSload Missing Covg](../images/bootcamp/ext_sload_missing_covg.png)
 
-However, because we're using the optimizer in our Foundry.Tunnel, boundary.toml, there can be scenarios in which the coverage report is incorrect because coverage mappings by the compiler are incorrect in those cases.
+Since this is a view function which doesn't change state we can safely say that covering it is unnecessary for our case. You should therefore use your knowledge of the system to make a judgement call about which functions in the system you can safely ignore coverage on. The remaining functions should be those that test meaningful interactions including public/external functions, as well as the internal functions they call in their control flow.
 
-We also see a lack of coverage on Flashlum. We see that we end here, which obviously is because we didn't implement a Flashlum provider. So we're just going to leave with this. From manual analysis, I don't quite see why we would care about having to look into reentrancy here. The only exception will be performing operations when we have a lower amount of tokens.
+So in our case for `Morpho` we can say we need to have one hundred percent coverage of the meaningful interactions. And so that includes borrowing, liquidating, et cetera.
+
+When we look at coverage over the `liquidate` function, we can see that it appears to be reverting at the line: 
+
+**TODO: add image of missing coverage in liquidate**
+![Liquidate Missing Coverage]()
+
+Meaning we need to investigate this because this is a key functionality we want to test in the system. 
 
 Then we see the meat and potatoes of the contract, which is the call to liquidate, which seems to be reverting here. So we most likely want to investigate that. Whereas here we see what I mentioned, where we have the repay having red lines here, but then we see green lines below. And this may indicate that repay is actually working.
 
@@ -149,6 +128,10 @@ Now that we establish that, we can go create another handler to perform a liquid
 And then the last one will be to hit this line right here, which is position ID borrower dot collateral. So I'm going to have to think about it. But fundamentally, we just want to grab these positions.
 
 ## Multi-Dimensionality with Create Chimera App V2
+
+Specifically, with our open sourcing of our Create Chimaer App tool, we're going to open source the Actor Manager and the Asset Manager, which are basically these two contracts that completely abstract the need for you to handle multiple actors and for you to handle multiple tokens.
+
+And the reason why we want to do that is because ninety nine percent of our customers they end up having some sort of a system where many addresses can perform calls and they end up having a token or some tokens. And so having a simplified way to manage that ensures that you don't have to waste time repeating the same basic configuration, which at the end of the day always boils down to having some sort of a variable and then having some sort of a function to switch it.
 
 That was basically it in terms of coverage. I think we're going to get to one hundred percent very shortly. And from here, what we're really missing will be adding the multidimensionality, which comes from the work we've done with the second version of Chimera, which is the current version available at the reconfuzz slash create Chimera app.
 
