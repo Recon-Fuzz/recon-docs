@@ -2,7 +2,9 @@
 
 ## Introduction and Goals
 
-What's up? I'm Alex from Recon. Happy Tuesday. Today we are resuming off of our previous session in which we quickly scaffolded an invariant testing suite for Morpho. And today we're going to reach one hundred percent coverage. We're also going to add multi-actors as well as a multi-asset setup. This is also going to be the first live in which we show the create kimera app version two which we open sourced as of yesterday so get ready we're gonna have an awesome live and maybe we'll even find a bug.
+In [part 1](./bootcamp/bootcamp_day_1.md) we looked at how to create the setup and get high coverage, we're now going to look at how to get 100% coverage using the fuzzing run from part 1.
+
+You can pickup using the repo with the changes from part 1 [here](https://github.com/Recon-Fuzz/morpho-blue/tree/day-1).
 
 Today our goals are going to be to get one hundred percent coverage on the Morpho repo. If you're following along or if this is the first live, you can go on my GitHub, github.com and you can grab morpho-live-demo. The commit for F seven is the one from yesterday, and that's exactly where I'm going to get started from.
 
