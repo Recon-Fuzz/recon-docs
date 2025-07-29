@@ -39,7 +39,8 @@ Our primary goals for this section are:
 ## Practical Implementation - Setting Up Morpho
 
 Once you've cloned the Morpho repo locally you can make the following small changes to speed up compilation and test run time: 
-- disable `via-ir` in the `foundry.toml` configuration
+- disable `via-ir` in the `foundry.toml` configuration 
+- remove the `bytecode_hash = "none"` from the `foundry.toml` configuration (this interferes with coverage report generation in the fuzzer)
 - delete the entire existing test folder
 
 
