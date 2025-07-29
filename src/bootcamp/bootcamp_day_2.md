@@ -36,56 +36,178 @@ Since this is a view function which doesn't change state we can safely say that 
 
 So in our case for `Morpho` we can say we need to have one hundred percent coverage of the meaningful interactions. And so that includes borrowing, liquidating, et cetera.
 
-When we look at coverage over the `liquidate` function, we can see that it appears to be reverting at the line: 
+When we look at coverage over the `liquidate` function, we can see that it appears to be reverting at the line that checks if the position is healthy: 
 
 **TODO: add image of missing coverage in liquidate**
 ![Liquidate Missing Coverage]()
 
-Meaning we need to investigate this because this is a key functionality we want to test in the system. 
+Meaning we need to investigate this because this is a key functionality we want to test in the system. To understand why the is always reverting at the line above we'll use a Foundry unit test to determine what causes it to always revert. 
 
-Then we see the meat and potatoes of the contract, which is the call to liquidate, which seems to be reverting here. So we most likely want to investigate that. Whereas here we see what I mentioned, where we have the repay having red lines here, but then we see green lines below. And this may indicate that repay is actually working.
+We can also see that the `repay` function similarly has only red lines after line 288, indicating that something may be causing it to always underflow: 
 
-## Implementing Canaries
+**TODO: add image of missing coverage in repay**
+![Repay Underflow Coverage]() 
 
-In order to figure this out, we're going to use a canary. And then in order to work on the liquidate, we'll instead follow the Foundry approach of using Foundry first and figuring out whether the handlers is able to reach that coverage.
+However we can also note that the return value isn't highlighted at all, potentially indicating that this is an issue with the coverage displaying mechanism, so our approach to debugging this will be different, using canaries instead.
 
-Let's grab the name Repay, go in the target functions. As I'm coding, I'm going to let Medusa run in the background because maybe the handler is already good enough. The idea that I stop pausing while working is dumb. That's also why we run invariant tests in the Cloud, because we want to just build a big corpus and obviously, the fuzzer is extremely wasteful in his attempts. And so the more time we just give it to try stuff, the better it's going to be.
+## Debugging With Canaries
 
-So we see repair. We see that it's written in this way, very basic. So in order for us to introduce a canary, bool has repaid and then we will set bool as repaid to true after the call. And that's because, as we said, a revert would happen here and a revert wouldn't cause a failure, but a revert would mean that this line will never be hit. And so we simply want to make sure that this line is hit.
+To create a canary for the `repay` function, we can create a simple boolean `hasRepaid` which we add to our `Setup` contract and set in our `morpho_repay` handler function:
 
-And then for the sake of proper coding, I'm going to go on properties and basically I'll add my first property, which is going to be called Canary. Canary has done repay. And I'm being fairly liberal on my coding convention. But as a general rule, we put an underscore to separate what we are aiming to do, such as canary, invariant, property, or target contracts, such as Morpho. And then we will typically do camel case on the rest.
+```javascript
+abstract contract MorphoTargets is
+    BaseTargetFunctions,
+    Properties
+{
+    function morpho_repay(uint256 assets, uint256 shares, address onBehalf, bytes memory data) public asActor {
+        morpho.repay(marketParams, assets, shares, onBehalf, data);
+        hasRepaid = true;
+    }
+}
+```
 
-Our assertion will simply assert that Azure Paid is always false. So we'll simply assert that Azure Paid is always false by saying T, which means true, not has repaid and basically we just say something like canary has not repaid because this is a canary property.
+Then we can define a simple canary property in our `Properties` contract:
 
-By convention as of today we tend to support echidna most of the time and because we work with echidnas so often because medusa used to be a lot more unreliable. We always express properties that could be expressed as view properties as assertions so that we can always run them with Echidna. This can change in the future.
+```javascript
+abstract contract Properties is BeforeAfter, Asserts {
 
-## Adding Liquidation Canary
+    function canary_hasRepaid() public returns (bool) {
+        t(!hasRepaid, "hasRepaid");
+    }
+    
+}
+```
 
-At this point I introduce the canary for doing error pay. I should probably introduce a canary for the liquidation as well. So let's see more for liquidate. I'm just gonna take it slow here. But basically I'll just do more bool has liquidated.
+this uses the `t` (true) assertion from the [`Asserts`](./writing_invariant_tests/chimera_framework.md) contract to let us know if the call to `morpho.repay` successfully completes by forcing an assertion failure (remember that only assertion failures are picked up by Echidna and Medusa). This function will randomly be called by the the fuzzer like the functions in `TargetFunctions`, allowing it to check if repay is called successfully after any of the target function calls.
 
-Obviously this is also wasteful approach in the future we're gonna add some sort of a thing that says something like recon canary and it automatically generates this for you so use our framework and things are gonna get better over time.
+> NOTE: while you're doing the above you can run the fuzzer in the background to confirm that you're not simply missing coverage because of a lack of sufficient tests. It's always beneficial to have the fuzzer running in the background because it'll be building up a corpus that will make subsequent runs more efficient. 
 
-I'm just gonna copy the logic for the canary with not has liquidated. I'll just replace the name here. And so fundamentally, these are canaries just for coverage.
+As a general rule, we put an underscore to separate what we are aiming to do, such as canary, invariant, property, or target contracts, such as Morpho, then use camel case on the rest of the function name. 
 
-## Corpus Reuse and Fuzzer Intelligence
+> See [this section](../writing_invariant_tests/implementing_properties.md#testing-mode) to better understand why we prefer to express properties using assertions rather than with boolean properties.
 
-So we're going to stop the fuzzer. We may or may not check it, but when we rerun the fuzzer, first of all, we're gonna have a compilation issue. But what I was saying is when we rerun the fuzzer, the fuzzer will use the corpus, which is the call sequences from the previous runs, meaning that the fuzzer is basically getting smarter over time. And this is why you wanna keep running the fuzzer.
+We can then run Medusa again to determine if we're actually reaching coverage over the `repay` function. 
 
-Because of our template, we can just forge build to get a better formatted error. It says that the identifier is not recognized. So it's because I declared it here. So I'm just going to move the canaries to the setup file.
+## Investigating Liquidation Handler with Foundry
 
-## Investigating Liquidation Handler
+Now we can switch to using Foundry to investigate why the `liquidate` function isn't being fully covered. We can do this by expanding upon the `test_crytic` function which we used in part 1 to run sanity tests with.
 
-At this point, I'm going to investigate the liquidation. We had already set up this test demo where we borrow. So next up, we will simply want to set the price to something really small. And we want to see if we can perform a liquidation.
+So to test if we can liquidate a user we'll just keep the existing test where they open a borrow position and we'll set the price to a really low value to make the user liquidatable: 
 
-So let's go to MorphoLiquidate and we will simply liquidate ourselves. We've addressed this and then we've seized assets and repaid shares. We can quickly imagine how this is gonna be kind of an issue because we don't exactly know what these are. Whereas this one will always default to a empty volume.
+```javascript
+    function test_crytic() public {
+        morpho_supply_clamped(1e18);
+        morpho_supplyCollateral_clamped(1e18);
+
+        oracle_setPrice(1e30);
+
+        morpho_borrow(1e6, 0, address(this), address(this));
+
+        oracle_setPrice(0);
+
+        // Note: we liquidate ourselves and pass in the amount of assets borrowed as the seizedAssets and 0 for the repaidShares for simplicity
+        morpho_liquidate(address(this), 1e6, 0, "");
+    }
+```
+
+After running the test we get the following output:
+
+```bash
+    ├─ [22995] Morpho::liquidate(MarketParams({ loanToken: 0xc7183455a4C133Ae270771860664b6B7ec320bB1, collateralToken: 0x5991A2dF15A8F6A256D3Ec51E99254Cd3fb576A9, oracle: 0xF62849F9A0B5Bf2913b396098F7c7019b51A820a, irm: 0x2e234DAe75C793f67A35089C9d99245E1C58470b, lltv: 800000000000000000 [8e17] }), CryticToFoundry: [0x7FA9385bE102ac3EAc297483Dd6233D62b3e1496], 1000000 [1e6], 0, 0x)
+    │   ├─ [330] Morpho::_accrueInterest(<unknown>, <unknown>)
+    │   │   └─ ← 
+    │   ├─ [266] OracleMock::price() [staticcall]
+    │   │   └─ ← [Return] 0
+    │   ├─ [2585] Morpho::_isHealthy(<unknown>, <unknown>, 0x1B4D54357a97De46Aae0FBDfD649dD8190EF99Eb, 128)
+    │   │   ├─ [356] SharesMathLib::toAssetsUp(1000000000000 [1e12], 1000000 [1e6], 1000000000000 [1e12])
+    │   │   │   └─ ← 1000000 [1e6]
+    │   │   ├─ [0] console::log("isHealthy", false) [staticcall]
+    │   │   │   └─ ← [Stop]
+    │   │   ├─ [0] console::log("collateralPrice", 0) [staticcall]
+    │   │   │   └─ ← [Stop]
+    │   │   └─ ← false
+    │   ├─ [353] SharesMathLib::toSharesUp(1000000000000 [1e12], 1000000 [1e6], 0)
+    │   │   └─ ← 0
+    │   ├─ [356] SharesMathLib::toAssetsUp(1000000000000 [1e12], 1000000 [1e6], 0)
+    │   │   └─ ← 0
+    │   ├─ [198] UtilsLib::toUint128(0)
+    │   │   └─ ← 0
+    │   ├─ [198] UtilsLib::toUint128(0)
+    │   │   └─ ← 0
+    │   ├─ [198] UtilsLib::toUint128(1000000 [1e6])
+    │   │   └─ ← 1000000 [1e6]
+    │   ├─ [199] UtilsLib::toUint128(1000000 [1e6])
+    │   │   └─ ← 1000000 [1e6]
+    │   ├─ emit Liquidate(id: 0x5914fb876807b8cd7b8bc0c11b4d54357a97de46aae0fbdfd649dd8190ef99eb, caller: CryticToFoundry: [0x7FA9385bE102ac3EAc297483Dd6233D62b3e1496], borrower: CryticToFoundry: [0x7FA9385bE102ac3EAc297483Dd6233D62b3e1496], repaidAssets: 0, repaidShares: 0, seizedAssets: 1000000 [1e6], badDebtAssets: 0, badDebtShares: 0)
+```
+
+which indicates that we were able to successfully liquidate the user. This means that the fuzzer is theoretically able to reach coverage over the entire `liquidate` function, it just hasn't yet because it hasn't found the right call sequence that allows it to reach the lines of interest yet.
 
 All right, so this was successful, meaning that the liquidation went through. We can inspect the logs via decode internal. I believe there should be an event for liquidations. We see that the liquidation was successful. So what this means is that the tool is theoretically able to reach coverage.
 
 ## Tool Sophistication Limitations
 
-And then it's going to probably struggle because of, honestly, because of lack of sophistication in it trying, especially when it comes to variables that have dependencies. I believe this is still something that is not fully explored and fully optimized in these tools and so hopefully one day they will but as of today we're gonna just increase our likelihood of getting to coverage by adding a clamped handler for liquidation.
+After having run Medusa with the canary property enabled for the `morpho_repay` function we can see that it also doesn't break the property, meaning that the repay function is never fully covered:
 
-We're also seeing the repay never went through it never broke so we probably want to investigate if repaying fails. And so this also works. So fundamentally what we're experiencing is the issue that the buzzer is fairly not sophisticated in being able to find the path.
+```bash
+⇾ [PASSED] Assertion Test: CryticTester.add_new_asset(uint8)
+⇾ [PASSED] Assertion Test: CryticTester.asset_approve(address,uint128)
+⇾ [PASSED] Assertion Test: CryticTester.asset_mint(address,uint128)
+⇾ [PASSED] Assertion Test: CryticTester.canary_hasRepaid() /// @audit this should have failed
+⇾ [PASSED] Assertion Test: CryticTester.morpho_accrueInterest()
+⇾ [PASSED] Assertion Test: CryticTester.morpho_borrow(uint256,uint256,address,address)
+⇾ [PASSED] Assertion Test: CryticTester.morpho_createMarket()
+⇾ [PASSED] Assertion Test: CryticTester.morpho_enableIrm(address)
+⇾ [PASSED] Assertion Test: CryticTester.morpho_enableLltv(uint256)
+⇾ [PASSED] Assertion Test: CryticTester.morpho_flashLoan(address,uint256,bytes)
+⇾ [PASSED] Assertion Test: CryticTester.morpho_liquidate(address,uint256,uint256,bytes)
+⇾ [PASSED] Assertion Test: CryticTester.morpho_repay(uint256,uint256,address,bytes)
+⇾ [PASSED] Assertion Test: CryticTester.morpho_setAuthorization(address,bool)
+⇾ [PASSED] Assertion Test: CryticTester.morpho_setAuthorizationWithSig((address,address,bool,uint256,uint256),(uint8,bytes32,bytes32))
+⇾ [PASSED] Assertion Test: CryticTester.morpho_setFee(uint256)
+⇾ [PASSED] Assertion Test: CryticTester.morpho_setFeeRecipient(address)
+⇾ [PASSED] Assertion Test: CryticTester.morpho_setOwner(address)
+⇾ [PASSED] Assertion Test: CryticTester.morpho_supply(uint256,uint256,address,bytes)
+⇾ [PASSED] Assertion Test: CryticTester.morpho_supply_clamped(uint256)
+⇾ [PASSED] Assertion Test: CryticTester.morpho_supplyCollateral(uint256,address,bytes)
+⇾ [PASSED] Assertion Test: CryticTester.morpho_supplyCollateral_clamped(uint256)
+⇾ [PASSED] Assertion Test: CryticTester.morpho_withdraw(uint256,uint256,address,address)
+⇾ [PASSED] Assertion Test: CryticTester.morpho_withdrawCollateral(uint256,address,address)
+⇾ [PASSED] Assertion Test: CryticTester.oracle_setPrice(uint256)
+⇾ [PASSED] Assertion Test: CryticTester.switch_asset(uint256)
+⇾ [PASSED] Assertion Test: CryticTester.switchActor(uint256)
+⇾ Test summary: 26 test(s) passed, 0 test(s) failed
+⇾ html report(s) saved to: medusa/coverage/coverage_report.html
+⇾ lcov report(s) saved to: medusa/coverage/lcov.info
+```
+
+We can then similarly test this with our sanity test to see if the fuzzer can ever reach this state: 
+
+```javascript
+    function test_crytic() public {
+        morpho_supply_clamped(1e18);
+        morpho_supplyCollateral_clamped(1e18);
+
+        oracle_setPrice(1e30);
+
+        morpho_borrow(1e6, 0, address(this), address(this));
+
+        morpho_repay(1e6, 0, address(this), "");
+    }
+```
+
+And when we run it we see that this also passes: 
+
+```bash
+[PASS] test_crytic() (gas: 261997)
+Suite result: ok. 1 passed; 0 failed; 0 skipped; finished in 7.43ms (1.18ms CPU time)
+
+Ran 1 test suite in 149.79ms (7.43ms CPU time): 1 tests passed, 0 failed, 0 skipped (1 total tests)
+```
+
+So fundamentally what we're experiencing is the issue that the fuzzer is fairly unsophisticated in finding the needed paths to reach these lines.
+
+At this point we have two options since we know that these two functions can theoretically be covered with our current setup: we can either let the fuzzer run for an extended period of time and hope that it's long enough to reach these lines, or we can create clamped handlers which increase the likelihood that the fuzzer will cover these functions. 
 
 ## Creating Clamped Handlers
 
