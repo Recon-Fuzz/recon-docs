@@ -50,4 +50,4 @@ The Chimera framework is here to offload the required thinking related to settin
 
 ## Next Steps 
 
-If you understand the above you're now ready to get started with [Day 1](./bootcamp/bootcamp_day_1.md) of the bootcamp.
+If you understand the above you're now ready to get started with [Day 1](./bootcamp_day_1.md) of the bootcamp.
