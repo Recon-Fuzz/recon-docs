@@ -20,7 +20,7 @@ The key reason the Chimera Framework was created was because normally if you wan
 
 The Chimera Framework solves for running all these tools by giving you a scaffolding that resolves the process of stitching things together so you can just drop in your tests, written with the most familiar format provided by Foundry, and they automatically work with all of the above mentioned tools.
 
-> In this first section we'll just be focused on understanding the Chimera Framework, for info on how to run each tool see the [Chimera](src/writing_invariant_tests/chimera_framework.md) page.
+> In this first section we'll just be focused on understanding the Chimera Framework, for info on how to run each tool see the [Chimera](/writing_invariant_tests/chimera_framework.md) page.
 
 ## The Four Phases of Invariant Testing
 
@@ -28,7 +28,7 @@ Before diving into the example we'll first look at some of the key points of how
 
 We've developed this approach because at the end of the day, the time spent writing the test is a sunken cost. The primary value of invariant testing is in preventing bugs, so standardizing the way you write tests is key if you don't want to waste time reinventing the wheel each time you're building a test suite. 
 
-After looking at these different phases we'll get into scaffolding Morpho but you can skip ahead to the [Getting Started](#getting-started) section if you want to start right away.
+After looking at these different phases we'll get into scaffolding Morpho but you can skip ahead to the [Getting Started](./bootcamp_day_1.md/#getting-started) section if you want to start right away.
 
 ### Phase 1: Setup Phase
 In this phase your only goal should be to deploy the contracts in a meaningful state.
