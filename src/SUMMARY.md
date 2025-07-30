@@ -16,8 +16,9 @@
 
 # Bootcamp
 - [Intro to the Bootcamp](./bootcamp/bootcamp_intro.md)
-- [Part 1 - Invariant Testing with Chimera Framework](./bootcamp/bootcamp_day_1.md)
-- [Part 2 - Multidimensional Invariant Tests](./bootcamp/bootcamp_day_2.md)
+- [Part 1 - Invariant Testing with Chimera Framework](./bootcamp/bootcamp_part_1.md)
+- [Part 2 - Multidimensional Invariant Tests](./bootcamp/bootcamp_part_2.md)
+- [Part 3 - ](./bootcamp/bootcamp_part_3.md)
 
 ---
 

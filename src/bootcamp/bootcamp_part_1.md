@@ -111,7 +111,7 @@ abstract contract Setup is BaseSetup, ActorManager, AssetManager, Utils {
     Morpho morpho;
     
     function setup() internal virtual override {
-        morpho = new Morpho(address(this)); 
+        morpho = new Morpho(_getActor()); 
     }
 
     ...
@@ -313,7 +313,7 @@ abstract contract Setup is BaseSetup, ActorManager, AssetManager, Utils {
     /// === Setup === ///
     function setup() internal virtual override {
         // Deploy Morpho
-        morpho = new Morpho(address(this)); 
+        morpho = new Morpho(_getActor()); 
 
         // Deploy assets
         _newAsset(18); // asset
@@ -334,7 +334,7 @@ Now to continue the fixes to our setup we'll need to register a market in the `M
 ```javascript
     function setup() internal virtual override {
         // Deploy Morpho
-        morpho = new Morpho(address(this)); 
+        morpho = new Morpho(_getActor()); 
 
         // Deploy Mocks
         irm = new MockIRM();
@@ -432,7 +432,7 @@ We can then create a simple unit test to confirm that we can successfully add th
 ```javascript
     function test_crytic() public {
         // testing supplying assets to a market as the default actor (address(this))
-        morpho_supply(1e18, 0, address(this), hex"");
+        morpho_supply(1e18, 0, _getActor(), hex"");
     }
 ```
 
@@ -455,8 +455,8 @@ Next we'll expand our test to see if we can supply some collateral:
 
 ```javascript
     function test_crytic() public {
-        morpho_supply(1e18, 0, address(this), hex"");// testing supplying assets to a market as the default actor (address(this))
-        morpho_supplyCollateral(1e18, address(this), hex"");
+        morpho_supply(1e18, 0, _getActor(), hex"");// testing supplying assets to a market as the default actor (address(this))
+        morpho_supplyCollateral(1e18, _getActor(), hex"");
     }
 ```
 
@@ -543,11 +543,11 @@ abstract contract MorphoTargets is
     Properties
 {
     function morpho_supply_clamped(uint256 assets) public {
-        morpho_supply(assets, 0, address(this), hex"");
+        morpho_supply(assets, 0, _getActor(), hex"");
     }
 
     function morpho_supplyCollateral_clamped(uint256 assets) public {
-        morpho_supplyCollateral(assets, address(this), hex"");
+        morpho_supplyCollateral(assets, _getActor(), hex"");
     }
 }
 ```
@@ -561,9 +561,9 @@ We can then replace our existing calls in the `test_crytic` test with the clampe
 ```javascript
     function test_crytic() public {
         morpho_supply_clamped(1e18);
-        morpho_supplyCollateral(1e18, address(this), hex"");
+        morpho_supplyCollateral(1e18, _getActor(), hex"");
 
-        morpho_borrow(1e18, 0, address(this), address(this));
+        morpho_borrow(1e18, 0, _getActor(), _getActor());
     }
 ```
 
@@ -639,7 +639,7 @@ Now we can add our `oracle_setPrice` function to our sanity test to confirm that
 
         oracle_setPrice(1e30);
 
-        morpho_borrow(1e6, 0, address(this), address(this));
+        morpho_borrow(1e6, 0, _getActor(), _getActor());
     }
 ```
 
