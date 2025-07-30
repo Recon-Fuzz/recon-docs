@@ -205,49 +205,118 @@ Suite result: ok. 1 passed; 0 failed; 0 skipped; finished in 7.43ms (1.18ms CPU 
 Ran 1 test suite in 149.79ms (7.43ms CPU time): 1 tests passed, 0 failed, 0 skipped (1 total tests)
 ```
 
-So fundamentally what we're experiencing is the issue that the fuzzer is fairly unsophisticated in finding the needed paths to reach these lines.
+So fundamentally the issue we're experiencing is because the fuzzer is fairly unsophisticated in finding the needed paths to reach these lines.
 
 At this point we have two options since we know that these two functions can theoretically be covered with our current setup: we can either let the fuzzer run for an extended period of time and hope that it's long enough to reach these lines, or we can create clamped handlers which increase the likelihood that the fuzzer will cover these functions. 
 
 ## Creating Clamped Handlers
 
-We could try running Echidna. This is what I personally will do. I tend to like Echidna more. But it could also just be that both tools require more than five minutes to reach a meaningful coverage. Maybe one hour, maybe four hours, something like that, will mean that on a zero configuration, we will still be able to reach this meaningful coverage.
+As noted above it could simply be the case that for Medusa to reach full coverage on these functions takes an extended period of time (1, 2 or more hours of continuously running). But often if you're just trying to get to full coverage and don't want to have to worry about having a corpus that needs to be delicately preserved in order to ensure you're always effectively testing, introducing clamp handlers can be a simple way to speed up the time to reaching full coverage while ensuring the test suite still explores all possible states.
 
-Whereas if we're really know in a hurry and we don't want to wait we'll again we'll just create these two clamp handlers. I'm just going to copy the functions so I don't forget them. I'll paste them here for a second and basically write function morpho underscore liquidate underscore clamped.
+So given that we know from our tests above that `liquidate` and `repay` aren't fully covered we can create simple clamped handlers for them:
 
-And I'll call it assets because I want to use just this variable and so I'll just pass you into five sticks assets. And basically I'll just call the other version of the function where the borrower will be addressed is, and then the assets is gonna be seized assets, and then zero and then X with empty data. And so this is gonna be my plant assets liquidation.
+```javascript
+abstract contract MorphoTargets is
+    BaseTargetFunctions,
+    Properties
+{
+    function morpho_liquidate_clamped(uint256 seizedAssets, bytes memory data) public {
+        morpho_liquidate(address(this), seizedAssets, 0, data);
+    }
+
+    function morpho_repay_clamped(uint256 assets) public {
+        morpho_repay(assets, 0, address(this), hex"");
+    }
+}
+```
+
+this again ensures that the clamped handler always calls the unclamped handle, simplifying things when we add tracking variables to our target functions while still allowing the unclamped handler to explore interesting states.
 
 ## Echidna Results and Workflow
 
-From my experience, a few lines of morph are really hard to hit. And they will be tied to this. Because in order to hit them, we will want to have the RPC, sorry, the the fuzzer have exactly zero collateral. And so a way to do that will be to have an exact liquidation where we pass the seized assets to be exactly equal to the collateral value.
+After having run the suite a few times before creating this demo we found a few lines of morph that are really difficult to hit even after applying clamping and so will require a long duration run to ensure they get covered. More specifically the following line in `Morpho` is difficult to reach because it requires a liquidation to occur on a user with 0 collateral value: 
 
-You can see down here that Echidna is starting to do its job and quickly falsifying stuff. You can see the canary, both canaries have been hit very quickly. And in this case, it seems like there's an all zero chance that they're being called with the no clamp version, which is always cool. But fundamentally, we basically reached coverage for these operations.
+```javascript
+    function liquidate( ... ) external returns (uint256, uint256) {
+        ... 
 
-And then in the background, what Echidna is doing is it's shrinking this massive sequence, right? Because this is ridiculous. How would you work with this? You will go on our tool, paste it, and you will still have, you know, four underlines of gibberish. So what the tool is actually doing in the background is shrinking it, and it's pretty efficient at it.
+        /// @audit requires liquidating a position whose collateral is exactly 0
+        if (position[id][borrower].collateral == 0) {
+            badDebtShares = position[id][borrower].borrowShares;
+            badDebtAssets = UtilsLib.min(
+                market[id].totalBorrowAssets,
+                badDebtShares.toAssetsUp(market[id].totalBorrowAssets, market[id].totalBorrowShares)
+            );
 
-## Tool Configuration and Repro Generation
+            market[id].totalBorrowAssets -= badDebtAssets.toUint128();
+            market[id].totalSupplyAssets -= badDebtAssets.toUint128();
+            market[id].totalBorrowShares -= badDebtShares.toUint128();
+            position[id][borrower].borrowShares = 0;
+        }
 
-This really shows you what our workflow will look like. Once we get the repro, we will just grab it here. You can see that Echidna gives this beautiful, fully shrunk no extra unnecessary data in any of its sequence so we can just copy it put it in our critical foundry and now we have a quick way to debug stuff.
+        ...
+    }
+```
 
-What we did in our template which you can access after recon pause slash create camera app is we already configured all of the tools. We're working to also make almost one hundred percent compatible so that every tool starts with the same state, the same address, the same config, so that you don't have to think about it. So when a tool such as Aquila prints out this address, this address always means the same thing for everybody.
+So with that in mind we'll not consider coverage over these lines for this example. 
+
+If we now add an additional canary to the `morpho_liquidate` function and run the fuzzer (Echidna this time to make sure it's not dependent on the existing Medusa corpus) we can see that pretty quickly both of our canaries break:
+
+**TODO: add breaking echidna call sequence**
+
+Then with the breaking call sequence in hand we can stop the fuzzer (`crtl + c`) which will allow Echidna to take the very large call sequence and reduce it to the minimum calls require to break the property:
+
+**TODO: add logs of shrunken call sequence**
+
+And once again if we've run Echidna using the Recon extension it will automatically generate Foundry reproducer unit tests for the breaking call sequences which get added to the `CryticToFoundry` contract.
 
 ## Remaining Coverage Issues
 
-And so we effectively got the coverage we wanted. Something we will do in the background will be running in exploration mode so that the tool continues to give us further states that are interesting. And then in the meantime, we will go and we will inspect the coverage report off of Echidna.
+Now that we've confirmed that we have coverage over the two functions of interest that weren't previously getting covered, we can check the coverage report to see what remains uncovered: 
 
-We can see that everything is done here. We see this line right here is not being hit. And I'm not surprised because our shortcut handler is using, I believe it was using seized assets instead of repaid shares. So we most likely want to have a shortcut for that.
+**TODO: insert screenshot of missed lines by echidna even after clamping**
 
-And the last thing we probably want to have a shortcut that uses exactly the collateral, which is basically the way to get the tools to explore the states very quickly.
+This shows that even though we're getting coverage in the sense that we successfully call the function, we aren't getting full branch coverage for all the possible paths that can be taken within the function calls themselves. 
+
+This means that we can either add additional clamped handlers that increase the likelihood that we reach these branches or we can let the suite run for 24+ hours and there will be a higher likelihood that we reach coverage over these branches.
+
+The unclamped handlers at the bottom of the `MorphoTargets` ensures we can still reach these states since our **clamped handlers are only a subset of these**, a key idea when using the Chimera Framework.
 
 ## Creating Additional Handlers
 
-It's important to note that even though we're adding all these shortcuts to quickly explore the state, we will still want you to run the suite for a while because all of the unclamped handlers at the bottom of the file, they may try combinations, that we are not thinking about by having all these clamped versions.
+Continuing with our clamping approach, we'll add a clamped handler for liquidating shares and one for increasing the likelihood of liquidating a user with 0 collateral value:
 
-And so the key principle of the Chimera framework is that we are using a subset of the calls. We're not removing them because removing them means that you're not checking for those.
+```javascript
+abstract contract MorphoTargets is
+    BaseTargetFunctions,
+    Properties
+{
+    ...
 
-Now that we establish that, we can go create another handler to perform a liquidation with clamped shares where we will basically just pass shares here instead of assets. And we would expect this to be somewhat successful.
+    function morpho_liquidate_assets(uint256 seizedAssets, bytes memory data) public {
+        morpho_liquidate(address(this), seizedAssets, 0, data);
+    }
 
-And then the last one will be to hit this line right here, which is position ID borrower dot collateral. So I'm going to have to think about it. But fundamentally, we just want to grab these positions.
+    function morpho_liquidate_shares(uint256 shares, bytes memory data) public {
+        morpho_liquidate(address(this), 0, seizedShares, data);
+    }
+}
+```
+
+Next we can create a shortcut handler which will peform more specific actions to liquidate an entire position:
+
+```javascript
+   function morpho_shortcut_liquidate_full() public {
+        (, uint256 borrowedShares, ) = morpho.position(MarketParamsLib.id(marketParams), address(this));
+        morpho_liquidate(address(this), 0, borrowedShares, hex"");
+    }
+```
+
+this makes it more likely that we will be able to reach a state where the user's collateral value will be 0, reaching the branch highlighted above.
+
+We can then run echidna again with a much higher likelihood of reaching the previously uncovered lines.
+
+**TODO: add screenshot of echidna output after adding this**
 
 ## Multi-Dimensionality with Create Chimera App V2
 
