@@ -324,6 +324,9 @@ abstract contract Setup is BaseSetup, ActorManager, AssetManager, Utils {
 
 In the above we use the `_newAsset` function exposed by the [`AssetManager`](../oss/setup_helpers.md#assetmanager) to deploy a new asset which we can fetch using the `_getAsset()` function.
 
+We introduced the `AssetManager` and `ActorManager` in V2 of Create Chimera App because the majority of setups will require multiple addresses to perform calls and use tokens in some way. Since our framework implicitly overrides the system of using different senders via the fuzzer, the `ActorManager` allows us to replicate the normal behavior of having multiple senders using the `asActor` modifier. Similarly, tracking deployed tokens for checking properties or clamping previously required implementing unique configurations in the `Setup` contract, so we've abstracted this into the `AssetManager` to standardize the process and prevent needing to reimplement it each time.
+
+
 ## Market Creation and Handler Implementation
 
 Now to continue the fixes to our setup we'll need to register a market in the `Morpho` contract which we can do by adding the following to our setup: 
@@ -406,6 +409,9 @@ abstract contract MorphoTargets is
     ...
 }
 ```
+
+> The `asActor` modifier explicitly uses the currently set actor returned by `_getActor()` to call the handler functions, whereas the `asAdmin` modifier uses the default admin actor (`address(this)`). In the above setup we only have the admin actor added to the actor tracking but we use the `asActor` address to indicate that these are functions that are expected to be called by any normal user. Only target functions expected to be called by privileged users should use the `asAdmin` modifier.
+
 
 This helps us get to coverage faster because instead of the fuzzer trying all possible inputs for the `MarketParams` struct, it uses the `marketParams` from the setup to ensure it always targets the correct market. 
 
