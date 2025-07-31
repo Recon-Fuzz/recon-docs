@@ -12,6 +12,10 @@ The invariant testing contract that's deployed in the [Chimera Framework](../tut
 
 A Foundry test contract used to implement unit tests of property-breaking call sequences (reproducers) obtained with testing tools (i.e. Echidna, Medusa, Halmos, etc.).
 
+## Clamping
+
+Reducing the search space of a fuzzer for a handler function by excluding certain input values that may not provide meaningful coverage.
+
 ## Invariant Testing
 
 The act of testing logical statements about smart contracts using tools that manipulate their state randomly (fuzzers) or by following all possible paths (formal verifiers).
