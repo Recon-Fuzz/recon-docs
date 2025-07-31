@@ -48,7 +48,7 @@ An example was our engagement with Centrifuge in which we realized that since th
 
 ## Dealing With Complex Tests
 
-If however you need to implement a more complex test that can't be implemented as a global or inlined test and requires multiple state changing calls you can use the `stateless` modifier which reverts all state changes after the function call:
+If however you need to implement a more complex test that can't be implemented as a global test and requires state changing calls that would don't use the raw value passed in by the fuzzer, you can use the `stateless` modifier which reverts all state changes after the function call:
 
 ```javascript
     modifier stateless() {
@@ -57,11 +57,20 @@ If however you need to implement a more complex test that can't be implemented a
     }
 ```
 
-This ensures that the actual state exploration done by the fuzzer is handled only by the clean target functions which call one state changing function at a time, this keeps what we call the "story" clean in the case of a broken property where having individual handlers that each handle some change of state makes it easier to determine what's going on when looking at the reproducer unit test.
+This ensures that the actual state exploration done by the fuzzer is handled only by the clean target functions which call one state changing function at a time and have descriptive names. This approach keeps what we call the "story" clean when a property breaks because having each individual handler responsible for one change of state makes it easier to determine what's going on when looking at the reproducer unit test.
 
-The `stateless` modifier on the `DoomsdayTargets` however allows testing for specific cases such as withdrawing an entire user's `maxWithdraw` amount and determining if this sets the user's `maxWithdraw` to 0 after: 
+Adding the `stateless` modifier on the `DoomsdayTargets` allows testing for specific cases which would make multiple state changes or modify the input received in some way, such as withdrawing an entire user's `maxWithdraw` amount from a vault and determining if this sets the user's `maxWithdraw` to 0 after: 
 
-**TODO: code snippet for the above example**
+```javascript
+    function doomsday_maxWithdraw() public stateless {
+        uint256 maxWithdrawBefore = vault.maxWithdraw(_getActor);
+
+        vault.withdraw(amountToWithdraw, _getActor(), _getActor());
+
+        uint256 maxWithdrawAfter = vault.maxWithdraw(_getActor);
+        eq(maxWithdrawAfter, 0, "maxWithdraw after withdrawing all is nonzero");
+    }
+```
 
 If our assertion fails we'll get a reproducer in which the function is the last one called, however if it doesn't the fuzzer will revert the state changes and the function that will be used for exploring withdrawals will be the primary withdrawal function.
 
