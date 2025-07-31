@@ -1,52 +1,69 @@
-# How Echidna Minted 100s of Millions in Voting Power: Writing and Breaking Properties
+# Part 3 - Writing and Breaking Properties
 
 ## Introduction and Goals
 
-What's up? Happy Wednesday. I'm Alex the Entrepreneur here with the third installment of our invariant testing at home event. And today we're actually going to talk about properties. You're going to write your first few properties. And I'm also going to show you a really cool bug that we found on the v true governance of liquidity where we went from a low severity rounding error to a critical inflation bug by using echidna in optimization mode so today is going to be epic.
+In this section we'll get to the most valuable part of invariant testing: writing properties.
 
-We're going to have two different parts to today's event. The first part is going to be a quick theory, and we're going to scaffold a quick suite for another contract. And then on the second part, I'm going to talk about properties.
+## Additional Points On Chimera Architecture
 
-## Manager Review and Architecture
+In part 1 and 2 we primarily looked at targets defined in the `MorphoTargets` contract but when we scaffold with the Recon extension you'll notice that we also get the `AdminTargets`, `DoomsdayTargets` and `ManagersTargets` generated automatically. We'll look at these more in depth below but before doing so here's a brief overview of each:
 
-As of last event yesterday, we talked about managers. And managers, they allow us to deal with multiple callers as well as multiple assets. If you check the source code, you'll see that we effectively prank before each call. And then the assets, we literally just deploy them. And obviously, if Solidity had a templating engine or templating system with generics, we would basically have a generic manager. But as of today, that's not available. So we just re-roll a new manager, such as a ERC for six to six manager or something like that, based on our needs.
+- `AdminTargets` - target functions that should only be called by a system admin (uses the `asAdmin` modifier to call as our admin actor)
+- `DoomsdayTargets` - special tests with multiple state changing operations in which we add inlined assertions to test specific scenarios
+- `ManagersTargets` - target functions that allow us to interact with any managers used in our system (`ActorManager` and `AssetManager` are added by default)
 
-In terms of targets, obviously having managers leads us to having different contracts. We're going to have admin targets. These are supposed to handle the functions called by the administrator or some sort of a vault in our context. Doomsday targets, those are tied to testing the doomsday properties, which I'm going to mention briefly later. And then the manager targets are these ways for which the father basically allowed the father to handle the managers such as changing actors and creating new assets.
+**TODO: determine if worth adding the context on before/after tracking if it's relevant, if not can just point users to book section**
 
-In terms of those variables we're not going to look at them too much today but the current state of the art at least from my perspective is to track the current message.sig or to give an operation a specific type and that's going to allow you to specify constraints that only apply to specific before after scenarios. If you check some of our open source work such as the bsm for badger you'll see that we've used this technique which makes for very elegant properties.
-
-## Coverage Strategies
-
-Then in terms of reaching coverage we spoke about how every handler needs to be a subset of the basic target functions and by doing that we're basically able to codify all of our steps and hopefully over time we're going to be able to build more tools that effectively allow us to reach coverage in one click which is really our end goal for chimera is to just give us a contract write some properties we internally get you to one hundred percent coverage and you find bugs basically you prevent real exploits which is the entire point of security.
+In terms of ghost variables we're not going to look at them too much today but the current state of the art at least from my perspective is to track the current message.sig or to give an operation a specific type and that's going to allow you to specify constraints that only apply to specific before after scenarios. If you check some of our open source work such as the bsm for badger you'll see that we've used this technique which makes for very elegant properties.
 
 ## The Three Types of Properties
 
-In terms of properties, we have a longer property specification bootcamp property writing workshop where we go through a bigger thing but in terms of the gist of it, I'm just going to give you three ideas for properties, and I believe this will get you very far. And today I'm going to show you how these can lead you to a critical bug.
+In terms of properties it's easy to get caught-up in the subtleties of the different types, but for this section we'll just stick with three general ideas for properties that will get you very far. We'll then see how these can lead you to uncovering a critical bug.
 
-So you don't need to overthink what properties are. Before writing them, you just have to understand these couple of ideas.
+> If you do want to dive deeper into the subtleties of properties see [this](../writing_invariant_tests/implementing_properties.md) section.
 
 ### 1. Global Properties
 
-The first one is called global properties. And a global property will basically be tied to the global state of the system, whether it's the state in which it is, whether it's some variable. And so my favorite global property would be a solvency property, which is one that we're going to explore today, where we effectively will just ask the token how many balances are in the contract and then we'll ask the contract what its internal balance is. And anytime the internal balance is higher than the actual balance, and you found an insolvency.
+The first broad category covers global properties which are tied to the global state of the system. This can be anything from the current state of the system or the value of some variable in the system.
 
-And so you really don't need to make things more complicated than that. And so anytime you're thinking about these global interesting macro states, you want to think about either these one by one checks, balance versus internal balance, or perhaps some aggregated checks, such as some of all user balances versus some of all internal balances. And so this is basically the AD-twenty of property writing. Once you understand this, you can go very far.
+Generally a good global property that can be defined in many systems is a solvency property. In this type of property we effectively ask the the token what the sum of its balances is and then we'll ask the system contract what it's internal balance is. Anytime the internal balance is higher than the actual balance (sum of token balances), we can therefore say that the system is insolvent.
+
+So anytime you're thinking about these global interesting macro states, you want to think about either these one-by-one checks like balance versus internal balance, or perhaps an aggregated check like as the sum of all user balances versus sum of all internal balances.
 
 ### 2. State Changing Properties
 
-Then we have state changing properties. And the idea would be that we would verify how a certain state changes. For example, we would verify that if we increase a balance on a vault, then our balance is increased by the correct amount. And also that if we try to withdraw, for example, which would be a bit more of a nuanced check, we would want to get back the same amount. And you'll be surprised by how many times that's not the case.
+State changing properties allow us to verify how a certain state changes. 
 
-### 3. Inline FOSS Test (What to Avoid)
+For example, we would verify that if we increase a balance on a vault, then our balance of the share token is increased by the correct amount. Similarly, we can check that if we try to withdraw we would want to get back the same amount. You might be surpised how many times these types of simple checks have lead to uncovering edge cases in private audits. 
 
-And then a word I'm going to throw around sometimes is called the inline FOSS test. And the inline FOSS test basically means that you're writing a test that tends to be, in a sense, not particularly interesting. It doesn't it tends to be more of an imperative task more so than a declarative declarative test which tends to be better. And then this tends to be the properties of most new beginners right so my advice is anytime you end up writing this inline fast test think about this idea of inductive reasoning.
+### 3. Inline Fuzz Test (Avoid)
 
-Which is the idea that if you can prove that a transition is valid then you actually have implicitly proven that the set of all transition is valid. A good example is some of the work we did with centrifuge which we can explore tomorrow with jerome cto centrifuge. And it's the idea that if your contract already has all these global trackers, then we don't actually need to scaffold a copy of these trackers in our testers and then verify that those match. We can simply do a before after check on each handler to verify that the trackers in the contract move and change in a way that is consistent.
+Inlined fuzz tests usually tends to be not particularly interesting in terms of finding edge cases as they often test behavior in a similar manner to stateless fuzz tests or unit tests. 
 
-## Keeping Code Simple
+Because these are low value properties they should be avoided for higher value properties. Any time you end up writing inlined fuzz tests you should instead try to rewrite it as an inductive property where if you can prove that a single transition is valid you can then implicitly prove that the set of all transitions is valid. This increases the value of an inlined test because it allows us to prove more than just a single property and instead we can know about the set of all possible states.
 
-And so that ends up making the code a lot simpler. And the bigger issue, I'm bolder here, but fundamentally the biggest issue is that you're writing all this code is you're writing code that now you have to maintain. And so you don't want to mess things up. You don't want to overcomplicate your life.
+An example was our engagement with Centrifuge in which we realized that since there were already global variables that track values of interest, we didn't need to add additional trackers to our test suite which we update inside our handlers. We can instead perform a global before/after check for calls by a given handler to confirm that the state variables change as expected.
 
-And so this is why I like to have the stateless modifier where I basically just do a bunch of tests and then revert because you generally speaking want to explore the state through simple handlers. You want to have these global properties. Then once things get nasty, you just want to undo all the state changes to make sure that you don't end up creating this very weird way to explore state, which can be very difficult to debug.
+**TODO: expand on the above or add a visual example because this one is hard to understand**
 
-And so this is how you will deal with a complex test. You will just create a simple modifier called stateless that reverts at the end. And because of how invariant testing works, all of the storage changes will be undone, whereas all the assertion failures will still be captured. And so this to me is how you keep the story simple, where the story is the way in which you explore the actual storage changes.
+## Dealing With Complex Tests
+
+If however you need to implement a more complex test that can't be implemented as a global or inlined test and requires multiple state changing calls you can use the `stateless` modifier which reverts all state changes after the function call:
+
+```javascript
+    modifier stateless() {
+        _;
+        revert("stateless");
+    }
+```
+
+This ensures that the actual state exploration done by the fuzzer is handled only by the clean target functions which call one state changing function at a time, this keeps what we call the "story" clean in the case of a broken property where having individual handlers that each handle some change of state makes it easier to determine what's going on when looking at the reproducer unit test.
+
+The `stateless` modifier on the `DoomsdayTargets` however allows testing for specific cases such as withdrawing an entire user's `maxWithdraw` amount and determining if this sets the user's `maxWithdraw` to 0 after: 
+
+**TODO: code snippet for the above example**
+
+If our assertion fails we'll get a reproducer in which the function is the last one called, however if it doesn't the fuzzer will revert the state changes and the function that will be used for exploring withdrawals will be the primary withdrawal function.
 
 ## Practical Exercise: Rewards Manager
 
