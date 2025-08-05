@@ -74,208 +74,601 @@ Adding the `stateless` modifier on the `DoomsdayTargets` allows testing for spec
 
 If our assertion fails we'll get a reproducer in which the function is the last one called, however if it doesn't the fuzzer will revert the state changes and the function that will be used for exploring withdrawals will be the primary withdrawal function.
 
-## Practical Exercise: Rewards Manager
+## Practical Exercise: `RewardsManager`
 
-For today I have a very cool exercise we're going to scaffold the rewards manager I'm going to use the extension and I'll try to reach coverage maybe I'll spend twenty minutes on this we mock tokens we mock volts and we're gonna focus on reaching coverage.
+**TODO: update the repo link to be one in Recon and without the intial scaffolding**
+For our example we'll be looking at the `RewardsManager`, built by [Alex The Entreprenerd](https://x.com/GalloDaSballo) which you can find in [this repo](https://github.com/GalloDaSballo/RewardsManager-Invariants).
 
-If you want to follow along you can go on my github gallup as well and the repo is going to be called rewards manager invariance and I've already cloned it locally and for the sake of time I've also deleted the test folder and because I have access to the recon extension I can just go on the Recon extension, select the rewards manager, and then click on scaffold.
+We'll use the Recon extension to add a Chimera scaffolding to the project like we did in part 1, then focus on how we can get full coverage and define meaningful properties to test. After scaffolding the `RewardsManager` we should have the following targets: 
 
-And it's going to basically set up a ton of code for me. We're going to have the managers, the helpers, the mock token, the targets, and we're going to have all the targets already set up for us. You can see that we have epoch, token, et cetera. So we're definitely going to have to do some clamping. But at the same time, we're already in a decent spot.
+```javascript
+abstract contract RewardsManagerTargets is
+    BaseTargetFunctions,
+    Properties
+{
 
-## About the Rewards Manager Contract
+    function rewardsManager_accrueUser(uint256 epochId, address vault, address user) public asActor {
+        rewardsManager.accrueUser(epochId, vault, user);
+    }
 
-Actually, something I have to say is I'm shocked nobody stole this code because to me, the rewards manager is like one of the coolest thing I ever built. You can put as many rewards as you want. It's all going to work and it's actually fairly gas efficient you can definitely spend more time to optimize it but it's already pretty decent.
+    function rewardsManager_accrueVault(uint256 epochId, address vault) public asActor {
+        rewardsManager.accrueVault(epochId, vault);
+    }
 
-And the way it works is you as the vault you would just call a notify transfer to say whether something was deposited something was withdrawn something was transferred and that would basically handle all of the crediting of the internal balances so technically speaking an eoa could could do this call and it could automatically generate a point system so in my opinion it's such a cool contract.
+    function rewardsManager_addBulkRewards(uint256 epochStart, uint256 epochEnd, address vault, address token, uint256[] memory amounts) public asActor {
+        rewardsManager.addBulkRewards(epochStart, epochEnd, vault, token, amounts);
+    }
 
-And then when we unload the policy we basically check the current epoch we are creating a user we include the vault and we give them some sort of points and so we're already you can already feel about something here where total supply would be the total amount of shares that we issued. Shares by user would be all the shares that the user has for a specific vault.
+    function rewardsManager_addBulkRewardsLinearly(uint256 epochStart, uint256 epochEnd, address vault, address token, uint256 total) public asActor {
+        rewardsManager.addBulkRewardsLinearly(epochStart, epochEnd, vault, token, total);
+    }
 
-## Initial Property Planning
+    function rewardsManager_addReward(uint256 epochId, address vault, address token, uint256 amount) public asActor {
+        rewardsManager.addReward(epochId, vault, token, amount);
+    }
 
-And so we can already start what I would call the invariants.md. which would basically be a quick doc where we would list some properties. And so the first property would simply mean be that total supply of Vault must match some of what was in balances, shares, some of shares for Vault and users.
+    function rewardsManager_claimBulkTokensOverMultipleEpochs(
+        uint256 epochStart, 
+        uint256 epochEnd, 
+        address vault, 
+        address[] memory tokens, 
+        address user
+    ) public asActor {
+        rewardsManager.claimBulkTokensOverMultipleEpochs(epochStart, epochEnd, vault, tokens, user);
+    }
 
-And you can see that there's these, no, actually, yeah, there's these here, it's a square back of current epoch. So you can see how, over time the math can actually desync. I would just make a note that it's indexed by epoch. So it could break and I would expect this to break if we do a naive property, but I don't necessarily expect our system to be so naively insolvent, although we'll see. We'll see if that's the case.
+    function rewardsManager_claimReward(uint256 epochId, address vault, address token, address user) public asActor {
+        rewardsManager.claimReward(epochId, vault, token, user);
+    }
 
-We also have a function to accrue and basically then we have our good old rip and tear, which are functions to perform optimized claims that also destroy storage slots, meaning you no longer can claim on those past ebooks and they do that so that to trigger gas refunds, basically. So there's actually quite a lot of thought into this.
+    function rewardsManager_claimRewardEmitting(uint256 epochId, address vault, address token, address user) public asActor {
+        rewardsManager.claimRewardEmitting(epochId, vault, token, user);
+    }
+
+    function rewardsManager_claimRewardReferenceEmitting(uint256 epochId, address vault, address token, address user) public asActor {
+        rewardsManager.claimRewardReferenceEmitting(epochId, vault, token, user);
+    }
+
+    function rewardsManager_claimRewards(
+        uint256[] memory epochsToClaim, 
+        address[] memory vaults, 
+        address[] memory tokens, 
+        address[] memory users
+    ) public asActor {
+        rewardsManager.claimRewards(epochsToClaim, vaults, tokens, users);
+    }
+
+    function rewardsManager_notifyTransfer(address from, address to, uint256 amount) public asActor {
+        rewardsManager.notifyTransfer(from, to, amount);
+    }
+
+    function rewardsManager_reap(RewardsManager.OptimizedClaimParams memory params) public asActor {
+        rewardsManager.reap(params);
+    }
+
+    function rewardsManager_tear(RewardsManager.OptimizedClaimParams memory params) public asActor {
+        rewardsManager.tear(params);
+    }
+}
+```
+
+Since the `RewardsManager` has no constructor arguments we can see that the project immediately compiles, letting us move onto the next step:
+
+```bash
+forge build
+[⠊] Compiling...
+[⠑] Compiling 56 files with Solc 0.8.24
+[⠘] Solc 0.8.24 finished in 702.49ms
+Compiler run successful!
+```
+
+## About the `RewardsManager` Contract
+
+The `RewardsManager`, as the name implies, is meant to handle the accumulation and distribution of reward tokens for depositors into a system. Since token rewards are often used as an incentive for providing liquidity to protocols in which the liquidity is provided via vaults, this contract is meant to integrate with a vault via a notification system which is triggered by user actions in the vault.
+
+The key function in the notification system is `notifyTransfer`:
+
+```javascript
+    function notifyTransfer(address from, address to, uint256 amount) external {
+        require(from != to, "Cannot transfer to yourself");
+        // NOTE: Anybody can call this because it's indexed by msg.sender
+        // Vault is msg.sender, and msg.sender cost 1 less gas
+
+        if (from == address(0)) {
+            _handleDeposit(msg.sender, to, amount);
+        } else if (to == address(0)) {
+            _handleWithdrawal(msg.sender, from, amount);
+        } else {
+            _handleTransfer(msg.sender, from, to, amount);
+        }
+
+        emit Transfer(msg.sender, from, to, amount);
+    }
+```
+
+which allows accruing rewards to a given user based on the action taken.
+
+Looking at the `_handleDeposit` function more closely: 
+
+```javascript
+    function _handleDeposit(address vault, address to, uint256 amount) internal {
+        uint256 cachedCurrentEpoch = currentEpoch();
+        accrueUser(cachedCurrentEpoch, vault, to);
+        // We have to accrue vault as totalSupply is gonna change
+        accrueVault(cachedCurrentEpoch, vault);
+
+        unchecked {
+            // Add deposit data for user
+            shares[cachedCurrentEpoch][vault][to] += amount;
+        }
+        // Add total shares for epoch // Remove unchecked per QSP-5
+        totalSupply[cachedCurrentEpoch][vault] += amount;
+
+    }
+```
+
+we can see that it accrues points to the user and the vault based on the time since the last accrual. It then increases the shares which determine a user's percentage of the total rewards that will be distributed as well as the total shares.
+
+## Initial Property Outline
+
+From the above function we can define our first property as "the `totalSupply` is the sum of user balances: 
+
+```md
+totalSupply == SUM(shares[vault][users])
+```
+
+> Note: because we're indexing by epoch, there's a possibility for this to break
 
 ## Setting Up Actors and Assets
 
-To get started, the first thing we want to do is we want to register some actors. So we'll do good old A one C three and we'll do good old Bob. And maybe we'll put another one. I guess we'll call it coffee. And so we're basically gonna have three actors. Each of these actors, we probably wanna give them some tokens. And obviously we also wanna have some tokens.
+Now to get started with improving our test setup we'll need to add actors and token deployments to the `setup` function:
 
-So let's do add assets. So we're going to have a, let's see what our asset was. It actually needs to be a new asset. So let's do new asset with eighteen decimals, a new asset with eight decimals and a new asset with six decimals. All of these will be mockier C-twenty. You could obviously extend our suite to have more types of tokens. But fundamentally, this means that our switch is going to use three different types of tokens with three actors plus this.
+```javascript
+    function setup() internal virtual override {
+        rewardsManager = new RewardsManager();
 
-And for the sake of testing, we're going to use this as the admin, whereas every other actor is going to be considered a user. So what that means for us is that the we're going to go in our targets, in the awards manager targets. And so in the line that is tied to notifying, so notify transfer, we'll actually change it to as admin.
+        // Add 3 additional actors (default actor is address(this))
+        _addActor(address(0x411c3));
+        _addActor(address(0xb0b));
+        _addActor(address(0xc0ff3));
+
+        // Deploy MockERC20 assets
+        _newAsset(18);
+        _newAsset(8);
+        _newAsset(6);
+    }
+```
+
+Note that in our use of the `ActorManager`, the default actor we use is `address(this)` which also serves as the "admin" actor which we use to call privileged functions via the `asAdmin` modifier.
+
+We'll then use the CodeLense to change the modifier on the `rewardsManager_addBulkRewards`, `rewardsManager_addBulkRewardsLinearly`, `rewardsManager_addReward` and `rewardsManager_notifyTransfer` functions so they get called by the admin actors. We can then add these to the `AdminTargets` contract to clarify that these will only be expected to be called by the admin: 
+
+```javascript
+abstract contract AdminTargets is
+    BaseTargetFunctions,
+    Properties
+{
+    function rewardsManager_addBulkRewards(uint256 epochStart, uint256 epochEnd, address vault, address token, uint256[] memory amounts) public asAdmin {
+        rewardsManager.addBulkRewards(epochStart, epochEnd, vault, token, amounts);
+    }
+
+    function rewardsManager_addBulkRewardsLinearly(uint256 epochStart, uint256 epochEnd, address vault, address token, uint256 total) public asAdmin {
+        rewardsManager.addBulkRewardsLinearly(epochStart, epochEnd, vault, token, total);
+    }
+
+    function rewardsManager_addReward(uint256 epochId, address vault, address token, uint256 amount) public asAdmin {
+        rewardsManager.addReward(epochId, vault, token, amount);
+    }
+
+    function rewardsManager_notifyTransfer(address from, address to, uint256 amount) public asAdmin {
+        rewardsManager.notifyTransfer(from, to, amount);
+    }
+}
+```
+
+This then leaves our `RewardsManagerTargets` cleaner with all the ways to accrue in the `rewardsManager_accrueUser` and `rewardsManager_accrueVault` functions and the remaining functions allow claiming.
 
 ## Creating Clamped Handlers
 
-For now, what we could do, will be to have the following set of limitations. It will be tokens, it will be vault equals to this, and then it will be users equals to the actor. So for now, we could simply start by just taking the most simple function, which is going to be flame reward.
+From looking at our target functions we see there are 3 primary values that we'll need to clamp if we don't want the fuzzer to spend an inordinate amount of time exploring states that are irrelevant: 
 
-And so we could just do a quick flame reward clamped. And I'm guessing the only thing we want to grab is going to be the epoch ID. And because we call the claim reward function, which already pranks, we're not going to add any additional checks here. We're just going to call this one.
 
-And so the epoch ID will be a parameter. The vault is going to be address this. The token is going to be get asset and the user is going to be get after. So that's basically going to be our clamping for this function and then we could also do claim rewards, but I think for now this could be a good point in which to start the fuzzer.
+```javascript
+abstract contract RewardsManagerTargets is
+    BaseTargetFunctions,
+    Properties
+{
+    ...
 
-## Running the Fuzzer and Debugging
+    function rewardsManager_accrueUser(uint256 epochId, address vault, address user) public asActor {
+        rewardsManager.accrueUser(epochId, vault, user);
+    }
+    
+    ...
 
-At this point, this is where we will go take some sun and just wait a bit. But definitely stick around because the second part of the live is going to be around this bug. Let's just see what the tool can do in the meantime.
+    function rewardsManager_claimRewardEmitting(uint256 epochId, address vault, address token, address user) public asActor {
+        rewardsManager.claimRewardEmitting(epochId, vault, token, user);
+    }
 
-The nice thing about these type of tools is that they memoize their progress. So even though I have to restart it, this is a key that I quickly retriangle of its previous corpus, which means that I didn't waste five minutes in waiting for the fuzzer. I wasted maybe twenty seconds, thirty seconds, but it's still way more than what Foundry takes. And this is why we advocate for you using Foundry at all times. And then running the fuzzer for what it's best, which is actually breaking the property.
+    ...
+}
+```
+
+the primary values we'll need to clamp are: `address vault`, `address token` and `address user`. For the `vault` we'll use `address(this)`, the token is given by `_getAsset()` and the user by `_getActor()`.
+
+We'll start off by only clamping the `claimReward` function because it should get us to a decent spot after our first run of the fuzzer: 
+
+```javascript
+abstract contract RewardsManagerTargets is
+    BaseTargetFunctions,
+    Properties
+{
+    function rewardsManager_claimReward_clamped(uint256 epochId) public asActor {
+        rewardsManager_claimReward(epochId, address(this), _getAsset(), _getActor());
+    }
+}
+```
+
+We can then run Echidna in `exploration` mode to see how far the fuzzer gets: 
+
+![Echidna Exploration Mode](../images/bootcamp/echidna_expl_mode.png)
 
 ## Writing the First Properties
 
-At this point, the fuzzer is running. Maybe I'll give it a few more minutes. And so I'm going to go back to my invariant nodes. And you can see how we have this total supply vault, sum of shares. And then we also have these implicit ones of sum of user balances. Must be less than equal to total supply, but I guess we have it. Whereas we probably want to check for rewards of user must always be less than the balance of the token.
+Now with the fuzzer running in the background to explore state we'll take advantage of this down time to start implementing our first properties. 
 
-So most likely this is the next property we want to investigate and I'm going to be writing them in a moment. So let's see if we have a way to know what the total rewards are. I guess we have these rewards info per address per epoch. So basically, what we could do is we could ask the contract what the latest epoch is, and then sum up the rewards, and then we should be able to figure this out.
+In addition to the solvency property we outlined above we can also define a property that states that: "the sum of rewards are less than or equal to the reward token balance of the `RewardsManager`". 
 
-So basically, we will go for each epoch, sum up all the rewards for this, and then get total and then assert total is less than equal to token dot balance of so I think we have the information we need to set up these two properties and now we're going to see whether they actually break.
+Often it's good to write out properties as pseudo-code first because it allows us to understand which values we can read from state and which we'll need to add additional tracking for. In our case we need to know the sum of rewards of a user, which we can get from the **TODO: `rewardsInfo` looks like it's unused so probably changed later down below in actual implementation**. We can the write the following pseudocode to describe what we need our propert to do:
+
+```md
+For each epoch, sum all rewards for `address(this)` (our placeholder for the vault)
+
+Using the sum of the above, assert that `total <= token.balanceOf(rewardsManager)`
+```
 
 ## Implementing the Total Supply Solvency Property
 
-We're going to go in properties dot solve and so we'll start with the first one property underscore let's call it total supply solvency. And so we're going to get the rewards manager, which is called rewards manager. We want to get the, what was it? We probably want to get the shares and we probably want to get the total supply.
+We can now implement the first property in the `Properties` contract: 
 
-And I'm pretty sure we're going to find something interesting here. So I'm going to write it in a fairly naive way. But most likely we want to do UH-FF-Six current epoch. is going to be equal to, is there a way to get the current epoch? Yeah. We're going to get the current epoch, which is based on time.
+```javascript
+    function property_totalSupplySolvency() public {
+        // fetch the current epoch up to which rewards have been accumulated
+        uint256 currentEpoch = rewardsManager.currentEpoch();
+        uint256 epoch;
 
-And so then we'll have a simple accumulator, image five, six, hack. Then we'll do while hack is less than equal to current epoch. We'll just increase it at the end as opposed to increment. And we'll then grab the, for each, what do we do? For each user, so we probably want to do a for loop, UH for six I, I less than, get actors, not left, I plus plus.
+        while(epoch < currentEpoch) {
+            uint256 sharesAtEpoch;
 
-## Property Breaking and Debugging Process
+            // sum over all users
+            for (uint256 i = 0; i < _getActors().length; i++) {
+                uint256 shares = rewardsManager.shares(epoch, address(this), _getActors()[i]);
+                sharesAtEpoch += shares;
+            }
 
-And I'm pretty sure this party will break. So it's going to be interesting to look at this, but basically we'll just do epoch plus equals to rewards manager. And then we want to assert that the shares at epoch match the rewards manager dot total supply of the epoch at the vault, epoch at vault.
+            // check that sum of user shares for an epoch is the same as the totalSupply for that epoch
+            eq(sharesAtEpoch, rewardsManager.totalSupply(epoch, address(this)), "Sum of user shares should equal total supply");
 
-And because of how accrual works in this contract, I'm pretty sure this will break. But this is a good property to write naively and to debug. So I'd be happy whether it breaks or not. And so we'll say that the sum of user shares must match total supply. We'll see how this pairs.
+            epoch++;
+        }
 
-So this is probably a good time to just stop and see what the fuzzer is going to do. So I'm going to stop. And then I'm going to check the coverage. Then I'm going to check the property. And then we're going to resume, just because other ways this can get too overwhelming. And obviously, at home, you can go at your own pace.
+    }
+```
 
-But I will typically do one property at the time, especially if I expect it to break. Because obviously, if it's right, I don't care. But if it's going to break, what's the point writing another one.
+We can see that in the above that since the `RewardsManager` contract has checkpoints the `totalSupply` for each epoch and also tracks user shares for each epoch, we don't need to add any additional tracking and can just read the values directly from state to make an assertion on them. 
+
+This is the ideal scenario since we don't need to add any additional tracking to our handlers to allow us to know the value of system variables. Given that there are often many different ways to implement properties you should always opt for the simplest approach of reading directly from the contract's state whenever possible as it minimizes potential breaking changes if the underlying codebase changes, but as we will see this isn't always possible. 
+
+We'll now stop the fuzzer that we've been running in the background to see what coverage looks like then start a new run with our implemented property to see if it breaks. This is a good habit to get into because implementing multiple properties without running the fuzzer could result in many false positives that all need to be debugged separately which ultimately slows down your development cycle. 
 
 ## Coverage Analysis
 
-So now I'm using the extension to click this button, which is going to basically simplify the coverage report and only grab me the stuff that I want. And so we can see that we were able to get the notification system. A deposit was done. A withdrawal was done. A transfer was done. The accrual of a vault was done. This view function was not called. The check for the time left was called. The total stock price epoch was definitely called. And then user accruals were done.
+From the coverage report we can see that all the major functions of interest: `notifyTransfer`, `_handleDeposit`, `_handleWithdrawal`, `_handleTransfer` and `accrueVault` are fully covered. 
 
-So let's see if a user was able to claim. We see the claim rewards. We see a loop here with the call to claim reward emitting. And then we see that the user epoch total points were equal to zero. So it seems like we're having a bit of an issue in getting to claiming. because we always get to a user that has zero rewards.
+We can also see however that the `claimReward` function is only being partially covered:
 
-## Property Failure Analysis
+![Claim Reward Coverage](../images/bootcamp/claim_reward_partial_covg.png)
 
-The next step will be, let's say I'm going to comment this out. I'll show you how you can figure out that this will break. Basically, you'll see that Kidra is literally going to have issues. It's going to just start to chug because it's the same as driving a car without inserting any gear and so you're really just trying to basically crush the car.
+specifically, users never accumulate any points so they never have anything to claim. 
 
-And so anytime it will call this it's gonna have issues where it will just its performance is gonna massively decrease because we fundamentally have this check that once the epoch has increased will massively limit what the buzzer can do and so if you check the number here you'll see that it's stuck at ten thousand. And that's because every time a worker gets stuck, it's basically gonna be shoot with a line.
+So we can then use this additional information to improve our `rewardsManager_claimReward_clamped` function further:
+
+```javascript
+    function rewardsManager_claimReward_clamped(uint256 epochId) public asActor {
+        uint256 maxEpoch = rewardsManager.currentEpoch();
+        epochId = epochId % (maxEpoch + 1);
+        
+        rewardsManager_claimReward(epochId, address(this), _getAsset(), _getActor());
+    }
+```
+
+which ensures that we only claim rewards for an `epochId` that has already passed.
+
+We can then start a new run of the fuzzer to determine if this has improved coverage and also whether the property we implemented breaks or not.  
 
 ## Property Refinement Process
 
-And another way to debug the property will be to go and create the Foundry obviously, and just call it. But basically, this is going to run out of gas, and it's going to break eventually. I mean, the fact that it takes this long is also an indicator of something being wrong.
+Very shortly after we start running the fuzzer we see that it breaks the property so we can stop the fuzzer and have a reproducer unit test automatically generated for us if we're using the Recon extension or use the [Recon log scraper tool](../free_recon_tools/echidna_scraper.md) to do so: 
 
-So we'll just give it a few seconds for it to break the property. And then from there, we'll just grab the repo that is shrunken, hopefully, and we'll use it to investigate this property being broken.
+```javascript
+    function test_property_totalSupplySolvency_0() public {
+        vm.warp(block.timestamp + 157880);
+        vm.roll(block.number + 1);
+        rewardsManager_notifyTransfer(0x0000000000000000000000000000000000000000,0x00000000000000000000000000000000DeaDBeef,1);
 
-The property is broken. And then we're going to just paste it in the tool, and we get this line like so. So let's go back to Critic Tester, paste the Foundry repo. And now we're not going to read the Echidna output. There's no point. We're just going to use the Foundry test because it's so much more efficient.
+        vm.warp(block.timestamp + 446939);
+        vm.roll(block.number + 1);
+        property_totalSupplySolvency();
+    }
+```
 
-## Understanding the Property Break
+which after we run gives us the following output in our console which is still relatively difficult to debug and find the source of the broken property with:
 
-And we can see that the sum of user shares must match the total supply. So obviously, this is still a bit dense. And the way you would, I mean, on one hand, you can debug with dash vv because this is okay in terms of why the property is broken. But what I like to do to open up properties would be to basically get the body of the property and just paste it.
+```bash
+Ran 1 test for test/recon/CryticToFoundry.sol:CryticToFoundry
+[FAIL: Sum of user shares should equal total supply: 0 != 1] test_property_totalSupplySolvency_0() (gas: 187289)
+Traces:
+  [187289] CryticToFoundry::test_property_totalSupplySolvency_0()
+    ├─ [0] VM::warp(157881 [1.578e5])
+    │   └─ ← [Return]
+    ├─ [0] VM::roll(2)
+    │   └─ ← [Return]
+    ├─ [0] VM::prank(CryticToFoundry: [0x7FA9385bE102ac3EAc297483Dd6233D62b3e1496])
+    │   └─ ← [Return]
+    ├─ [97543] RewardsManager::notifyTransfer(0x0000000000000000000000000000000000000000, 0x00000000000000000000000000000000DeaDBeef, 1)
+    │   ├─ emit Transfer(vault: CryticToFoundry: [0x7FA9385bE102ac3EAc297483Dd6233D62b3e1496], from: 0x0000000000000000000000000000000000000000, to: 0x00000000000000000000000000000000DeaDBeef, amount: 1)
+    │   └─ ← [Stop]
+    ├─ [0] VM::warp(604820 [6.048e5])
+    │   └─ ← [Return]
+    ├─ [0] VM::roll(3)
+    │   └─ ← [Return]
+    ├─ [414] RewardsManager::currentEpoch() [staticcall]
+    │   └─ ← [Return] 2
+    ├─ [3355] RewardsManager::shares(0, CryticToFoundry: [0x7FA9385bE102ac3EAc297483Dd6233D62b3e1496], CryticToFoundry: [0x7FA9385bE102ac3EAc297483Dd6233D62b3e1496]) [staticcall]
+    │   └─ ← [Return] 0
+    ├─ [3355] RewardsManager::shares(0, CryticToFoundry: [0x7FA9385bE102ac3EAc297483Dd6233D62b3e1496], 0x00000000000000000000000000000000000411c3) [staticcall]
+    │   └─ ← [Return] 0
+    ├─ [3355] RewardsManager::shares(0, CryticToFoundry: [0x7FA9385bE102ac3EAc297483Dd6233D62b3e1496], 0x0000000000000000000000000000000000000B0b) [staticcall]
+    │   └─ ← [Return] 0
+    ├─ [3355] RewardsManager::shares(0, CryticToFoundry: [0x7FA9385bE102ac3EAc297483Dd6233D62b3e1496], 0x00000000000000000000000000000000000c0fF3) [staticcall]
+    │   └─ ← [Return] 0
+    ├─ [3102] RewardsManager::totalSupply(0, CryticToFoundry: [0x7FA9385bE102ac3EAc297483Dd6233D62b3e1496]) [staticcall]
+    │   └─ ← [Return] 0
+    ├─ [0] VM::assertEq(0, 0, "Sum of user shares should equal total supply") [staticcall]
+    │   └─ ← [Return]
+    ├─ [3355] RewardsManager::shares(1, CryticToFoundry: [0x7FA9385bE102ac3EAc297483Dd6233D62b3e1496], CryticToFoundry: [0x7FA9385bE102ac3EAc297483Dd6233D62b3e1496]) [staticcall]
+    │   └─ ← [Return] 0
+    ├─ [3355] RewardsManager::shares(1, CryticToFoundry: [0x7FA9385bE102ac3EAc297483Dd6233D62b3e1496], 0x00000000000000000000000000000000000411c3) [staticcall]
+    │   └─ ← [Return] 0
+    ├─ [3355] RewardsManager::shares(1, CryticToFoundry: [0x7FA9385bE102ac3EAc297483Dd6233D62b3e1496], 0x0000000000000000000000000000000000000B0b) [staticcall]
+    │   └─ ← [Return] 0
+    ├─ [3355] RewardsManager::shares(1, CryticToFoundry: [0x7FA9385bE102ac3EAc297483Dd6233D62b3e1496], 0x00000000000000000000000000000000000c0fF3) [staticcall]
+    │   └─ ← [Return] 0
+    ├─ [1102] RewardsManager::totalSupply(1, CryticToFoundry: [0x7FA9385bE102ac3EAc297483Dd6233D62b3e1496]) [staticcall]
+    │   └─ ← [Return] 1
+    ├─ [0] VM::assertEq(0, 1, "Sum of user shares should equal total supply") [staticcall]
+    │   └─ ← [Revert] Sum of user shares should equal total supply: 0 != 1
+    └─ ← [Revert] Sum of user shares should equal total supply: 0 != 1
 
-So that way we get the all of the logic that is being used and then obviously we're just going to console I guess we don't need to console the log because we're going to get it but basically this is saying that the user share for zero is zero and instead the amount on the total supply is greater than zero.
+Suite result: FAILED. 0 passed; 1 failed; 0 skipped; finished in 1.41ms (547.08µs CPU time)
 
-And so this is actually a mistake that I made where the notify transfer function is open and it still allows to send tokens to anybody. And so as long as we allow anybody to receive these tokens, we basically are going to have this issue. So for the sake of demonstration, I'm just going to remove it.
+Ran 1 test suite in 98.61ms (1.41ms CPU time): 0 tests passed, 1 failed, 0 skipped (1 total tests)
+
+Failing tests:
+Encountered 1 failing test in test/recon/CryticToFoundry.sol:CryticToFoundry
+[FAIL: Sum of user shares should equal total supply: 0 != 1] test_property_totalSupplySolvency_0() (gas: 187289)
+```
+
+So instead, a simple way that we like to use more easily debug broken properties is by pasting the body of the property into the test itself which allows us to use `console.log()` to see the values at each step of the property execution: 
+
+```javascript 
+    function test_property_totalSupplySolvency_0() public {
+        rewardsManager_notifyTransfer(0x0000000000000000000000000000000000000000,0x00000000000000000000000000000000DeaDBeef,1);
+
+        // property_totalSupplySolvency();
+        uint256 currentEpoch = rewardsManager.currentEpoch();
+        uint256 epoch;
+
+        while(epoch < currentEpoch) {
+            uint256 sharesAtEpoch;
+
+            // sum over all users
+            for (uint256 i = 0; i < _getActors().length; i++) {
+                uint256 shares = rewardsManager.shares(epoch, address(this), _getActors()[i]);
+                sharesAtEpoch += shares;
+            } 
+
+            // check if solvency is met
+            eq(sharesAtEpoch, rewardsManager.totalSupply(epoch, address(this)), "Sum of user shares should equal total supply");
+
+            epoch++;
+        }
+    }
+```
+
+But in this case we can see that the only call that was made in the sequence was to `rewardsManager_notifyTransfer`, which indicates that this is most likely a false positive which we can confirm by checking the handler function implementation in `AdminTargets`: 
+
+```
+abstract contract AdminTargets is
+    BaseTargetFunctions,
+    Properties
+{
+    ...
+
+    function rewardsManager_notifyTransfer(address from, address to, uint256 amount) public asAdmin {
+        rewardsManager.notifyTransfer(from, to, amount);
+    }
+}
+```
+
+from which it becomes clear that the `notifyTransfer` function can be called for any `to` address which results in handling an increase in shares accounted to a user because the `rewardsManager_notifyTransfer` is called as an admin which is the same address that we're using as the vault in our case so this allows it to incorrectly create transfer notifications that aren't actually valid. 
+
+As a quick workaround for this we can simply clamp the `to` address to the currently set actor like so: 
+
+```javascript
+    function rewardsManager_notifyTransfer(address from, uint256 amount) public asAdmin {
+        rewardsManager.notifyTransfer(from, _getActor(), amount);
+    }
+```
+
+we can then run Echidna again to confirm that this resolved our broken property as expected. After which we see that it still fails with the following reproducer:
+
+```javascript
+    function test_property_totalSupplySolvency_1() public {
+        rewardsManager_notifyTransfer(0x0000000000000000000000000000000000000000,1);
+
+        vm.warp(block.timestamp + 701427);
+        vm.roll(block.number + 1);
+        rewardsManager_notifyTransfer(0x00000000000000000000000000000000DeaDBeef,0);
+
+        vm.warp(block.timestamp + 512482);
+        vm.roll(block.number + 1);
+        property_totalSupplySolvency();
+    }
+``` 
+
+So this seems like it might be a real broken property, indicating that we've found a real bug. From our experience, typically when you're in a flow of writing properties and quickly checking that they're not false positives, following a lead on a broken property like this can be a bit of a distraction which prevents you from implementing more properties and leads to a side-quest of determining the root cause. Ultimately the goal of implementing properties is to test our understanding of the system so we can say that if the property breaks and we don't know why, our understanding of the system is most likely incorrect so we need to reevaluate the property implementation to understand why it still breaks. 
+
+We can see however that if we call `RewardsManager::accrueVault` before checking the property however that the test then passes: 
+
+```javascript
+    function test_property_totalSupplySolvency_1() public {
+        rewardsManager_notifyTransfer(0x0000000000000000000000000000000000000000,1);
+
+        vm.warp(block.timestamp + 701427);
+        vm.roll(block.number + 1);
+        rewardsManager_notifyTransfer(0x00000000000000000000000000000000DeaDBeef,0);
+
+        rewardsManager_accrueVault(rewardsManager.currentEpoch(), address(this));
+
+        vm.warp(block.timestamp + 512482);
+        vm.roll(block.number + 1);
+        property_totalSupplySolvency();
+    }  
+```
+
+```bash
+[PASS] test_property_totalSupplySolvency_1() (gas: 391567)
+Suite result: ok. 1 passed; 0 failed; 0 skipped; finished in 7.33ms (2.83ms CPU time)
+```
+
+this is because the `accrueVault` function sets a new value for the `totalSupply` if the `_getTotalSupplyAtEpoch` function determines that it hasn't updated since the last epoch: 
+
+```javascript
+  function accrueVault(uint256 epochId, address vault) public {
+        require(epochId <= currentEpoch(), "Cannot see the future");
+
+        (uint256 supply, bool shouldUpdate) = _getTotalSupplyAtEpoch(epochId, vault);
+
+        if(shouldUpdate) {
+            // Because we didn't return early, to make it cheaper for future lookbacks, let's store the lastKnownBalance
+            totalSupply[epochId][vault] = supply;
+        }
+
+        ...
+  }
+```
+
+We can see that this happens in our test because due to our actor setup, the `notifyTransfer` function calls `_handleTransfer`: 
+
+```javascript
+    function notifyTransfer(address from, address to, uint256 amount) external {
+        require(from != to, "Cannot transfer to yourself");
+        // NOTE: Anybody can call this because it's indexed by msg.sender
+        // Vault is msg.sender, and msg.sender cost 1 less gas
+
+        if (from == address(0)) {
+            _handleDeposit(msg.sender, to, amount);
+        } else if (to == address(0)) {
+            _handleWithdrawal(msg.sender, from, amount);
+        } else {
+            _handleTransfer(msg.sender, from, to, amount);
+        }
+
+        emit Transfer(msg.sender, from, to, amount);
+    }
+```
+
+with the `to` address set to the current actor which in our case is `address(this)`, and because `address(this)` is also our vault contract this causes unexpected behavior in our test. 
+
+Essentially, we're notifying a transfer from the `from` address to the `address(this)` actor which normally would behave as expected because `msg.sender` would never be expected to be the same as the `from` or `to` addresses because the vault wouldn't have functionality to make a transfer to itself. 
+
+We can see from the `handleTransfer` function that this subsequently doesn't call `accrueVault` so the vault's `totalSupply` remains unchanged because it's processing this as a transfer rather than a deposit which would subsequently increase the `totalSupply`:
+
+```javascript
+    function _handleTransfer(address vault, address from, address to, uint256 amount) internal {
+        uint256 cachedCurrentEpoch = currentEpoch();
+        // Accrue points for from, so they get rewards
+        accrueUser(cachedCurrentEpoch, vault, from);
+        // Accrue points for to, so they don't get too many rewards
+        accrueUser(cachedCurrentEpoch, vault, to);
+
+        ...
+    }
+```
+
+So our property has highlighted an issue in our test setup that shows that we should actually clamp the `from` and `to` addresses to be one of the actors other than `address(this)`:
+
+```javascript
+    function rewardsManager_notifyTransfer(uint256 fromEntropy, uint256 toEntropy, uint256 amount) public asAdmin {
+        uint256 actorsLength = _getActors().length;
+
+        // prevent selecting the default actor
+        address from;
+        address to;
+        from = fromEntropy == 0 ? address(0) : _getActors()[fromEntropy % actorsLength];
+        to = toEntropy == 0 ? address(0) : _getActors()[toEntropy % actorsLength];
+
+        rewardsManager.notifyTransfer(from, to, amount);
+    }
+```
+
+which if we now test with the `test_property_totalSupplySolvency_1` reproducer passes: 
+
+```javascript
+    function test_property_totalSupplySolvency_1() public {
+        rewardsManager_notifyTransfer(0, 2, 1);
+
+        vm.warp(block.timestamp + 701427);
+        vm.roll(block.number + 1);
+        rewardsManager_notifyTransfer(0, 2,0);
+
+        vm.warp(block.timestamp + 512482);
+        vm.roll(block.number + 1);
+        property_totalSupplySolvency();
+    }  
+```
+
+This highlights a common issue that can arise during invariant testing where a property might break for an unknown reason and it appears to be a real break but upon further investigation it's due to a test suite misconfiguration. Since this issue was relatively simple to identify we fixed it before moving onto writing our next property but typically resolving these types of issues mid-flow of writing properties can be rather time consuming and distracting so it's usually best to leave them broken then go back to resolving them in a separate debugging pass once you've implemented your remaining properties and have removed other false positives. 
+
+This is mostly a workflow preference but we've found it beneficial in our engagements because it allows for more distinct phases that still allow forward progress without getting stuck on an issue that might take hours to debug and like above simply be due to a misconfiguration.
+
+**TODO: investigate root cause of this, seems like it's because the admin address is the same as the vault**
 
 ## Finding Potential Bugs
 
-This phase of writing properties is very common. You basically end up specifying some property, you didn't think about it too much, and it basically breaks. I believe in this case, though, the reason why is because any time we change a deposit we have to grab the previous vault and you'll see in a crew vault I'll show it in a moment but basically we have to bring back that value whereas for the user you actually don't need to do that.
+If we run the fuzzer again with our revised clamped handler we can then see that the property still breaks with the following reproducer:
 
-And so I'm pretty sure the total supply should always be greater than the user shares and then to properly track the accounting in a more strict way we will most likely have to do a lot more work because we basically have to call these accrue functions.
 
-We're seeing that the sum of user shares must match the total supply and we're seeing that the property is breaking with the share that epoch being greater than zero whereas the total supply at epoch being zero and so we will be able to fix this in many ways, but before we do that, I feel like we may have found a real bug, which would be interesting.
+```javascript
+    function test_property_totalSupplySolvency_2() public {
+        vm.roll(block.number + 1);
+        vm.warp(block.timestamp + 187957);
+        rewardsManager_notifyTransfer(0,31919817873906484457616520816862118877645938270498273013141438,968185310588699677123274589116025179452188333707124755504);
 
-The reason why I say it is because my theory is anytime you notify a transfer, so anytime we notify a transfer, we have to get some accrual. We have to trigger some accrual of the vault which means that the total supply should always be updated to the latest value unless nothing happened this week, this epoch.
+        vm.warp(block.timestamp + 184313);
+        vm.roll(block.number + 1);
 
-## The Liquity Governance Bug Case Study
+        vm.roll(block.number + 1);
+        vm.warp(block.timestamp + 450265);
+        rewardsManager_notifyTransfer(2558326731337984441436338030936748012728969342862375220894783296876970426,14430921241106930414750317741839630256727976664000902492174384068,1183034652271781882787167034077441631572159888849485);
 
-So to top off this introduction, I want to talk about a bug we found on the liquidity Vichu governance repository. And basically we were engaged by Liquity to write their Vichu governance after it was already sketched out. And we spent quite some time rewriting a bunch of key flows. We added a final state machine. We really spent a lot of time trying to fix a bunch of issues and secure the system.
+        vm.warp(block.timestamp + 387182);
+        vm.roll(block.number + 1);
+        property_totalSupplySolvency();
+    }
+```
 
-And we basically When we left off, we basically run in the cloud via Echidna, and we run it with what is called optimization mode. And optimization mode basically lets the buzzer try to give you the maximum value it can.
+So this seems to indicate that there's a real bug that we didn't identify in the actual `RewardsManager` contract. Finding the source of the actual bug is left as an exercise to the reader, but we hope this example demonstrates the common feedback loop you'd follow when debugging properties until you can identify the true source.
 
-### The Properties That Led to Discovery
-
-And you can see that we have a bunch of properties here. and the most you can see the name one of them is optimized property sum of initiative matches the total votes optimize the maximum claim insolvency optimize the sum of liquidity global user matches underpaying meaning it's underpaid instead of insolvent and then we add this underpaid claim which was which looked really big I think this is a three hundred million but this turned out to be a false positive.
-
-But when you see a number like that you obviously don't want to just know be like oh okay I see you guys you actually want to investigate it and then the the the big number we found through this mode was optimizing the sum of initiative matching the total votes and we basically found this insolvency where summing up all of the votes of initiatives in the governance actually resulted in too many votes being available to users.
-
-### The Root Cause: Calculate Average Timestamp
-
-And so I'm going to show you exactly how we found it. To demonstrate the bug we go to a previous branch recon is actually surprisingly good archival of historical state. You can get the previous corpus from our run. You can see what the fuzzer actually did. And then we are basically going to the repo at this commit.
-
-The back story around this bug is tied to this function right here called calculate average timestamp. And I think this is the version that was already fixed. But basically, calculate average timestamp used to basically just be this uint-thirty-two for a block timestamp. will call this function average h which I think is not an average but it's literally just subtracting against the previous value so it's literally just a delta.
-
-And then it will give a weighted value and it will perform this division with truncation of to generate a new outer average and then it will grab the current time which is basically right now minus the new outer average.
-
-### The Voting Power Mechanism
-
-This was very complex in my opinion, and I think everybody can agree that it was complex. But fundamentally, what it was trying to do is it was making it so that when you deposited a hundred million dollars in liquidity that you flash loaned, you will get zero voting power. And when you stay for one second, you will get the amount plus one second, et cetera, et cetera.
-
-And anytime you withdraw, it will compute all of the value as time and it will subtract it, meaning that you will lose a lot of voting power. Whereas anytime you will deposit, it will socialize the time. that you wouldn't be able to receive more, meaning that depositing new stuff actually doesn't give you any new voting power. The voting power starts from now and it goes in the future.
-
-### The Critical Truncation Issue
-
-However, as you can imagine, give me a division line and I'll find you a crit. And the real problem is that this division obviously creates truncation. And truncation means, if you're not familiar with low-level programming, When the computer truncates a value, it means that it's literally going to remove that and it's not going to carry it.
-
-And so the impact of truncation when we started the engagement was thought to be up to one second. That was what people thought, and it was me, other auditors, we all agreed that there was an impact, but this was a low severity impact.
-
-### The Property That Revealed the Truth
-
-And instead to fully explore this, we basically wrote this function called property sum of initiative matches the total votes strict. So property sum of initiatives And so in the governance properties, we basically wrote this very simple solvency property.
-
-We have a function called get initiative state and global state. It basically grabs the current global state and the state of all the initiatives. It gives you the allocated liquidity sum, the total counter liquidity, the voted power sum and the governance powers.
-
-And that's because instead of comparing the time and the amount, which was really complex to me, I basically just multiplied everything into times, time, times. amount so that it will give you a scalar value that was easy to compare. And I just match it at requiring that it would match exactly.
-
-### Escalating from Low to Critical Severity
-
-And so what actually happened was that the voting power was not and maybe even delicate liquid but basically this property was breaking and so anytime a absolute property breaks with the buzzer you only have two options one of them is to investigate the code which obviously you have to do eventually but the other option is to figure out if there's some sort of a clamp or sort of a limit to the error.
-
-And when you start by the assumption that this line has a one-second bug, then your rational decision would simply be to put a tolerance and just ensure that the balances are correct within some bound. And that bound, in my opinion, shouldn't be considered absolute. You would have to compute it as seconds.
-
-But fundamentally, This is not an uncommon way to ensure that a value that is incorrect, but it's incorrect by a certain amount, it actually is not more broken, basically. And so that was the idea. And it broke again.
-
-### Using Optimization Mode
-
-So what I did is I literally, unironically, I just grabbed this command and instead of having assertion mode from Echidna, I will use optimization mode. Then I would have to refactor the property from this absolute value to optimization property that uses this pattern which is a very common pattern for optimization.
-
-Where you would have a sol in solvency at an underpaying pattern you grab one of the true values you do left greater than right or right greater than left and then you just take the int to five six of it and you return it and what we ended up finding literally I'll run it right now, but we ended up finding is that the insolvency that we thought was gonna be very marginal turned out to be in the hundreds of million of dollars of voting power.
-
-### The Revelation and Impact
-
-And so obviously once your optimization run shows you that, it doesn't matter because at the time the output from the tool was absolutely unintelligible but it really doesn't matter what the tool will spit out in terms of how to get to that point once you have done the diligence you are so confident in your assessment of the precision and the precision breaks and then you run the tool and you get this value in this case it's thirty two million in the local fuzzy run it should be over a hundred twenty million.
-
-But basically you know that this is not gonna be abandoned and so that's where we were left for a few days, mostly due to my own limitations. But I'm going to show you what you would do from there to actually properly debug the bug.
-
-### Key Takeaways
-
-And so I hope this, if there's any takeaway from today, is that a global property breaking should make you reflect, should be a cause for pause and consideration about how the system works. And then you can escalate your own work through these three levels of the exact check, the exact check with bounds, and the optimization mode.
-
-And given my extensive experience in being wrong, in thinking that the impact is low, I will generally say that if you can't do the equivalent check, you should always refactor your property into an optimization mode. Because once you let the fuzzer run for a bit and it starts giving you this value, let's see what it is. A hundred fifty one million. Like at this point, all you want is to get a repro.
-
-### Technical Details on Optimization Mode
-
-So I'm going to show you how to get a repro in, you know, how to get a repro from a key in twenty twenty five from optimization mode. But fundamentally, Echidna will stop shrinking only when you're done. And so I think I ran it already, so I'm somewhat cheating. But basically, I'm just going to run with something like ten thousand tests.
-
-And so what's going to happen is that the ten thousand tests are sufficient for Echidna to grab the previous corpus and replay it and give me the maximum value. But then they're going to be very quick on the CPU cycles, so that we get through those. And then after the ten thousand tests, Echidna will engage shrinking.
-
-And you generally, for optimization mode, you want to let it run as much as you can. And this is also why in Create Chimera App True, our latest version of Create Chimera App, which is live and re-confused with Flash Create Chimera App, we have a shrink limit of one hundred thousand because it generally tends to be the sweet spot to get to shrink basically anything until it runs into bugs, which there's few, but they do exist.
-
-### Handling Zero Values in Optimization
-
-And then another thing to note is that anytime an optimization property gives you a zero, let's say this property gives a zero, that will trigger another bug that Echidna has where it will try to shrink an empty sequence and it just will crush the worker. And so to prevent that, you just have to comment out every property that returns a zero.
-
-So if we go to the end here and we see max value zero for this liquidity underpay we just have to comment it out in the source code and then rerun the suite or rerun just the shrinking part of echidna to allow it to do it I learned this the hard way, but there's a reason why I'm so willing to talk about it.
-
-### The Final Impact and Resolution
-
-Yeah, we basically broke it through that property. And in terms of mitigation, the mitigation that I had suggested was to use a higher scale, higher precision scale. And I think it's actually in the same commit that I was running. Because originally that one second used to be literally one second so one way was one second whereas once you add a timestamp precision of one in twenty six that obviously once one way is or even this hundred fifty million has to be divided by one in twenty six meaning that we it's basically one and a half seconds of impact that will be left with the code as it was.
-
-And I believe the liquidity team decided that was not acceptable and so they ended up changing to a slope intercept model which is different but yeah fundamentally that was it with the bug another bug that never made it to production.
-
-## Conclusion and Next Steps
-
-And it's really because it has led me, especially personally, to finding an incredible amount of bugs, preventing an insane amount of economic volume. And so I can casually say that we prevented a one hundred fifty million dollar voting bug because it really is through the power of this tool. And obviously our unwavering patience in using it, but the tool allowed us to do it.
-
-And so you should do one hundred percent consider this. And hopefully this shows you what can be done at the highest level. And so obviously all of what we thought was just one way turned out to be one second for all take for each instance, meaning that it turned out to be a massive value once you start having a ton of voting power and a ton of seconds. And obviously you could do it for every initiative. And so that will lead, I think the hundred million bug is actually underestimated. I think the impact on this bug is literally infinite because you can probably repeat it every time the truncation line is hit.
-
-If you enjoyed the video definitely let me know and then I'll see you tomorrow where we're gonna host building a safe protocol we're gonna have james from badger dub from corn Jerome from Centrifuge and Thomas from Credit Coupe. These are all previous customers of ours and they're going to share their insight into how to build a protocol that is safe and not run into a wall where you just have unsafe code and you literally can't ship.
-
-Thank you for your time. Have an awesome rest of your day and I'll see you tomorrow. Have an awesome one.
+**TODO: add the implementation of the second property**
