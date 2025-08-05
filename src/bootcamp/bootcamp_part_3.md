@@ -319,7 +319,7 @@ Now with the fuzzer running in the background to explore state we'll take advant
 
 In addition to the solvency property we outlined above we can also define a property that states that: "the sum of rewards are less than or equal to the reward token balance of the `RewardsManager`". 
 
-Often it's good to write out properties as pseudo-code first because it allows us to understand which values we can read from state and which we'll need to add additional tracking for. In our case we need to know the sum of rewards of a user, which we can get from the **TODO: `rewardsInfo` looks like it's unused so probably changed later down below in actual implementation**. We can the write the following pseudocode to describe what we need our propert to do:
+Often it's good to write out properties as pseudo-code first because it allows us to understand which values we can read from state and which we'll need to add additional tracking for. In our case we need to know the sum of rewards of a user, which we can get from the **TODO: `rewardsInfo` looks like it's unused so probably changed later down below in actual implementation**. We can then write the following pseudocode to describe what we need our property to do:
 
 ```md
 For each epoch, sum all rewards for `address(this)` (our placeholder for the vault)

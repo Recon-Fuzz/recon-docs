@@ -1,6 +1,6 @@
-# The Liquity Governance Bug Case Study
+# Liquity Governance Bug Case Study
 
-We'll now see how everything we've covered up to this point in the bootcamp was used to find a real world vulnerability in the V2 of Liquity's governance system in an engagement performed by [Alex The Entreprenerd](https://x.com/GalloDaSballo).
+We'll now see how everything we've covered up to this point in the bootcamp was used to find a real-world vulnerability in the V2 of Liquity's governance system in an engagement performed by [Alex The Entreprenerd](https://x.com/GalloDaSballo).
 
 This issue was found in [this commit](https://github.com/liquity/V2-gov/tree/29471b270b365b655d4ddc74226322376e2ffe60) which was under review in the Liquity V2 codebase.
 
@@ -46,7 +46,7 @@ In our case this begins with the `_calculateAverageTimestamp` function:
 
 The intention of this calculation was to make flashloans unable to manipulate voting power by using the average amount of time for which a user was deposited to calculate voting power which in the case of a flashloan would be 0 and for any normal deposits their voting power would increase with the amount of time deposited. 
 
-The key thing to note for our case is that the `newOuterAverageAge` calculation is subject to truncation where the because of the division operation that it performs. This had already been highlighted in a previous review and it had been thought that the maximum value lost to truncation would be 1 second, since the `newOuterAverageAge` represents time in seconds and the truncation would essentially act as a rounding down, eliminating the trailing digit. Since the maximum lost value of 1 second, the impact of this finding was judged as low severity. 
+The key thing to note for our case is that the `newOuterAverageAge` calculation is subject to truncation because of the division operation that it performs. This had already been highlighted in a previous review and it had been thought that the maximum value lost to truncation would be 1 second, since the `newOuterAverageAge` represents time in seconds and the truncation would essentially act as a rounding down, eliminating the trailing digit. Since the maximum lost value was 1 second, the impact of this finding was judged as low severity. 
 
 If we look at the `_allocateLQTY` function which is what actually handles user vote allocation using the `LQTY` token we see the following: 
 
@@ -173,24 +173,24 @@ Given that the `_calculateAverageTimestamp` function was expected to have at lea
 
         t(
             allocatedLQTYSum == totalCountedLQTY || (
-                allocatedLQTYSum >= totalCountedLQTY - TOLLERANCE &&
-                allocatedLQTYSum <= totalCountedLQTY + TOLLERANCE
+                allocatedLQTYSum >= totalCountedLQTY - TOLERANCE &&
+                allocatedLQTYSum <= totalCountedLQTY + TOLERANCE
             ),
-        "Sum of Initiative LQTY And State matches within absolute tollerance");
+        "Sum of Initiative LQTY And State matches within absolute tolerance");
 
         t(
             votedPowerSum == govPower || (
-                votedPowerSum >= govPower - TOLLERANCE &&
-                votedPowerSum <= govPower + TOLLERANCE
+                votedPowerSum >= govPower - TOLERANCE &&
+                votedPowerSum <= govPower + TOLERANCE
             ),
-        "Sum of Initiative LQTY And State matches within absolute tollerance");
+        "Sum of Initiative LQTY And State matches within absolute tolerance");
     }
 ```
 
 where 
 
 ```javascript
-    uint256 constant TOLLERANCE = 1e19; // NOTE: 1e18 is 1 second due to upscaling
+    uint256 constant TOLERANCE = 1e19; // NOTE: 1e18 is 1 second due to upscaling
 ```
 
 **TODO: how can tolerance be seconds if other value is voting power**
@@ -231,7 +231,7 @@ so this insolvency that was initially thought to be marginal turned out to resul
 
 ### Key Takeaways
 
-If there's any takeaway from this lesson, it shoul be that a global property breaking should make you reflect, should be a cause for pause and consideration about how the system works. Then you can can determine by how much a property breaks by using the three steps we showed above: using an exact check, an exact check with bounds, and optimization mode. 
+If there's any takeaway from this lesson, it should be that a global property breaking should make you reflect, should be a cause for pause and consideration about how the system works. Then you can determine by how much a property breaks by using the three steps we showed above: using an exact check, an exact check with bounds, and optimization mode. 
 
 More generally, if you can't create an exact check to allow you to check your property, you should refactor your property into an optimization mode test to determine what a possible difference is as it will still be valuable in helping you determine if a broken property leads to a low severity issue or a high severity one.
 
@@ -241,32 +241,35 @@ After running in optimization mode for a few minutes with the other optimization
 
 **TODO: insert image of optimization logs**
 
-Since Echidna will only apply shrinking to an optimization call sequence if it reaches the `testLimit`, the approach we need to take here is slightly differente from when we run in `assertion` moce. Once we have a large enough value like above to demonstrate that the severity is no longer what we previously expected, we can stop the job. 
+Since Echidna will only apply shrinking to an optimization call sequence if it reaches the `testLimit`, the approach we need to take here is slightly different from when we run in `assertion` mode. Once we have a large enough value like above to demonstrate that the severity is no longer what we previously expected, we can stop the job. 
 
-So I'm going to show you how to get a repro in, you know, how to get a repro from a key in twenty twenty five from optimization mode. But fundamentally, Echidna will stop shrinking only when you're done. And so I think I ran it already, so I'm somewhat cheating. But basically, I'm just going to run with something like ten thousand tests.
+So now that we have a call sequence that maximizes the value which is saved to our corpus we can just run a job with a `testLimit` of 10,000 which will quickly be reached and allow Echidna to shrink the reproducer call sequence for us:
 
-And so what's going to happen is that the ten thousand tests are sufficient for Echidna to grab the previous corpus and replay it and give me the maximum value. But then they're going to be very quick on the CPU cycles, so that we get through those. And then after the ten thousand tests, Echidna will engage shrinking.
+So Echidna will use the 10,000 tests to replay calls from the sequence in the corpus which will eventually reach the same maximum value, then it will enter shrinking mode as it stops which will remove calls that don't contribute to optimizing the desired value.
 
-And you generally, for optimization mode, you want to let it run as much as you can. And this is also why in Create Chimera App True, our latest version of Create Chimera App, which is live and re-confused with Flash Create Chimera App, we have a shrink limit of one hundred thousand because it generally tends to be the sweet spot to get to shrink basically anything until it runs into bugs, which there's few, but they do exist.
+Generally we want to allow shrinking to run for as long as possible to ensure that we have all unnecessary calls removed from the sequence, which is why chimera comes with the `shrinkLimit` in the `echidna.yaml` configuration file set to 100,000.
 
-### Handling Zero Values in Optimization
+> Note that as of the time of writing there's a bug in Echidna that effects shrinking [described here](../writing_invariant_tests/optimizing_broken_properties.md#zero-call-sequence)
 
-And then another thing to note is that anytime an optimization property gives you a zero, let's say this property gives a zero, that will trigger another bug that Echidna has where it will try to shrink an empty sequence and it just will crush the worker. And so to prevent that, you just have to comment out every property that returns a zero.
+We then pass this into our Echidna log scrapper and get the following reproducer:
 
-So if we go to the end here and we see max value zero for this liquidity underpay we just have to comment it out in the source code and then rerun the suite or rerun just the shrinking part of echidna to allow it to do it I learned this the hard way, but there's a reason why I'm so willing to talk about it.
+which can normally be used for debugging but in this case since the source of the issue is already known, this simply serves as proof of how an attacker could use this to inflate their voting power.
 
 ### The Final Impact and Resolution
 
 Yeah, we basically broke it through that property. And in terms of mitigation, the mitigation that I had suggested was to use a higher scale, higher precision scale. And I think it's actually in the same commit that I was running. Because originally that one second used to be literally one second so one way was one second whereas once you add a timestamp precision of one in twenty six that obviously once one way is or even this hundred fifty million has to be divided by one in twenty six meaning that we it's basically one and a half seconds of impact that will be left with the code as it was.
 
-And I believe the liquidity team decided that was not acceptable and so they ended up changing to a slope intercept model which is different but yeah fundamentally that was it with the bug another bug that never made it to production.
+And I believe the Liquity team decided that was not acceptable and so they ended up changing to a slope intercept model which is different but yeah fundamentally that was it with the bug another bug that never made it to production.
 
 ## Conclusion and Next Steps
 
-And it's really because it has led me, especially personally, to finding an incredible amount of bugs, preventing an insane amount of economic volume. And so I can casually say that we prevented a one hundred fifty million dollar voting bug because it really is through the power of this tool. And obviously our unwavering patience in using it, but the tool allowed us to do it.
+So what was originally thought to just be a precision loss of 1 wei, really turned out to be one second for all stake for each initiative, meaning that this value is very large once you start having a large amount of voting power and a many seconds have passed. This could then be applied to every initiative, inflating voting power even further. 
 
-And so you should do one hundred percent consider this. And hopefully this shows you what can be done at the highest level. And so obviously all of what we thought was just one way turned out to be one second for all take for each instance, meaning that it turned out to be a massive value once you start having a ton of voting power and a ton of seconds. And obviously you could do it for every initiative. And so that will lead, I think the hundred million bug is actually underestimated. I think the impact on this bug is literally infinite because you can probably repeat it every time the truncation line is hit.
+This concludes the Recon bootcamp, you should now be ready to take everything you've learned here and apply it to real-world projects to find bugs with invariant testing. 
 
-If you enjoyed the video definitely let me know and then I'll see you tomorrow where we're gonna host building a safe protocol we're gonna have james from badger dub from corn Jerome from Centrifuge and Thomas from Credit Coupe. These are all previous customers of ours and they're going to share their insight into how to build a protocol that is safe and not run into a wall where you just have unsafe code and you literally can't ship.
+For some real-world examples of how we used Chimera to set up invariant testing suites for some of our customers check out the following repos from Recon engagements:
+- [eBTC BSM](https://github.com/ebtc-protocol/ebtc-bsm/tree/main/test/recon-core)
+- [Nerite](https://github.com/Recon-Fuzz/nerite/tree/invariant-testing/contracts/test/recon)
+- [Liquity Governance V2](https://github.com/liquity/V2-gov/tree/main/test/recon)
 
-Thank you for your time. Have an awesome rest of your day and I'll see you tomorrow. Have an awesome one.
+If you have any questions or feel that we've missed a topic to help you get started with invariant testing please reach out to the Recon team in the help channel of [our Discord](https://discord.gg/aCZrCBZdFd). 

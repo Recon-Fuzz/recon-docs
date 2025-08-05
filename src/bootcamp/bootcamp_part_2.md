@@ -556,9 +556,4 @@ If you'd like to see more examples of how to scaffold projects with Chimera chec
 - [Fuzzing MicroStable with Echidna](https://www.youtube.com/watch?v=WYqyZG8itb0) | Alex & Shafu on Invariant Testing
 - [Using Recon Pro to test invariants in the cloud](https://www.youtube.com/watch?v=cUAgLUra3Zw) | Alex & Austin Griffith
 
-For some real-world examples using Chimera checkout the following repos from Recon engagements:
-- [eBTC BSM](https://github.com/ebtc-protocol/ebtc-bsm/tree/main/test/recon-core)
-- [Nerite](https://github.com/Recon-Fuzz/nerite/tree/invariant-testing/contracts/test/recon)
-- [Liquity Governance V2](https://github.com/liquity/V2-gov/tree/main/test/recon)
-
 If you have any questions feel free to reach out to the Recon team in the help channel of [our discord](https://discord.gg/aCZrCBZdFd). 
