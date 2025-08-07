@@ -81,7 +81,8 @@ abstract contract TargetFunctions {
               }
        }
 
-       function counter_setNumber_clamped(uint256 newNumber) public asActor {
+       // NOTE: Clamped handler doesn't use `asActor` nor before after handlers, as it's going to use the unclamped handler
+       function counter_setNumber_clamped(uint256 newNumber) public {
               // clamping prevents the newNumber passed into setNumber from ever being 0
               newNumber = between(newNumber, 1, type(uint256).max);
               // clamped handler calls the unclamped handler
