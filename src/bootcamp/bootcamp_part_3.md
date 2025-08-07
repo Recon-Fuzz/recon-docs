@@ -740,4 +740,6 @@ When you're forced to refactor your code to resolve an issue identified by a bro
 
 One of the other key benefits of invariant testing besides explicitly identifying exploits is that it allows you to ask and answer questions about **whether it's possible to get the system into a specific state**. If the answer is yes and the state is unexpected, this can often be used as a precondition that can lead to an exploit of the system. 
 
-In part 4, we'll look at how a precondition was able to identify a multi-million dollar bug in a real-world codebase before it was pushed to production. 
+In [part 4](../bootcamp/bootcamp_part_4.md), we'll look at how a precondition was able to identify a multi-million dollar bug in a real-world codebase before it was pushed to production. 
+
+As always, if you have any questions reach out to the Recon team in the help channel of [our discord](https://discord.gg/aCZrCBZdFd). 
