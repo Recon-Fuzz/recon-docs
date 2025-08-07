@@ -267,6 +267,8 @@ So what was originally thought to just be a precision loss of 1 wei, really turn
 
 This concludes the Recon bootcamp, you should now be ready to take everything you've learned here and apply it to real-world projects to find bugs with invariant testing. 
 
+To learn more about techniques for implementing properties checkout [this section](../writing_invariant_tests/implementing_properties.md). For more on how to use optimization mode to determine the maximum severity of a broken property checkout [this section](../writing_invariant_tests/optimizing_broken_properties.md). 
+
 For some real-world examples of how we used Chimera to set up invariant testing suites for some of our customers check out the following repos from Recon engagements:
 - [eBTC BSM](https://github.com/ebtc-protocol/ebtc-bsm/tree/main/test/recon-core)
 - [Nerite](https://github.com/Recon-Fuzz/nerite/tree/invariant-testing/contracts/test/recon)
