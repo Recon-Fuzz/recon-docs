@@ -11,7 +11,7 @@ In this first part we're going to look at the Chimera Framework, what it is, why
 The key idea behind the Chimera framework is to use the following contracts as a scaffolding for your test suite:
 
 - `Setup` - where deployment configurations are located
-- `TargetFunctions` - explicitly define all functions that should be called as part of state exploration
+- `TargetFunctions` - explicitly define all functions that should be called by the tool as part of state exploration
 - `Properties` - used to explicitly define the properties to be tested
 - `BeforeAfter` - used to track variables over time to define more complex properties
 - `CryticTester` - the entrypoint from which a given tool will execute tests
@@ -23,14 +23,14 @@ This scaffolding reduces the decisions you have to make about your test suite co
 
 The primary contracts we'll be looking at in this lesson are `Setup` and `TargetFunctions`.
 
-In `Setup`, we're going to put all of our deployment configuration. This can become very complex but for now all you want to think about is that we need to specify how to deploy all the contracts of interest for all of our tools.
+In the `Setup` contract we're going to locate all of our deployment configuration. This can become very complex but for now all you need to think about is specifying how to deploy all the contracts of interest for our tool.
 
 The `TargetFunctions` contract allows you to explicitly state all the functions that should be called as part of state exploration. For more complex codebases you'll generally have multiple sub-contracts which specify target functions for each of the contracts of interest in the system which you can inherit into `TargetFunctions`. Fundamentally, any time you're thinking about exploring state the handler for the state changing call should be located in `TargetFunctions`.
 
 --- 
 
 ## Getting Started
-To follow along, you can clone this [Morpho repository](https://github.com/morpho-org/morpho-blue). We'll then see how after you've cloned Morpho you can use the [Recon Builder](../free_recon_tools/builder.md) to get all the Chimera scaffoling for our contract of interest. 
+To follow along, you can clone this fork of the [Morpho repository](https://github.com/Recon-Fuzz/morpho-blue). We'll then see how to use the [Recon Builder](../free_recon_tools/builder.md) to add all the Chimera scaffolding for our contract of interest. 
 
 Our primary goals for this section are: 
 1. **setup** - create the simplest setup possible that allows you to test all interesting state combinations
@@ -41,12 +41,12 @@ Our primary goals for this section are:
 Once you've cloned the Morpho repo locally you can make the following small changes to speed up compilation and test run time: 
 - disable `via-ir` in the `foundry.toml` configuration 
 - remove the `bytecode_hash = "none"` from the `foundry.toml` configuration (this interferes with coverage report generation in the fuzzer)
-- delete the entire existing test folder
+- delete the entire existing `test` folder
 
 
 Our next step is going to be getting all the Chimera scaffolding added to our repo which we'll do using the [Recon Extension](../free_recon_tools/recon_extension.md) because it's the fastest and simplest way. 
 
-> NOTE: you can also generate your Chimera scaffolding without downloading the extension using the [Recon Builder](../free_recon_tools/builder.md) instead
+> You can also generate your Chimera scaffolding without downloading the extension using the [Recon Builder](../free_recon_tools/builder.md) instead
 
 After having downloaded the extension you'll need to build the project so it can recognize the contract ABIs that we want to scaffold:
 
@@ -64,7 +64,7 @@ After scaffolding, all the Chimera Framework contracts will be added to a new `t
 
 ### Fail Mode and Catch Mode
 
-The extension offers some additional "modes" for target functions: **fail mode** and **catch mode**:
+The extension offers additional "modes" for target functions: **fail mode** and **catch mode**:
 
 ![Test Modes In Extension](../images/bootcamp/test_modes_extension.png)
 
@@ -80,9 +80,9 @@ This is important to note because without it you could end up excluding revertin
 
 Generally you should aim to make the `Setup` contract as simple as possible, this helps reduce the number of assumptions made and also makes it simpler for collaborators to understand the initial state that the fuzzer starts from. 
 
-> NOTE: if you used the Recon Builder for scaffolding you'll most likely have to spend some time resolving compilation errors due to incorrect imports because it isn't capable of automatically resolving these in the same way that the extension does.
+> If you used the Recon Builder for scaffolding you'll most likely have to spend some time resolving compilation errors due to incorrect imports because it isn't capable of automatically resolving these in the same way that the extension does.
 
-In our case because of the relative simplicity of the contract that we're deploying in our test suite we can just check the constructor arguments of the `Morpho` contract to determine what we need to deploy it:
+In our case, because of the relative simplicity of the contract that we're deploying in our test suite we can just check the constructor arguments of the `Morpho` contract to determine what we need to deploy it:
 
 ```javascript
 contract Morpho is IMorphoStaticTyping {
@@ -104,7 +104,7 @@ contract Morpho is IMorphoStaticTyping {
 
 from which we can see that we simply need to pass in an owner for the deployed contract. 
 
-We can therefore modify our `Setup` contract accordingly so that it deploys the `Morpho` contract with the `address(this)` (the default [actor](../glossary.md#actor) that we use as our admin) set as the owner of the contract: 
+We can therefore modify our `Setup` contract accordingly so that it deploys the `Morpho` contract with `address(this)` (the default [actor](../glossary.md#actor) that we use as our admin) set as the owner of the contract: 
 
 ```javascript
 abstract contract Setup is BaseSetup, ActorManager, AssetManager, Utils {
@@ -118,7 +118,7 @@ abstract contract Setup is BaseSetup, ActorManager, AssetManager, Utils {
 }
 ```
 
-We now have the contract which we can call target functions on deployed! This completes step 1 of 2 and now we can run the fuzzer!
+We now have the contract which we can call target functions on deployed and we can now run the fuzzer!
 
 ### Aside: How We Can Reuse Tests
 
@@ -157,7 +157,7 @@ With Medusa downloaded you can use the _Fuzz with Medusa_ button from the Recon 
 
 > You can also run Medusa using `medusa fuzz` from the root of your project directory
 
-After killing the fuzzing run after a few minutes (using the _cancel_ button from the Recon Cockpit or `ctrl + c` from the CLI), you'll be ready to analyze the results.
+We'll run the fuzzer for 10-15 minutes then stop the execution (using the _cancel_ button from the Recon Cockpit or `ctrl + c` from the CLI) to analyze the results.
 
 ## Understanding Fuzzer Output
 
@@ -190,19 +190,19 @@ From the output logs from Medusa we can see that its entrypoint into our created
 
 Which allows it to call all of the functions defined on our `TargetFunctions` contract (which in this case it inherits from `MorphoTargets`) **in a random order with random values passed in**. 
 
-> NOTE: The additional functions called in the above logs are defined on the `ManagersTargets` which provide utilities for modifying the currently used actor (via the [`ActorManager`](../oss/setup_helpers.md#actormanager)) and admin (via the [`AssetManager`](../oss/setup_helpers.md#assetmanager)) in the setup.
+> The additional functions called in the above logs are defined on the `ManagersTargets` which provide utilities for modifying the currently used actor (via the [`ActorManager`](../oss/setup_helpers.md#actormanager)) and admin (via the [`AssetManager`](../oss/setup_helpers.md#assetmanager)) in the setup.
 
 After running the fuzzer, it also generates a corpus which is a set of call sequences that allowed the fuzzer to expand line coverage:
 
 ![Coverage Sequences](../images/bootcamp/coverage_sequences.png)
 
-This will make it so that previous runs don't need to explore random inputs each time and the fuzzer will use inputs that it found that expand coverage to guide its fuzzing process and add mutations (modifications) to them to attempt to unlock new coverage or break a property. You can think of the corpus as the fuzzer's memory which allows it to retrace its previous steps when it starts again.
+This will make it so that previous runs don't need to only explore random inputs each time and the fuzzer will be able to use inputs and call sequences that it found that expand coverage to guide its fuzzing process and add mutations (modifications) to them to attempt to unlock new coverage or break a property. You can think of the corpus as the fuzzer's memory which allows it to retrace its previous steps when it starts again.
 
-> NOTE: If you modify the interface of your target function handlers you should delete your existing corpus and allow the fuzzer to generate a new one, otherwise it will make calls using the previous sequences which may no longer be valid and prevent proper state space exploration. 
+> If you modify the interface of your target function handlers you should delete your existing corpus and allow the fuzzer to generate a new one, otherwise it will make calls using the previous sequences which may no longer be valid and prevent proper state space exploration. 
 
 ## Understanding Coverage Reports
 
-After stopping Medusa it will also generate a coverage report (Chimera comes preconfigured to ensure that Medusa and Echidna always generate a coverage report) which is an HTML file that displays all the code from your project highlighting in green lines which the fuzzer reached and in red lines that the fuzzer didn't reach during testing. 
+After stopping Medusa it will also generate a coverage report (Chimera comes preconfigured to ensure that Medusa and Echidna always generate a coverage report) which is an HTML file that displays all the code from your project highlighting in green: lines which the fuzzer reached and in red: lines that the fuzzer didn't reach during testing. 
 
 ![Initial Morpho Coverage](../images/bootcamp/initial_morpho_coverage.png)
 
@@ -210,7 +210,7 @@ The coverage report is one of the most vital insights in stateful fuzzing becaus
 
 ## Debugging Failed Properties
 
-Now we'll add a simple assertion that always evaluates to false to one of our target function handlers: 
+Now we'll add a simple assertion that always evaluates to false (canary property) to one of our target function handlers to see how the fuzzer outputs breaking call sequences for us: 
 
 ```javascript
     function morpho_setOwner(address newOwner) public asActor {
@@ -252,11 +252,11 @@ If you ran the fuzzer with the extension, it will give you the option to automat
 
 This will be key once we start to break nontrivial properties because it gives us a much faster feedback loop to debug them.
 
-## Creating Mock Contracts
+## Initital Coverage Analysis
 
-If we look more closely at the `Morpho` contract which we're targeting with our `TargetFunctions` we can see from the 0% in our coverage report that it doesn't actually cover any of the lines of interest: 
+If we look more closely at the `Morpho` contract which we're targeting with our `TargetFunctions` we can see from the 28% in our coverage report that our target functions are only allowing us to reach minimal exploration of possible states: 
 
-![Morpho Coverage Detailed](../images/bootcamp/morpho_coverage_detailed.png)
+![Morpho Coverage Detailed](../images/bootcamp/initial_covg.png)
 
 If we look at the coverage on our `TargetFunctions` directly however we see that we have 100% coverage and all the lines show up highlighted in green: 
 
@@ -264,9 +264,29 @@ If we look at the coverage on our `TargetFunctions` directly however we see that
 
 This is an indication to us that the calls to the target function handlers themselves are initially successful but once it reaches the actual function in the `Morpho` contract it reverts. 
 
-If we look further at the implementation of the `Morpho` contract we can determine that the first thing we need to do to increase coverage is call the `enableIrm` function which allows enabling an Interest Rate Model (IRM) contract which calculates dynamic borrow rates for Morpho markets based on utilization. 
+## Understanding Morpho
 
-Since the IRM can be any contract that implements the `IIRM` interface and there's none in the existing Morpho repo, we'll create a mock so that we can simulate its behavior which will allow us to achieve our short-term goal of coverage for now. If we find that the actual behavior of the IRM is interesting for any of the properties we want to test, we can later replace this with a more realistic implementation. 
+Before we move on to looking at techniques that will allow us to increase coverage on the `Morpho` contract it'll help to have a bit of background on what `Morpho` is and how it works.
+
+Morpho is a noncustodial lending protocol that functions as a lending marketplace where users can supply assets to earn interest and borrow against collateral. 
+
+The protocol uses a singleton architecture where all lending markets exist within a single contract, with each market defined by five parameters: loan token, collateral token, oracle, interest rate model, and loan-to-value ratio. It implements share-based accounting, supports permissionless market creation and includes liquidation mechanisms to maintain solvency.
+
+## Creating Mock Contracts
+
+Now with a better understanding of Morpho we can see that for it to allow any user operations such as borrowing and lending it first needs a market to be created and for this we need an Interest Rate Model (IRM) contract which calculates dynamic borrow rates for Morpho markets based on utilization and can be set by an admin using the `enableIrm` function:
+
+```javascript
+    function enableIrm(address irm) external onlyOwner {
+        require(!isIrmEnabled[irm], ErrorsLib.ALREADY_SET);
+
+        isIrmEnabled[irm] = true;
+
+        emit EventsLib.EnableIrm(irm);
+    }
+```
+
+Since the IRM can be any contract that implements the `IIRM` interface and there's none in the existing Morpho repo, we'll need to create a mock so that we can simulate its behavior which will allow us to achieve our short-term goal of coverage for now. If we find that the actual behavior of the IRM is interesting for any of the properties we want to test, we can later replace this with a more realistic implementation. 
 
 The Recon Extension allows automatically generating mocks for a contract by right-clicking it and selecting the _Generate Solidity Mock_ option, but in our case since there's no existing instance of the IRM contract, we'll have to manually create our own as follows: 
 
@@ -288,7 +308,7 @@ contract IrmMock {
 
 Our mock simply exposes a function for setting and getting the `_borrowRate` because these are the functions required in the `IIRM` interface. We'll then expose a target function that calls the `setBorrowRate` function which allows the fuzzer to modify the borrow rate randomly. 
 
-Now the next contract we'll need is the oracle for setting the price of the underlying asset. Looking at the existing `OracleMock` in the Morpho repo we can see that it's already very simple so we can just reuse it in this case: 
+Now the next contract we'll need for creating a market is the oracle for setting the price of the underlying asset. Looking at the existing `OracleMock` in the Morpho repo we can see that it's sufficient for our case: 
 
 ```javascript
 contract OracleMock is IOracle {
@@ -315,6 +335,10 @@ abstract contract Setup is BaseSetup, ActorManager, AssetManager, Utils {
         // Deploy Morpho
         morpho = new Morpho(_getActor()); 
 
+        // Deploy Mocks
+        irm = new MockIRM();
+        oracle = new OracleMock();
+
         // Deploy assets
         _newAsset(18); // asset
         _newAsset(18); // liability
@@ -324,7 +348,7 @@ abstract contract Setup is BaseSetup, ActorManager, AssetManager, Utils {
 
 In the above we use the `_newAsset` function exposed by the [`AssetManager`](../oss/setup_helpers.md#assetmanager) to deploy a new asset which we can fetch using the `_getAsset()` function.
 
-We introduced the `AssetManager` and `ActorManager` in V2 of Create Chimera App because the majority of setups will require multiple addresses to perform calls and use tokens in some way. Since our framework implicitly overrides the system of using different senders via the fuzzer, the `ActorManager` allows us to replicate the normal behavior of having multiple senders using the `asActor` modifier. Similarly, tracking deployed tokens for checking properties or clamping previously required implementing unique configurations in the `Setup` contract, so we've abstracted this into the `AssetManager` to standardize the process and prevent needing to reimplement it each time.
+> We introduced the `AssetManager` and `ActorManager` in V2 of Create Chimera App because the majority of setups will require multiple addresses to perform calls and use tokens in some way. Since our framework implicitly overrides the use of different senders via the fuzzer, the `ActorManager` allows us to replicate the normal behavior of having multiple senders using the `asActor` modifier. Similarly, tracking deployed tokens for checking properties or clamping previously required implementing unique configurations in the `Setup` contract, so we've abstracted this into the `AssetManager` to standardize the process and prevent needing to reimplement it each time.
 
 
 ## Market Creation and Handler Implementation
@@ -360,9 +384,9 @@ Now to continue the fixes to our setup we'll need to register a market in the `M
     }
 ```
 
-It's important to note that this setup only allows us to test one market with the configurations we've added above, whereas if we want to truly be sure that we're testing all possibilities, we could use what we've termed as _dynamic deployment_ to allow the fuzzer to deploy multiple markets with different configurations (we'll cover this in a later section).
+It's important to note that this setup only allows us to test one market with the configurations we've added above, whereas if we want to truly be sure that we're testing all possibilities, we could use what we've termed as _dynamic deployment_ to allow the fuzzer to deploy multiple markets with different configurations (we cover this in [part 2](../bootcamp/bootcamp_part_2.md#dynamic-market-creation)).
 
-We can then make a further simplifying assumption that will work as a form of clamping to allow us to get to coverage faster by storing the `marketParams` variable as a storage variable:
+We can then make a further simplifying assumption that will work as a form of [clamping](../glossary.md#clamping) to allow us to get line coverage faster by storing the `marketParams` variable as a storage variable:
 
 ```javascript
 abstract contract Setup is BaseSetup, ActorManager, AssetManager, Utils {
@@ -410,57 +434,9 @@ abstract contract MorphoTargets is
 }
 ```
 
-> The `asActor` modifier explicitly uses the currently set actor returned by `_getActor()` to call the handler functions, whereas the `asAdmin` modifier uses the default admin actor (`address(this)`). In the above setup we only have the admin actor added to the actor tracking but we use the `asActor` address to indicate that these are functions that are expected to be called by any normal user. Only target functions expected to be called by privileged users should use the `asAdmin` modifier.
+> The `asActor` modifier explicitly uses the currently set actor returned by `_getActor()` to call the handler functions, whereas the `asAdmin` modifier uses the default admin actor (`address(this)`). In the above setup we only have the admin actor added to the actor tracking array but we use the `asActor` address to indicate that these are functions that are expected to be called by any normal user. Only target functions expected to be called by privileged users should use the `asAdmin` modifier.
 
-
-This helps us get to coverage faster because instead of the fuzzer trying all possible inputs for the `MarketParams` struct, it uses the `marketParams` from the setup to ensure it always targets the correct market. 
-
-## Testing Your Setup
-
-Now to ensure that our setup doesn't revert we can run the default `test_crytic` function in `CryticToFoundry` which is an empty test that will just call the `setup` function and allow us to confirm that our next run of the fuzzer will actually be able to achieve some sort of state exploration (if it reverts in the `setup` function our coverage report is essentially useless): 
-
-```bash
-Ran 1 test for test/recon/CryticToFoundry.sol:CryticToFoundry
-[PASS] test_crytic() (gas: 238)
-Suite result: ok. 1 passed; 0 failed; 0 skipped; finished in 6.46ms (557.00µs CPU time)
-```
-
-### Testing Token Interactions
-
-We can then create a simple unit test to confirm that we can successfully add these tokens to the system as a user: 
-
-```javascript
-    function test_crytic() public {
-        // testing supplying assets to a market as the default actor (address(this))
-        morpho_supply(1e18, 0, _getActor(), hex"");
-    }
-```
-
-which, if we run with `forge test --match-test test_crytic -vvvv --decode-internal`, will allow us to see how many shares we get minted: 
-
-```bash
-    │   ├─ emit Supply(id: 0x5914fb876807b8cd7b8bc0c11b4d54357a97de46aae0fbdfd649dd8190ef99eb, caller: CryticToFoundry: [0x7FA9385bE102ac3EAc297483Dd6233D62b3e1496], onBehalf: CryticToFoundry: [0x7FA9385bE102ac3EAc297483Dd6233D62b3e1496], assets: 1000000000000000000 [1e18], shares: 1000000000000000000000000 [1e24])
-    │   ├─ [38795] SafeTransferLib::safeTransferFrom(<unknown>, 0x5615dEB798BB3E4dFa0139dFa1b3D433Cc23b72f, 0x7FA9385bE102ac3EAc297483Dd6233D62b3e1496, 1136628940260574992893479910319181283093952727985 [1.136e48])
-    │   │   ├─ [34954] MockERC20::transferFrom(CryticToFoundry: [0x7FA9385bE102ac3EAc297483Dd6233D62b3e1496], Morpho: [0x5615dEB798BB3E4dFa0139dFa1b3D433Cc23b72f], 1000000000000000000 [1e18])
-    │   │   │   ├─ emit Transfer(from: CryticToFoundry: [0x7FA9385bE102ac3EAc297483Dd6233D62b3e1496], to: Morpho: [0x5615dEB798BB3E4dFa0139dFa1b3D433Cc23b72f], value: 1000000000000000000 [1e18])
-    │   │   │   └─ ← [Return] true
-    │   │   └─ ← 
-    │   └─ ← [Return] 1000000000000000000 [1e18], 1000000000000000000000000 [1e24]
-    └─ ← [Return]
-```
-
-showing that we received 1e24 shares for the 1e18 assets deposited. 
-
-Next we'll expand our test to see if we can supply some collateral:
-
-```javascript
-    function test_crytic() public {
-        morpho_supply(1e18, 0, _getActor(), hex"");// testing supplying assets to a market as the default actor (address(this))
-        morpho_supplyCollateral(1e18, _getActor(), hex"");
-    }
-```
-
-which also succeeds.
+This helps us get to coverage over the lines of interest faster because instead of the fuzzer trying all possible inputs for the `MarketParams` struct, it uses the `marketParams` from the setup to ensure it always targets the correct market.
 
 ## Asset and Token Setup
 
@@ -510,6 +486,53 @@ abstract contract Setup is BaseSetup, ActorManager, AssetManager, Utils {
 ```
 
 The `_setupAssetsAndApprovals` function allows us to mint the deployed assets to the actors (handled by the [`ActorManager`](../oss/setup_helpers.md#actormanager)) and approves it to the deployed `Morpho` contract. Note that we mint `type(uint88).max` to each user because it's a sufficiently large amount that allows us to realistically test for overflow scenarios.
+
+## Testing Your Setup
+
+Now to ensure that our setup doesn't cause the fuzzer to revert before executing any tests we can run the default `test_crytic` function in `CryticToFoundry` which is an empty test that will just call the `setup` function, this will confirm that our next run of the fuzzer will actually be able to start state exploration: 
+
+```bash
+Ran 1 test for test/recon/CryticToFoundry.sol:CryticToFoundry
+[PASS] test_crytic() (gas: 238)
+Suite result: ok. 1 passed; 0 failed; 0 skipped; finished in 6.46ms (557.00µs CPU time)
+```
+
+### Testing Token Interactions
+
+We can also create a simple unit test to confirm that we can successfully supply the tokens minted above to the system as a user: 
+
+```javascript
+    function test_crytic() public {
+        // testing supplying assets to a market as the default actor (address(this))
+        morpho_supply(1e18, 0, _getActor(), hex"");
+    }
+```
+
+which, if we run with `forge test --match-test test_crytic -vvvv --decode-internal`, will allow us to see how many shares we get minted: 
+
+```bash
+    │   ├─ emit Supply(id: 0x5914fb876807b8cd7b8bc0c11b4d54357a97de46aae0fbdfd649dd8190ef99eb, caller: CryticToFoundry: [0x7FA9385bE102ac3EAc297483Dd6233D62b3e1496], onBehalf: CryticToFoundry: [0x7FA9385bE102ac3EAc297483Dd6233D62b3e1496], assets: 1000000000000000000 [1e18], shares: 1000000000000000000000000 [1e24])
+    │   ├─ [38795] SafeTransferLib::safeTransferFrom(<unknown>, 0x5615dEB798BB3E4dFa0139dFa1b3D433Cc23b72f, 0x7FA9385bE102ac3EAc297483Dd6233D62b3e1496, 1136628940260574992893479910319181283093952727985 [1.136e48])
+    │   │   ├─ [34954] MockERC20::transferFrom(CryticToFoundry: [0x7FA9385bE102ac3EAc297483Dd6233D62b3e1496], Morpho: [0x5615dEB798BB3E4dFa0139dFa1b3D433Cc23b72f], 1000000000000000000 [1e18])
+    │   │   │   ├─ emit Transfer(from: CryticToFoundry: [0x7FA9385bE102ac3EAc297483Dd6233D62b3e1496], to: Morpho: [0x5615dEB798BB3E4dFa0139dFa1b3D433Cc23b72f], value: 1000000000000000000 [1e18])
+    │   │   │   └─ ← [Return] true
+    │   │   └─ ← 
+    │   └─ ← [Return] 1000000000000000000 [1e18], 1000000000000000000000000 [1e24]
+    └─ ← [Return]
+```
+
+showing that we received 1e24 shares for the 1e18 assets deposited. 
+
+If we then expand our test to see if we can supply collateral against which a user can borrow:
+
+```javascript
+    function test_crytic() public {
+        morpho_supply(1e18, 0, _getActor(), hex"");// testing supplying assets to a market as the default actor (address(this))
+        morpho_supplyCollateral(1e18, _getActor(), hex"");
+    }
+```
+
+we see that it also succeeds, so we have confirmed that the fuzzer is also able to execute these basic user interactions.
 
 ## Advanced Handler Patterns
 
@@ -576,7 +599,7 @@ After running the test we see that the call to `morpho_borrow` fails because of 
 Suite result: FAILED. 0 passed; 1 failed; 0 skipped; finished in 6.57ms (761.17µs CPU time)
 ```
 
-We can see that this error originates in the `_isHealthy` check in `Morpho`: 
+Looking at the `Morpho` implementation we see this error originates in the `_isHealthy` check in `Morpho`: 
 
 ```javascript
     function _isHealthy(MarketParams memory marketParams, Id id, address borrower, uint256 collateralPrice)
@@ -652,12 +675,12 @@ Suite result: ok. 1 passed; 0 failed; 0 skipped; finished in 1.54ms (142.25µs C
 
 With this test passing we can confirm that we have coverage over the primary functions in the `Morpho` contract that will allow us to explore the contract's state. Writing the type of sanity test like we did in the `test_crytic` function allows us to quickly debug simple issues that will prevent the fuzzer from reaching coverage before running it so that we're not stuck in a constant cycle of running and debugging only using the coverage report.
 
-Now with this simple clamping in place we can let the fuzzer run to start building up a corpus and determine if there are any functions where coverage is being blocked.
+Now with this simple clamping in place we can let the fuzzer run for anywhere from 15 minutes to 2 hours to start building up a corpus and determine if there are any functions where coverage is being blocked.
 
 ## Conclusion and Next Steps
 
-We've seen above how we can set up and ensure coverage in invariant testing. Once you've confirmed coverage on the contracts of interest, you can then get to the more interesting step of defining and implementing properties that will help you determine if your system works correctly. 
+We've seen above how we can set up and ensure coverage in invariant testing. Coverage is key because without it we can run the fuzzer indefintely but won't necessarily be testing meaningful states so it's always the most vital step that needs to be completed before implementing and testing properties.
 
-This is the end of part 1 of the bootcamp. In part 2, we'll look at some new improvements to Create Chimera App that make getting to coverage even faster. 
+In part 2, we'll look at how we can get to full meaningful coverage and some techniques we can implement to ensure better logical coverage so that we have a higher likelihood of reaching all lines of interest more frequently. 
 
 If you have any questions feel free to reach out to us in the [Recon Discord channel](https://discord.gg/aCZrCBZdFd)
