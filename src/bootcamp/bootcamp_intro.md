@@ -2,6 +2,8 @@
 
 This bootcamp is meant to take you from no knowledge of invariant testing to a point where you feel comfortable writing invariant tests to find bugs in a production system. 
 
+The bootcamp is roughly inspired by the content covered by [Alex The Entrprenerd](https://x.com/GalloDaSballo) in the first three parts of the livestreamed version [here](https://getrecon.xyz/bootcamp).
+
 Over the four parts of the bootcamp we'll cover the following:
 - How to scaffold an invariant testing suite using the Recon extension.
 - How to create a simplified system deployment for your invariant testing suite.
