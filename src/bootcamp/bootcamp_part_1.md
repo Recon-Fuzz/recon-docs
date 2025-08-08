@@ -681,6 +681,6 @@ Now with this simple clamping in place we can let the fuzzer run for anywhere fr
 
 We've seen above how we can set up and ensure coverage in invariant testing. Coverage is key because without it we can run the fuzzer indefintely but won't necessarily be testing meaningful states so it's always the most vital step that needs to be completed before implementing and testing properties.
 
-In part 2, we'll look at how we can get to full meaningful coverage and some techniques we can implement to ensure better logical coverage so that we have a higher likelihood of reaching all lines of interest more frequently. 
+In [part 2](../bootcamp/bootcamp_part_2.md), we'll look at how we can get to full meaningful coverage and some techniques we can implement to ensure better logical coverage so that we have a higher likelihood of reaching all lines of interest more frequently. 
 
 If you have any questions feel free to reach out to us in the [Recon Discord channel](https://discord.gg/aCZrCBZdFd)
