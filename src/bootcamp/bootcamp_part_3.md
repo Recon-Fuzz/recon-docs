@@ -4,6 +4,8 @@
 
 In this section we'll finally get to exploring the reason why invariant testing is valuable: breaking properties, but first we need to understand how to define and implement them. 
 
+> For the recorded stream of this part of the bootcamp see [here](https://x.com/i/broadcasts/1dRKZYvXNgvxB).
+
 ## Additional Points On Chimera Architecture
 
 In parts 1 and 2 we primarily looked at targets defined in the `MorphoTargets` contract but when you scaffold with Recon you also get the `AdminTargets`, `DoomsdayTargets` and `ManagersTargets` generated automatically. We'll look at these more in depth below but before doing so here's a brief overview of each:

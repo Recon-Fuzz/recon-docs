@@ -2,6 +2,8 @@
 
 This 3-part bootcamp is meant to give you everything you need to go from zero knowledge of invariant testing to an intermediate level where you can comfortably set up an invariant testing suite yourself and use properties to identify bugs in Solidity smart contracts.
 
+> For the recorded stream of this part of the bootcamp see [here](https://x.com/i/broadcasts/1yoKMogdmLlJQ).
+
 In this first part we're going to look at the Chimera Framework, what it is, why it exists and how we can use it to test a smart contract system using multiple different tools. By the end of part 1 you should be comfortable scaffolding a system and ensuring it has full coverage. 
 
 > This bootcamp is roughly based on the first three parts of the bootcamp streamed by [Alex The Entreprenerd](https://x.com/GalloDaSballo) [here](https://getrecon.xyz/bootcamp) though some of the implementation details have changed, however you can still use it to follow along if you prefer consuming content in a video format. 

@@ -8,6 +8,8 @@ In [part 1](./bootcamp/bootcamp_day_1.md) we looked at how to create setup Morph
 
 Our goals for this section are: to reach 100% line coverage on the Morpho repo and exploring ways to make our test suite capable of testing more possible setup configurations.
 
+> For the recorded stream of this part of the bootcamp see [here](https://x.com/i/broadcasts/1mrGmPDlqgQKy).
+
 ## How to Evaluate Coverage Reports
 
 From part 1 our `MorphoTargets` contract should have two clamped handlers (`morpho_supply_clamped` and `morpho_supplyCollateral_clamped`) and the remaining functions should be unclamped. 

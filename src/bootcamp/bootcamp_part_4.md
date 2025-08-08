@@ -2,6 +2,8 @@
 
 We'll now see how everything we've covered up to this point in the bootcamp was used to find a real-world vulnerability in Liquity's governance system in an engagement performed by [Alex The Entreprenerd](https://x.com/GalloDaSballo).
 
+> For the recorded stream of this part of the bootcamp see [here](https://x.com/i/broadcasts/1dRKZYvXNgvxB) starting at 49:40.
+
 This issue was found in [this commit](https://github.com/liquity/V2-gov/tree/29471b270b365b655d4ddc74226322376e2ffe60) of the Liquity V2 codebase which was under review.
 
 ## Background: Calculate Average Timestamp
