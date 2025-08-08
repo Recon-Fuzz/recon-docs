@@ -2,11 +2,11 @@
 
 ## Introduction and Goals
 
-In [part 1](./bootcamp/bootcamp_day_1.md) we looked at how to create setup Morpho and get high coverage, in part 2 we'll look at how to achieve line coverage of the missing lines from the end of part 1.
+In [part 1](./bootcamp/bootcamp_day_1.md) we looked at how to setup Morpho with a Chimera invariant testing and get reasonable coverage over the lines of interest, in part 2 we'll look at how to achieve line coverage over the uncovered lines from the end of part 1.
 
 > You can follow along using the repo with the scaffolding created in part 1 [here](https://github.com/Recon-Fuzz/morpho-blue/tree/day-1).
 
-Our goals for this section are: to reach 100% line coverage on the Morpho repo and exploring ways to make our test suite capable of testing more possible setup configurations.
+Our goals for this section are: to reach 100% line coverage on the Morpho repo and explore ways to make our test suite capable of testing more possible setup configurations.
 
 > For the recorded stream of this part of the bootcamp see [here](https://x.com/i/broadcasts/1mrGmPDlqgQKy).
 
@@ -20,17 +20,13 @@ Having run Medusa with these functions implemented we should now see an increase
     <img src="../images/bootcamp/improved_covg.png" alt="Improved Coverage" style="width: 50%; height: auto;">
   </div>
 
-We can see from the above that after adding our clamped handlers our coverage on `Morpho` increased from 28% to 77%. Medusa will then save these coverage increasing calls to the corpus for reuse in future runs, increasing its efficiency by not causing it to explore paths that always revert. 
+We can see from the above that after adding our improved setup and clamped handlers our coverage on `Morpho` increased from 28% to 77%. Medusa will now have these coverage increasing calls saved to the corpus for reuse in future runs, increasing its efficiency by not causing it to explore paths that always revert. 
 
 As we mentioned in part 1, the coverage report simply shows us which lines were successfully reached by highlighting them in green and shows which lines weren't reached by highlighting them in red.
 
 Our approach for fixing coverage using the report will therefore consist of tracing lines that are green until we find a red line. The red line will then be an indicator of where the fuzzer was reverting. Once we find where a line is reverting we can then follow the steps outlined in part 1 where we create a unit test in the `CryticToFoundry` contract to determine why a line may always be reverting and introduce clamping or changes to the setup to allow us to reach the given line.
 
 ## Coverage Analysis - Initial Results
-
-After having run Medusa for 10-15 minutes after adding the final changes from part 1 we can see that the coverage report shows coverage on the `Morpho` contract of 77%:
-
-![Coverage Percentage](../images/bootcamp/covg_percentage.png)
 
 It's important to note that although we mentioned above that our goal is to reach 100% coverage, this doesn't mean we'll try to blindly reach 100% coverage over all of a contract's lines because there are almost always certain functions whose behavior won't be of interest in an invariant testing scenario, like the `extSloads` function from the latest run:
 
@@ -90,7 +86,7 @@ this uses the `t` (true) assertion wrapper from the [`Asserts`](./writing_invari
 
 This function will randomly be called by the the fuzzer in the same way that the handler functions in `TargetFunctions` are called, allowing it to check if repay is called successfully after any of the state changing target function calls.
 
-> Note: While you're implementing the canary above you can run the fuzzer in the background to confirm that we're not simply missing coverage because of a lack of sufficient tests. It's always beneficial to have the fuzzer running in the background because it'll build up a corpus that will make subsequent runs more efficient. 
+> While you're implementing the canary above you can run the fuzzer in the background to confirm that we're not simply missing coverage because of a lack of sufficient tests. It's always beneficial to have the fuzzer running in the background because it will build up a corpus that will make subsequent runs more efficient. 
 
 As a general naming convention for functions in our suites we use an underscore as a prefix to define what the function does, such as `canary_`, `invariant_`, `property_` or target contracts (`morpho_` in our case) then use camel case for the function name itself. 
 
@@ -245,7 +241,7 @@ this again ensures that the **clamped handler always calls the unclamped handler
 
 The utility `_getActor()` function lets us pass its return value directly to our clamped handler to restrict it to be called for actors in the set managed by `ActorManager`. Calls for addresses other than these are not interesting to us because they wouldn't have been able to successfully deposit into the system since only the actors in the `ActorManager` are minted tokens in our setup.
 
-> Note: Clamping using the `_getActor()` function above in the call to `morpho_liquidate` would only result in self liquidations because the `asActor` modifier on the `morpho_liquidate` function would be called by the same actor. To allow liquidations by a different actor than the one being liquidated you could simply pass an entropy value to the clamped handler and use it to grab an actor from the array returned by `_getActors()`.
+> Clamping using the `_getActor()` function above in the call to `morpho_liquidate` would only result in self liquidations because the `asActor` modifier on the `morpho_liquidate` function would be called by the same actor. To allow liquidations by a different actor than the one being liquidated you could simply pass an entropy value to the clamped handler and use it to grab an actor from the array returned by `_getActors()`.
 
 ## Echidna Results
 
@@ -479,7 +475,7 @@ abstract contract MorphoTargets is
 
 Which should give us coverage over the missing line highlighted above. 
 
-We can then run Echidna again and see that we now cover the previously uncovered line.
+We can then run Echidna again for 5-10 minutes and see that we now cover the previously uncovered line.
 
 ![Liquidate Fixed Coverage](../images/bootcamp/liquidate_fixed_covg.png)
 
@@ -487,7 +483,7 @@ We can then run Echidna again and see that we now cover the previously uncovered
 
 With full coverage achieved over the functions of interest in our target contract we can now further analyze our existing setup and see where it could be improved. 
 
-Note that our statically deployed market which we previously added in the `setup` function only allowed us to test one market configuration which may prevent the fuzzer from finding interesting cases related to different market configurations: 
+Note that our statically deployed market which we previously added in the `setup` function in [part 1](../bootcamp/bootcamp_part_1.md#market-creation-and-handler-implementation) only allowed us to test one market configuration which may prevent the fuzzer from finding interesting cases related to different market configurations: 
 
 ```javascript
 abstract contract Setup is BaseSetup, ActorManager, AssetManager, Utils {
@@ -510,7 +506,7 @@ abstract contract Setup is BaseSetup, ActorManager, AssetManager, Utils {
 }
 ```
 
-We can replace this with a dynamic function which takes fuzzed values and allows us to test the system with more possible configurations, adding a new dimensionality to our test suite. We'll add the following function to our `TargetFunctions` contract to allow us to do this:
+We can replace this with a dynamic function which instead takes fuzzed values and allows us to test the system with more possible configurations, adding a new dimensionality to our test suite. We'll add the following function to our `TargetFunctions` contract to allow us to do this:
 
 ```javascript
     function morpho_createMarket_clamped(uint8 index, uint256 lltv) public {
@@ -552,7 +548,7 @@ which deploys an additional asset with a random number of decimals. This can be 
 
 We've looked at how we can scaffold a contract and get to 100% _meaningful_ coverage using Chimera and use the randomness of the fuzzer to test additional configuration parameters not possible with only a static setup. 
 
-In part 3 we'll look at how we can further use Chimera for its most key ability to write and break properties with different tools.
+In part 3 we'll look at how we can further use Chimera for its main purpose of writing and breaking properties with different tools.
 
 If you'd like to see more examples of how to scaffold projects with Chimera checkout the following podcasts:
 - [Fuzzing MicroStable with Echidna](https://www.youtube.com/watch?v=WYqyZG8itb0) | Alex & Shafu on Invariant Testing
