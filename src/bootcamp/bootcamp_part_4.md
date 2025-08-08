@@ -1,16 +1,18 @@
 # Part 4 - Liquity Governance Case Study
 
-We'll now see how everything we've covered up to this point in the bootcamp was used to find a real-world vulnerability in Liquity's governance system in an engagement performed by [Alex The Entreprenerd](https://x.com/GalloDaSballo).
+In part 4 we'll see how everything we've covered up to this point in the bootcamp was used to find a real-world vulnerability in Liquity's governance system in an engagement performed by [Alex The Entreprenerd](https://x.com/GalloDaSballo). We'll also see how to use Echidna's optimization mode to increase the severity of a vulnerability. 
+
+This issue was found in [this commit](https://github.com/liquity/V2-gov/tree/29471b270b365b655d4ddc74226322376e2ffe60) of the Liquity V2 codebase which was under review which you can clone if you'd like to follow along and reproduce the test results locally as it already contains all the scaffolding and property implementations.
 
 > For the recorded stream of this part of the bootcamp see [here](https://x.com/i/broadcasts/1dRKZYvXNgvxB) starting at 49:40.
 
-This issue was found in [this commit](https://github.com/liquity/V2-gov/tree/29471b270b365b655d4ddc74226322376e2ffe60) of the Liquity V2 codebase which was under review.
+## Background on Liquity Governance V2
 
-## Background: Calculate Average Timestamp
+The Liquity V2 Governance system is a modular initiative-based governance mechanism where users stake LQTY tokens to earn voting power that accrues linearly over time, where the longer the user is staked, the greater their voting power. Users then allocate this voting power to fund various "initiatives" (any smart contract implementing IInitiative interface) that compete for a share of protocol revenues (25% of Liquity's income) distributed weekly through 7-day epochs. 
 
-Before diving into the property we need to see the initial finding that inspired further targeted fuzz testing. This will help us better understand how we can use the tools that fuzzing provides us to escalate the severity of a vulnerability. 
+### Calculate average timestamp
 
-In our case this begins with the `_calculateAverageTimestamp` function:
+A key aspect of accruing voting power to a user is the mechanism that was chosen to determine the amount of time which a user had their LQTY allocated. In this case this was handled by the `_calculateAverageTimestamp` function:
 
 ```javascript
     function _calculateAverageTimestamp(
@@ -48,11 +50,21 @@ In our case this begins with the `_calculateAverageTimestamp` function:
     }
 ```
 
-The intention of this calculation was to make flashloans unable to manipulate voting power by using the average amount of time for which a user was deposited to calculate voting power. In the case of a flashloan since the user has to deposit and withdraw within the same transaction their voting power would be 0 and for any normal deposits their voting power would increase as a function of the amount of time deposited. 
+The intention of all this added complexity was to prevent flashloans from manipulating voting power by using the average amount of time for which a user was deposited to calculate voting power. In the case of a flashloan since the user has to deposit and withdraw within the same transaction their average deposited time would be 0 resulting in the `lqtyToVotes` calculation, used to calculate voting power, also returning 0: 
 
-The key thing to note for our case is that the `newOuterAverageAge` calculation is subject to truncation because of the division operation that it performs. This had been highlighted in a previous review and it had been thought that the maximum value lost to truncation would be 1 second, since the `newOuterAverageAge` represents time in seconds and the truncation would essentially act as a rounding down, eliminating the trailing digit. Since the maximum lost value was 1 second, the impact of this finding was judged as low severity because it would only minimally affect voting power. 
+```javascript
+    function lqtyToVotes(uint88 _lqtyAmount, uint120 _currentTimestamp, uint120 _averageTimestamp)
+        public
+        pure
+        returns (uint208)
+    {
+        return uint208(_lqtyAmount) * uint208(_averageAge(_currentTimestamp, _averageTimestamp));
+    }
+```
 
-If we look at the `_allocateLQTY` function, which makes the call to `_calculateAverageTimestamp` and actually handles user vote allocation using the `LQTY` token, we see the following: 
+The key thing to note for our case is that the `newOuterAverageAge` calculation is subject to truncation because of the division operation that it performs. This had been highlighted in a previous review and it had been thought that the maximum value lost to truncation would be 1 second, since the `newOuterAverageAge` represents time in seconds and the truncation would essentially act as a rounding down, eliminating the trailing digit. Since the maximum lost value was 1 second, the impact of this finding was judged as low severity because it would only minimally affect voting power by undervaluing the time for which users were deposited. 
+
+More specifically, if we look at the `_allocateLQTY` function, which makes the call to `_calculateAverageTimestamp` and actually handles user vote allocation using the `LQTY` token, we see the following: 
 
 ```javascript
     function _allocateLQTY(
@@ -108,9 +120,9 @@ In the case where `_prevLQTYBalance > _newLQTYBalance`, indicating a user was de
     }
 ```
 
-and with the recognition of the 1 second truncation, it would be possible for an attacker to grief an initiative by removing some of the allocated LQTY, which would cause the `newOuterAverageAge` to decrease by less than it should. As a result, since the average is less than expected, it would cause other voters to lose voting power. 
+and with the recognition of the 1 second truncation, an attacker could grief an initiative by removing an amount of allocated LQTY, which would cause their `newOuterAverageAge` to decrease by less than it should. As a result the attacker maintains more voting power than they should, subsequently diluting the voting power of other voters. 
 
-## The Property That Revealed the Truth
+## The property that revealed the truth
 
 To fully explore this and determine whether the maximum severity of the issue was in fact only minimal griefing with a max difference of 1 second, the following property was implemented: 
 
@@ -168,11 +180,11 @@ The following helper function was used to help with this comparison:
 
 by performing the operation to sum the amount of allocated LQTY and voting power for all initiatives. This also provides the global state by fetching it directly from the `governance` contract. 
 
-## Escalating from Low to Critical Severity
+## Escalating from low to critical severity
 
-After running the fuzzer on the property, it was then found to break, which led to two possible paths for what to do next: identify exactly why the property breaks (this was already known so not necessarily beneficial in escalating the severity), or introduce a tolerance by which the strict equality in the two values being compared could differ. 
+After running the fuzzer on the property, it was found to break, which led to two possible paths for what to do next: identify exactly why the property breaks (this was already known so not necessarily beneficial in escalating the severity), or introduce a tolerance by which the strict equality in the two values being compared could differ. 
 
-Given that the `_calculateAverageTimestamp` function was expected to have at least a 1 second variation, the approach of allowing a tolerance in a separate property was used to determine whether the variation was ever greater than this: 
+Given that the `_calculateAverageTimestamp` function was expected to have a maximum of 1 second variation, the approach of allowing a tolerance in a separate property was used to determine whether the variation was ever greater than this: 
 
 ```javascript
     function property_sum_of_initatives_matches_total_votes_bounded() public {
@@ -196,21 +208,19 @@ Given that the `_calculateAverageTimestamp` function was expected to have at lea
     }
 ```
 
-where 
+where `TOLERANCE` is the voting power for 1 second, given by `LQTY * 1 Second` where LQTY is a value in with 18 decimal precision:
 
 ```javascript
-    uint256 constant TOLERANCE = 1e19; // NOTE: 1e18 is 1 second due to upscaling
+    uint256 constant TOLERANCE = 1e19;
 ```
 
-**TODO: how can tolerance be seconds if other value is voting power**
+which meant that our `TOLERANCE` value would allow up to 10 seconds of lost allocated time in the average calculation, anything beyond this would again break the property. We use 10 seconds in this case because if we used 1 second as the tolerance the fuzzer would most likely break the property for values less than 10, still making this only a griefing issue, however if it breaks for more than 10 seconds we know we have something more interesting worth exploring further.  
 
-which meant that we allowed a 10 second tolerance bounding, so anything beyond this would again break the property. And sure enough, after running the fuzzer again, it once again broke the property, indicating that the initial classification as a low severity issue that would only be restricted to a 1 second difference was incorrect and now this would need further investigation to understand the root cause. 
+Surely enough, after running the fuzzer again with this tolerance added, it once again broke the property, indicating that the initial classification as a low severity issue that would only be restricted to a 1 second difference was incorrect and now this would require further investigation to understand the maximum possible impact. To find the maximum possible impact we could then create a test using Echidna's [optimization mode](https://secure-contracts.com/program-analysis/echidna/advanced/optimization_mode.html?highlight=optimization#optimizing-with-echidna). 
 
-Knowing that the property broke and the initial severity classification was incorrect, however, meant that we could also create a test using Echidna's [optimization mode](https://secure-contracts.com/program-analysis/echidna/advanced/optimization_mode.html?highlight=optimization#optimizing-with-echidna), which would allow us to determine the maximum possible impact. 
+## Using optimization mode
 
-## Using Optimization Mode
-
-Converting properties into an optimization mode test is usually just a matter of slight refactoring to the existing property: 
+Converting properties into an optimization mode test is usually just a matter of slight refactoring to the existing property to instead return some value rather than make an assertion: 
 
 ```javascript 
     function optimize_property_sum_of_initatives_matches_total_votes_insolvency() public returns (int256) {
@@ -226,15 +236,15 @@ Converting properties into an optimization mode test is usually just a matter of
     }
 ```
 
-where we can see that we just return a maximum value as the difference of `int256(votedPowerSum) - int256(govPower)` if `votedPowerSum > govPower`. Echidna will then use all the existing target function handlers to manipulate state in an attempt to optimize the value returned by this function.  
+where we can see that we just return the maximum value as the difference of `int256(votedPowerSum) - int256(govPower)` if `votedPowerSum > govPower`. Echidna will then use all the existing target function handlers to manipulate state in an attempt to optimize the value returned by this function.  
 
 > For more on how to define optimization properties, checkout [this page](../writing_invariant_tests/optimizing_broken_properties.md).
 
 This test could then be run using the `echidna . --contract CryticTester --config echidna.yaml --format text --test-limit 10000000 --test-mode optimization` command or by selecting `optimization` mode in the Recon cockpit.
 
-## The Revelation and Impact
+## The revelation and impact
 
-After running the fuzzer for 100 million tests, we get the following result:
+After running the fuzzer for 100 million tests, we get the following unit test generated from the reproducer:
 
 ```javascript
 // forge test --match-test test_optimize_property_sum_of_initatives_matches_total_votes_insolvency_0 -vvv 
@@ -417,23 +427,23 @@ function test_optimize_property_sum_of_initatives_matches_total_votes_insolvency
  }
 ```
 
-indicating that the initial insolvency was a severe underestimate, allowing an inflation in voting power of `4,152,241`. When translated into the dollar equivalent of LQTY, this results in millions of dollars worth of possible inflation in voting power. 
+indicating that the initial insolvency was a severe underestimate, allowing a possible inflation in voting power of `4152241824275924884020518 / 1e18 = 4,152,241`. When translated into the dollar equivalent of LQTY, **this results in millions of dollars worth of possible inflation in voting power**. 
 
 It's worth noting that if we let Echidna run for even longer, we would see that it subsequently inflates the voting power even further as was done in the engagement, which demonstrated an inflation in the range of hundreds of millions of dollars. 
 
-This is a common dilemma that must be faced when using optimization mode as it can often find continuously larger and larger values, but typically there is a point where the value is sufficiently maximized to prove a given severity (in this case, for example, maximizing any further wouldn't increase the severity as the value above already demonstrates a critical severity issue). 
+The dilemma of when to stop a test run is a common one when using optimization mode as it can often find continuously larger and larger values the longer you allow the fuzzer to run. Typically however there is a point of diminishing returns where the value is sufficiently maximized to prove a given severity. In this case, for example, maximizing any further wouldn't increase the severity as the value above already demonstrates a critical severity issue. 
 
 > For more info about how to generate a shrunken reproducer with optimization mode see [this section](../writing_invariant_tests/optimizing_broken_properties.md)
 
-So what was originally thought to just be a precision loss of 1 wei really turned out to be one second for all stake for each initiative, meaning that this value is very large once you start having a large amount of voting power and many seconds have passed. This could then be applied to every initiative, inflating voting power even further. 
+So what was originally thought to just be a precision loss of 1 second really turned out to be one second for all stake for each initiative, meaning that this value is very large once you have a large amount of voting power and many seconds have passed. This could then be applied to every initiative, inflating voting power even further. 
 
 ## Conclusion
 
-Fundamentally, a global property breaking should be a cause for pause, which you should use to reflect and consider further how the system works. Then you can determine the severity of the broken property using the three steps we showed above: an exact check, an exact check with bounds, and optimization mode. 
+Fundamentally, a global property breaking should be a cause for pause, which you should use to reflect and consider further how the system works. Then you can determine the severity of the broken property using the three steps shown above: an exact check, an exact check with bounds, and optimization mode. 
 
 More generally, if you can't use an exact check to check your property and have to use greater than or less than instead, you can refactor the implementation into an optimization mode test to determine what the maximum possible difference is.
 
-## Next Steps
+## Next steps
 
 This concludes the Recon bootcamp. You should now be ready to take everything you've learned here and apply it to real-world projects to find bugs with invariant testing. 
 
