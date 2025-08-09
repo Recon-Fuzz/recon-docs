@@ -13,15 +13,15 @@ Over the four parts of the bootcamp we'll cover the following:
 - How to use Echidna's optimization mode to increase the impact of broken properties.
 
 The following is a breakdown of each lesson for easier navigation:
-1. [Part 1](./bootcamp/bootcamp_part_1.md) - scaffolding, setup and coverage
-2. [Part 2](./bootcamp/bootcamp_part_2.md) - achieving full coverage and multidimensional testing 
-3. [Part 3](./bootcamp/bootcamp_part_3.md) - writing, breaking and debugging properties
-4. [Part 4](./bootcamp/bootcamp_part_4.md) - using optimization mode to increase the severity of broken properties
+1. [Part 1](./bootcamp_part_1.md) - scaffolding, setup and coverage
+2. [Part 2](./bootcamp_part_2.md) - achieving full coverage and multidimensional testing 
+3. [Part 3](./bootcamp_part_3.md) - writing, breaking and debugging properties
+4. [Part 4](./bootcamp_part_4.md) - using optimization mode to increase the severity of broken properties
 
 
 Note that each part is cumulative, building off of the topics and code from the previous section so if it's your first time here it might be best to work through them in order. 
 
-Below we cover some useful topics that can be helpful for beginners using fuzzing for invariant testing with the Chimera Framework for the first time. If you're already familiar with the Chimera Framework, skip ahead to the first section [here](./bootcamp/bootcamp_part_1.md). 
+Below we cover some useful topics that can be helpful for beginners using fuzzing for invariant testing with the Chimera Framework for the first time. If you're already familiar with the Chimera Framework, skip ahead to the first section [here](./bootcamp_part_1.md). 
 
 ## What are invariants? 
 
