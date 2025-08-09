@@ -6,7 +6,7 @@ The address that will perform the calls specific to TargetFunctions. See [ActorM
 
 ## CryticTester
 
-The invariant testing contract that's deployed in the [Chimera Framework](../tutorial/chimera_framework.md#crytictester) and that the fuzzer will use to explore state and properties with the target functions defined on it.
+The invariant testing contract that's deployed in the [Chimera Framework](../writing_invariant_tests/chimera_framework.md#crytictester) and that the fuzzer will use to explore state and properties with the target functions defined on it.
 
 ## CryticToFoundry
 
@@ -50,7 +50,7 @@ The set of functions that the fuzzer will call to explore state and properties f
 
 A process performed by the fuzzer to remove unnecessary calls from a call sequence that don't contribute to breaking a property. 
 
-## <a href="/tools/builder.html" target="_blank" rel="noopener noreferrer">Scaffolding</a>
+## [Scaffolding](../free_recon_tools/builder.md)
 
 The set of smart contracts put into place to organize the code and tell the fuzzer how to explore states and test properties.
 

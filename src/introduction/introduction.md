@@ -51,5 +51,5 @@ Recon has created a number of open source tools to make invariant testing easier
 Learn about [best practices](../opsec/op_sec.md) for operational security for web3 teams and the services that Recon provides to help projects with this.
 
 ### Glossary
-See the [glossary](./glossary.md) for terminology used throughout the book.
+See the [glossary](../glossary.md) for terminology used throughout the book.
 
