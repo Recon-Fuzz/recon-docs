@@ -16,6 +16,12 @@ A Foundry test contract used to implement unit tests of property-breaking call s
 
 Reducing the search space of a fuzzer for a handler function by excluding certain input values that may not provide meaningful coverage.
 
+## Dynamic Deployment
+
+A technique that consists of adding custom handlers that will deploy new contracts, by leaving the configuration up to the fuzzer, this can help explore more unintuitive edge cases and configurations.
+
+Dynamic Deployment is the opposite of a hardcoded config in Setup.
+
 ## Invariant Testing
 
 The act of testing logical statements about smart contracts using tools that manipulate their state randomly (fuzzers) or by following all possible paths (formal verifiers).

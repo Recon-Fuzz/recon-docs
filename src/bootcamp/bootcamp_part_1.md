@@ -384,7 +384,7 @@ Now to continue the fixes to our setup we'll need to register a market in the `M
     }
 ```
 
-It's important to note that this setup only allows us to test one market with the configurations we've added above, whereas if we want to truly be sure that we're testing all possibilities, we could use what we've termed as _dynamic deployment_ to allow the fuzzer to deploy multiple markets with different configurations (we cover this in [part 2](../bootcamp/bootcamp_part_2.md#dynamic-market-creation)).
+It's important to note that this setup only allows us to test one market with the configurations we've added above, whereas if we want to truly be sure that we're testing all possibilities, we could use what we've termed as [_dynamic deployment_](../glossary.md#dynamic-deployment) to allow the fuzzer to deploy multiple markets with different configurations (we cover this in [part 2](../bootcamp/bootcamp_part_2.md#dynamic-market-creation)).
 
 We can then make a further simplifying assumption that will work as a form of [clamping](../glossary.md#clamping) to allow us to get line coverage faster by storing the `marketParams` variable as a storage variable:
 
