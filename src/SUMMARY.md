@@ -14,6 +14,15 @@
 
 ---
 
+# Bootcamp
+- [Intro to the Bootcamp](./bootcamp/bootcamp_intro.md)
+- [Part 1 - Invariant Testing with Chimera Framework](./bootcamp/bootcamp_part_1.md)
+- [Part 2 - Multidimensional Invariant Tests](./bootcamp/bootcamp_part_2.md)
+- [Part 3 - Writing and Breaking Properties](./bootcamp/bootcamp_part_3.md)
+- [Part 4 - Liquity Governance Case Study](./bootcamp/bootcamp_part_4.md)
+
+---
+
 # Using Recon
 <!-- - [Getting Started] -->
 - [Building Handlers](./using_recon/building_handlers.md)

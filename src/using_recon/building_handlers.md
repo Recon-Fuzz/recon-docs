@@ -22,7 +22,7 @@ function vault_deposit(uint256 assets, address receiver) public {
 
 ## Generating Handlers In Recon
 
-To generate handlers in Recon all you need to do is paste the abi of the contract you'd like to build handlers for into the the text box on the _Build Handlers_ tab. To get the ABI of a contract in a foundry project just compile your project and look in the `out` directory for a file with the same name as your contract but with a `.json` extension. 
+To generate handlers in Recon all you need to do is paste the abi of the contract you'd like to build handlers for into the the text box on the [_Build Handlers_](https://getrecon.xyz/tools/builder) tab. To get the ABI of a contract in a foundry project just compile your project and look in the `out` directory for a file with the same name as your contract but with a `.json` extension. 
 
 After pasting the ABI into the text box, click the _Build Handlers_ button and Recon will generate the handlers for you. 
 

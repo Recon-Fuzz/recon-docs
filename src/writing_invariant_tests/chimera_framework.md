@@ -9,6 +9,7 @@ The framework is made up of the following contracts:
 - [`CryticToFoundry`](#cryticfoundry)
 - [`BeforeAfter`](#beforeafter)
 - [`CryticTester`](#cryticTester)
+- [`Assertions`](#assertions)
 
 When you [build your handlers](../using_recon/building_handlers.md) using Recon these files get automatically generated and populated for you. To use the framework in your project, you just need to download these files that get generated for you and add the [Chimera dependency](https://github.com/Recon-Fuzz/chimera) to your project: 
 
