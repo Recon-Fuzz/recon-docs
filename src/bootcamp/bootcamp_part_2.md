@@ -2,7 +2,7 @@
 
 ## Introduction and Goals
 
-In [part 1](./bootcamp_part_1.md) we looked at how to setup Morpho with a Chimera invariant testing and get reasonable coverage over the lines of interest, in part 2 we'll look at how to achieve line coverage over the uncovered lines from the end of part 1.
+In [part 1](./bootcamp_part_1.md) we looked at how to setup Morpho with a Chimera invariant testing suite and get reasonable coverage over the lines of interest, in part 2 we'll look at how to achieve full line coverage over the remaining uncovered lines from the end of part 1.
 
 > You can follow along using the repo with the scaffolding created in part 1 [here](https://github.com/Recon-Fuzz/morpho-blue/tree/day-1).
 
