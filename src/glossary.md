@@ -6,11 +6,21 @@ The address that will perform the calls specific to TargetFunctions. See [ActorM
 
 ## CryticTester
 
-The invariant testing contract that's deployed in the [Chimera Framework](../tutorial/chimera_framework.md#crytictester) and that the fuzzer will use to explore state and properties with the target functions defined on it.
+The invariant testing contract that's deployed in the [Chimera Framework](../writing_invariant_tests/chimera_framework.md#crytictester) and that the fuzzer will use to explore state and properties with the target functions defined on it.
 
 ## CryticToFoundry
 
 A Foundry test contract used to implement unit tests of property-breaking call sequences (reproducers) obtained with testing tools (i.e. Echidna, Medusa, Halmos, etc.).
+
+## Clamping
+
+Reducing the search space of a fuzzer for a handler function by excluding certain input values that may not provide meaningful coverage.
+
+## Dynamic Deployment
+
+A technique that consists of adding custom handlers that will deploy new contracts, by leaving the configuration up to the fuzzer, this can help explore more unintuitive edge cases and configurations.
+
+Dynamic Deployment is the opposite of a hardcoded config in Setup.
 
 ## Invariant Testing
 
@@ -44,9 +54,17 @@ The set of functions that the fuzzer will call to explore state and properties f
 
 ## Shrinking
 
-A process performed by the fuzzer to remove unnecessary calls from a call sequence that don't contribute to breaking a property. 
+A process performed by the fuzzer to remove unnecessary calls from a call sequence that don't contribute to breaking a property.
 
-## <a href="/tools/builder.html" target="_blank" rel="noopener noreferrer">Scaffolding</a>
+## Line Coverage
+
+The ability of the fuzzer to reach a specific line in the targeted contract.
+
+## Logical Coverage
+
+The frequency with which the fuzzer reaches all possible logical paths in a function of interest.
+
+## [Scaffolding](../free_recon_tools/builder.md)
 
 The set of smart contracts put into place to organize the code and tell the fuzzer how to explore states and test properties.
 

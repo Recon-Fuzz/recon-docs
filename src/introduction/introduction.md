@@ -2,7 +2,13 @@
 
 [Recon](https://getrecon.xyz/#team) is a team of invariant testing engineers and security researchers that provide invariant testing as a service while also developing tools and educational content to make it easier for anyone to test invariants on their smart contracts.
 
-Recon Pro is a tool for automatically scaffolding and running invariant testing in the cloud.
+Our goal is to make Invariant Testing a baseline for all projects building on the EVM.
+
+We're amongst the most profilific invariant testing writers, with [our template being used over 300 times by multiple professionals](https://getrecon.xyz/pro#builder).
+
+[Recon Pro](../using_recon/running_jobs.md) is a tool for running invariant tests in the cloud.
+
+The [Recon Extension](../free_recon_tools/recon_extension.md) is an open source VS Code Extension to scaffold a Invariant Testing Boilerplate using the [Chimera Framework](../writing_invariant_tests/chimera_framework.md).
 
 ## Navigating the Book
 
@@ -49,5 +55,5 @@ Recon has created a number of open source tools to make invariant testing easier
 Learn about [best practices](../opsec/op_sec.md) for operational security for web3 teams and the services that Recon provides to help projects with this.
 
 ### Glossary
-See the [glossary](./glossary.md) for terminology used throughout the book.
+See the [glossary](../glossary.md) for terminology used throughout the book.
 
