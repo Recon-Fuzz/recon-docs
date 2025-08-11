@@ -6,15 +6,17 @@ In this section we'll finally get to exploring the reason why invariant testing 
 
 > For the recorded stream of this part of the bootcamp see [here](https://x.com/i/broadcasts/1dRKZYvXNgvxB).
 
-## Additional Points On Chimera Architecture
+## Additional points on Chimera architecture
 
-In parts 1 and 2 we primarily looked at targets defined in the `MorphoTargets` contract but when you scaffold with Recon you also get the `AdminTargets`, `DoomsdayTargets` and `ManagersTargets` generated automatically. We'll look at these more in depth below but before doing so here's a brief overview of each:
+In parts 1 and 2 we primarily looked at targets defined in the `MorphoTargets` contract, but when you scaffold with Chimera you also get the `AdminTargets`, `DoomsdayTargets` and `ManagersTargets` contracts generated automatically. 
+
+We'll look at each of these more in depth below but before doing so here's a brief overview of each:
 
 - `AdminTargets` - target functions that should only be called by a system admin (uses the `asAdmin` modifier to call as our admin actor)
 - `DoomsdayTargets` - special tests with multiple state changing operations in which we add inlined assertions to test specific scenarios
 - `ManagersTargets` - target functions that allow us to interact with any manager used in our system (`ActorManager` and `AssetManager` are added by default)
 
-## The Three Types of Properties
+## The three types of properties
 
 When discussing properties it's easy to get caught-up in the subtleties of the different types, but for this overview we'll just stick with three general ideas for properties that will serve you well.
 
@@ -22,33 +24,67 @@ When discussing properties it's easy to get caught-up in the subtleties of the d
 
 ### 1. Global Properties
 
-Global properties, as the name implies, relate to the global state of the system, which can be defined by reading values from state variables or by added tracking variables that define values not stored by state variables.
+Global properties, as the name implies, make assertions on the global state of the system, which can be defined by reading values from state variables or by added tracking variables that define values not stored by state variables.
 
-An example of a global property that can be defined in many system types is a solvency property. For a solvency property we effectively query the sum of balances in the token, then query the balance in the system and make an assertion. Any time the system's balance is higher than the actual balance (sum of token balances), we can therefore say that the system is insolvent.
+An example of a global property that can be defined in many system types is a solvency property. For a solvency property we effectively query the sum of balances of the token, then query the balance in the system and make an assertion:
 
-Interesting macro states that can be checked with global properties usually either take the form of one-to-one variable checks like checking a user balance versus internal balance or aggregated checks like the sum of all user balances versus sum of all internal balances.
+```javascript
+    /// @dev simple solvency property that checks that a ERC4626 vault always has sufficient assets to exchange for shares
+    function property_solvency() public {
+        address[] memory actors = _getActors();
+
+        // sums user shares of the vault token
+        uint256 sumUserShares;
+        for (uint256 i; i < actors.length; i++) {
+            sumUserShares += vault.balanceOf(actors[i]);
+        }
+        // converts sum of user shares to vault's underlying assets
+        uint256 sharesAsAssets = vault.convertToAssets(sumUserShares);
+
+        // fetches underlying asset balance of vault
+        uint256 vaultUnderlyingBalance = IERC20(vault.asset()).balanceOf(address(vault));
+
+        // asserts that the vault must always have a sufficient amount of assets to repay the shares converted to assets
+        gte(vaultUnderlyingBalance, sharesAsAssets, "vault is insolvent");
+    }
+```
+
+In the above example, any time the system's balance is less than the sum of shares converted to the underlying asset, the system is insolvent because it would be unable to fulfill all repayments.
+
+> Interesting states that can be checked with global properties usually either take the form of one-to-one variable checks like checking a user balance versus balance tracked in the system or aggregated checks like the sum of all user balances versus sum of all internal balances.
 
 ### 2. State Changing Properties
 
 State changing properties allow us to verify how the state of a system evolves over time with calls to state changing functions. 
 
-For example, we could verify that if we increase a balance on a vault, then our balance of the share token is increased by the correct amount. Similarly, we can check that if we try to withdraw we would want to get back the same amount as was initially deposited. 
+For example, we could verify that for a deposit into a vault, a user's balance of the share token is increased by the correct amount:
 
-Although these types of checks may seem basic, you'd be surprised how many times these types of simple checks have led to uncovering edge cases in private audits for the Recon team. 
+```javascript
+    /// @dev inline property to check that user isn't minted more shares than expected
+    function vault_deposit(uint256 assets, address receiver) public {
+        // fetch the amount of expected shares to be received for depositing a given amount of assets
+        uint256 expectedShares = vault.previewDeposit(assets);
+        // fetch user shares before deposit
+        uint256 sharesBefore = vault.balanceOf(receiver);
 
-### 3. Inline Fuzz Test (Avoid)
+        // make the deposit
+        vault.deposit(assets, receiver);
 
-Inlined fuzz tests usually tend to not be particularly interesting in terms of finding edge cases as they often test behavior in a similar manner to stateless fuzz tests or unit tests. 
+        // fetch user shares after deposit
+        uint256 sharesAfter = vault.balanceOf(receiver);
 
-Because these are low value properties they should be avoided for higher value properties. Any time you end up writing inlined fuzz tests you should instead try to rewrite it as an inductive property where if you can prove that a single transition is valid you can then implicitly prove that the set of all transitions is valid. This increases the value of an inlined test because it allows us to prove more than just a single property and instead we can know about the set of all possible states.
+        // assert that user doesn't gain more shares than expected
+        lte(sharesAfter, sharesBefore + expectedShares, "user receives more than expected shares");
+    }
+```
 
-An example was our engagement with Centrifuge in which we realized that since there were already global variables that track values of interest, we didn't need to add additional trackers to our test suite which we update inside our handlers. We can instead perform a global before/after check for calls by a given handler to confirm that the state variables change as expected.
+The check in the above goes a step beyond a simple equality check and confirms that the user doesn't gain more shares than expected. This is helpful for finding issues where the vault may round in favor of the user instead of the protocol, potentially leading to insolvency.
 
-**TODO: expand on the above or add a visual example because this one is hard to understand**
+Although these types of checks may seem basic, you'd be surprised how many times they've led to uncovering edge cases in private audits for the Recon team. 
 
-## Dealing With Complex Tests
+## Dealing with complex tests
 
-Global and state changing properties allow making an assertion after an individual state change is made, but sometimes you'll want to check for how multiple specific state changes or specific values affect the system. 
+Global and state changing properties allow making an assertion after an individual state change is made, but sometimes you'll want to check how multiple specific state changes affect the system. 
 
 For these checks you can use the `stateless` modifier which reverts all state changes after the function call:
 
@@ -59,15 +95,13 @@ For these checks you can use the `stateless` modifier which reverts all state ch
     }
 ```
 
-This allows you to perform the specific check without maintaining changes to the state of the system. 
+This allows you to perform the specific check without maintaining state changes in the next target function call. 
 
-This ensures that the actual state exploration done by the fuzzer is handled only by the target functions which call one state changing function at a time and have descriptive names. This approach keeps what we call the "story" clean, where the story is the call sequence that's used to break a property in a reproducer unit test. Having each individual handler responsible for one state changing call makes it easier to determine which call caused the property to break when looking at the test.
-
-Adding the `stateless` modifier to functions defined in `DoomsdayTargets` therefore lets us test specific cases which make multiple state changes or modify the input to the target function in some way, such as withdrawing an entire user's `maxWithdraw` amount from a vault and determining if this sets the user's `maxWithdraw` to 0 after: 
+Adding the `stateless` modifier to functions defined in `DoomsdayTargets` therefore lets us test specific cases which make multiple state changes or modify the input to the target function in some way. For example, we can check if withdrawing a user's entire `maxWithdraw` amount from a vault sets the user's `maxWithdraw` to 0 after: 
 
 ```javascript
     function doomsday_maxWithdraw() public stateless {
-        uint256 maxWithdrawBefore = vault.maxWithdraw(_getActor);
+        uint256 maxWithdrawBefore = vault.maxWithdraw(_getActor());
 
         vault.withdraw(amountToWithdraw, _getActor(), _getActor());
 
@@ -76,86 +110,23 @@ Adding the `stateless` modifier to functions defined in `DoomsdayTargets` theref
     }
 ```
 
-If the assertion above fails, we'll get a reproducer unit test in which the `doomsday_maxWithdraw` function is the last one called. If the assertion doesn't fail, the fuzzer will revert the state changes and the function that will be used for exploring state changes related to withdrawals will be the primary withdrawal handler function.
+If the assertion above fails, we'll get a reproducer unit test in which the `doomsday_maxWithdraw` function is the last one called. If the assertion doesn't fail, the fuzzer will revert the state changes meaning it won't be included in the shrunken reproducer for any other broken properties. As a result, the function that's used for exploring state changes related to withdrawals will be the primary withdrawal handler function: `vault_withdraw`.
+
+Using this technique ensures that the actual state exploration done by the fuzzer is handled only by the target functions which call one state changing function at a time and have descriptive names. This approach keeps what we call the "story" clean, where the story is the call sequence that's used to break a property in a reproducer unit test. Having each individual handler responsible for one state changing call makes it easier to understand how the state evolves when looking at the test.
 
 ---
 
-## Practical Exercise: `RewardsManager`
+## Practical exercise: `RewardsManager`
 
-For our example we'll be looking at the `RewardsManager` contract, in [this repo](https://github.com/Recon-Fuzz/rewards-manager).
+For our example we'll be looking at the `RewardsManager` contract, in <a href="https://github.com/Recon-Fuzz/rewards-manager" target="_blank" rel="noopener noreferrer">this repo</a>.
 
-We'll first focus on getting an understanding of how the system works. This is the true first step in building an invariant testing suite when you're unfamiliar with the codebase because it helps us define meaningful properties and know what we need to have coverage over.
+First we'll use the Recon extension to add a Chimera scaffolding to the project like we did in part 1, then focus on how we can get full coverage and finally implement the properties. 
 
-> Typically if you designed/implemented the system yourself you'll already have a pretty good idea of what the properties you want to define are so you can usually get defining properties right away.
-
-Then we'll use the Recon extension to add a Chimera scaffolding to the project like we did in [part 1](../bootcamp/bootcamp_part_1.md#practical-implementation---setting-up-morpho), focus on how we can get full coverage, and finally implement the properties we defined earlier. 
-
-## About the `RewardsManager` Contract
-
-The `RewardsManager`, as the name implies, is meant to handle the accumulation and distribution of reward tokens for depositors into a system. Since token rewards are often used as an incentive for providing liquidity to protocols (typically via vaults), this contract is meant to integrate with vaults via a notification system which is triggered by user deposits/withdrawals/transfers. This subsequently triggers updates to reward tracking for a user so any holder of the vault token can receive rewards.
-
-The key function in the notification system that handles this is `notifyTransfer`:
-
-```javascript
-    function notifyTransfer(address from, address to, uint256 amount) external {
-        require(from != to, "Cannot transfer to yourself");
-
-        if (from == address(0)) {
-            _handleDeposit(msg.sender, to, amount);
-        } else if (to == address(0)) {
-            _handleWithdrawal(msg.sender, from, amount);
-        } else {
-            _handleTransfer(msg.sender, from, to, amount);
-        }
-
-        emit Transfer(msg.sender, from, to, amount);
-    }
-```
-
-which decrements or increments the reward tracking for a given user based on the action taken.
-
-Looking at the `_handleDeposit` function more closely: 
-
-```javascript
-    function _handleDeposit(address vault, address to, uint256 amount) internal {
-        uint256 cachedCurrentEpoch = currentEpoch();
-        accrueUser(cachedCurrentEpoch, vault, to);
-        // We have to accrue vault as totalSupply is gonna change
-        accrueVault(cachedCurrentEpoch, vault);
-
-        unchecked {
-            // Add deposit data for user
-            shares[cachedCurrentEpoch][vault][to] += amount;
-        }
-        // Add total shares for epoch // Remove unchecked per QSP-5
-        totalSupply[cachedCurrentEpoch][vault] += amount;
-
-    }
-```
-
-we can see that it accrues rewards to the user and the vault based on the time since the last accrual. It then increases the shares accounted to the user for the current epoch which determine a user's fraction of the total rewards as a fraction of the total shares.
-
-## Initial Property Outline
-
-Now that we have an understanding of how the system works, we can define our first property.
-
-From the above function we can define our first solvency property as "the `totalSupply` of shares tracked is the sum of user share balances": 
-
-```md
-totalSupply == SUM(shares[vault][users])
-```
-
-which ensures that we never have more shares accounted to users than the `totalSupply` we're tracking.
-
-In addition to the solvency property, we can also define a property that states that: "the sum of rewards are less than or equal to the reward token balance of the `RewardsManager`":
-
-```md
-SUM(rewardsInfo[epochId][vaultAddress][tokenAddress]) == rewardToken.balanceOf(address(rewardsManager))
-```
+This is typically how we structure our engagements at Recon, as we outlined in [this section](../bootcamp/bootcamp_intro.md#the-four-phases-of-invariant-testing) of the intro as these steps need to preceed one another to be maximally effective and reduce the amount of time spent debugging issues. 
 
 ## Scaffolding
 
-We can use the same process for scaffolding as we did in [part 1](../bootcamp/bootcamp_part_1.md#practical-implementation---setting-up-morpho). After scaffolding the `RewardsManager`, we should have the following targets: 
+We can use the same process for scaffolding as we did in [part 1](../bootcamp/bootcamp_part_1.md#practical-implementation---setting-up-morpho). After scaffolding the `RewardsManager`, we should have the following target functions: 
 
 ```javascript
 abstract contract RewardsManagerTargets is
@@ -228,7 +199,7 @@ abstract contract RewardsManagerTargets is
 }
 ```
 
-Since the `RewardsManager` has no constructor arguments, we can see that the project immediately compiles:
+Since the `RewardsManager` has no constructor arguments, we can see that the project immediately compiles without needing to modify our `setup` function:
 
 ```bash
 forge build
@@ -238,11 +209,11 @@ forge build
 Compiler run successful!
 ```
 
-letting us move onto the next step of expanding our setup to improve our line and logical coverage.
+letting us move onto the next step of expanding our setup to improve our [line](../glossary.md#line-coverage) and [logical](../glossary.md#logical-coverage) coverage.
 
-## Setting Up Actors and Assets
+## Setting up actors and assets
 
-To start with improving our test setup we'll add three additional actors and token deployments of varying decimal values to the `setup` function:
+The first step for improving our test setup will be adding three additional actors and token deployments of varying decimal values to the `setup` function:
 
 ```javascript
     function setup() internal virtual override {
@@ -265,9 +236,13 @@ To start with improving our test setup we'll add three additional actors and tok
     }
 ```
 
-Note that in the `ActorManager`, the default actor is `address(this)` which also serves as the "admin" actor which we use to call privileged functions via the `asAdmin` modifier.
+> Note that in the `ActorManager`, the default actor is `address(this)` which also serves as the "admin" actor which we use to call privileged functions via the `asAdmin` modifier.
 
-The `RewardsManager` doesn't implement access control mechanisms, but we can simulate privileged functions only being called by the admin actor using the CodeLense provided by the Recon extension which we add to the `AdminTargets`. In a real-world setup this allows testing admin functions that would be called in regular operations by ensuring these target functions are always called with the correct actor so they don't revert. 
+The `RewardsManager` doesn't implement access control mechanisms, but we can simulate privileged functions only being called by the admin actor using the CodeLense provided by the Recon extension to replace the `asActor` modifier with the `asAdmin` modifier on our functions of interest:
+
+![Codelense Example](../images/bootcamp/extension_codelense.png)
+
+and subsequently relocating these functions to the `AdminTargets` contract. In a real-world setup this allows testing admin functions that would be called in regular operations by ensuring these target functions are always called with the correct actor so they don't needlessly revert. 
 
 We'll apply the above mentioned changes to the `rewardsManager_addBulkRewards`, `rewardsManager_addBulkRewardsLinearly`, `rewardsManager_addReward` and `rewardsManager_notifyTransfer` functions:
 
@@ -296,9 +271,9 @@ abstract contract AdminTargets is
 
 This leaves our `RewardsManagerTargets` cleaner and makes it easier to distinguish user actions from admin actions.
 
-## Creating Clamped Handlers
+## Creating clamped handlers
 
-Using our understanding of the system and looking at our target functions we can see there are 3 primary values that we'll need to clamp if we don't want the fuzzer to spend an inordinate amount of time exploring states that are irrelevant: `address vault`, `address token` and `address user`
+Looking at our target functions we can see there are 3 primary values that we'll need to clamp if we don't want the fuzzer to spend an inordinate amount of time exploring states that are irrelevant: `address vault`, `address token` and `address user`:
 
 
 ```javascript
@@ -337,11 +312,11 @@ abstract contract RewardsManagerTargets is
 }
 ```
 
-We can then run Echidna in `exploration` mode for 10-20 minutes to see how many of the lines of interest get covered with this minimal clamping applied: 
+We can then run Echidna in `exploration` mode (which only tries to increase coverage without testing properties) for 10-20 minutes to see how many of the lines of interest get covered with this minimal clamping applied: 
 
 ![Echidna Exploration Mode](../images/bootcamp/echidna_expl_mode.png)
 
-## Coverage Analysis
+## Coverage analysis
 
 After stopping the fuzzer, we can see from the coverage report that all the major functions of interest: `notifyTransfer`, `_handleDeposit`, `_handleWithdrawal`, `_handleTransfer`, and `accrueVault` are fully covered:
 
@@ -351,9 +326,9 @@ We can also see, however, that the `claimReward` function is only being partiall
 
 ![Claim Reward Coverage](../images/bootcamp/claim_reward_partial_covg.png)
 
-specifically, the epoch being claimed never has any points accumulated for it, so it never has anything to claim. 
+specifically, the epoch for which a user is claiming rewards never has any points accumulated for it, so it never has anything to claim. 
 
-So we can then use this additional information to improve our `rewardsManager_claimReward_clamped` function further:
+We can use this additional information to improve our `rewardsManager_claimReward_clamped` function further:
 
 ```javascript
     function rewardsManager_claimReward_clamped(uint256 epochId) public asActor {
@@ -366,11 +341,80 @@ So we can then use this additional information to improve our `rewardsManager_cl
 
 which ensures that we only claim rewards for an `epochId` that has already passed, which makes it more likely that there will be points accumulated for it.
 
-We can then start a new run of the fuzzer to determine whether this has improved coverage as expected. 
+We can then start a new run of the fuzzer and confirm that this has improved coverage as expected:
 
-**TODO: add image of increased coverage**
+![Improved Claim Reward Coverage](../images/bootcamp/claim_reward_improved_covg.png)
 
-## Implementing the First Properties
+Now with a setup that works and coverage over the functions of interest we can move on to the property writing phase.
+
+## About the `RewardsManager` contract
+
+Before implementing the properties themselves we need to get a high-level understanding of how the system works. This is essential for effective invariant testing when you're unfamiliar with the codebase because it helps you define meaningful properties. 
+
+> Typically if you designed/implemented the system yourself you'll already have a pretty good idea of what the properties you want to define are so you can skip this step and start defining properties right away.
+
+The `RewardsManager`, as the name implies, is meant to handle the accumulation and distribution of reward tokens for depositors into a system. Since token rewards are often used as an incentive for providing liquidity to protocols, typically via vaults, this contract is meant to integrate with vaults via a notification system which is triggered by user deposits/withdrawals/transfers. This subsequently updates reward tracking for a user so any holder of the vault token can receive rewards proportional to the amount of time for which they're deposited.
+
+The key function in the notification system that handles this is `notifyTransfer`:
+
+```javascript
+    function notifyTransfer(address from, address to, uint256 amount) external {
+        require(from != to, "Cannot transfer to yourself");
+
+        if (from == address(0)) {
+            _handleDeposit(msg.sender, to, amount);
+        } else if (to == address(0)) {
+            _handleWithdrawal(msg.sender, from, amount);
+        } else {
+            _handleTransfer(msg.sender, from, to, amount);
+        }
+
+        emit Transfer(msg.sender, from, to, amount);
+    }
+```
+
+which decrements or increments the reward tracking for a given user based on the action taken.
+
+Looking at the `_handleDeposit` function more closely: 
+
+```javascript
+    function _handleDeposit(address vault, address to, uint256 amount) internal {
+        uint256 cachedCurrentEpoch = currentEpoch();
+        accrueUser(cachedCurrentEpoch, vault, to);
+        // We have to accrue vault as totalSupply is gonna change
+        accrueVault(cachedCurrentEpoch, vault);
+
+        unchecked {
+            // Add deposit data for user
+            shares[cachedCurrentEpoch][vault][to] += amount;
+        }
+        // Add total shares for epoch // Remove unchecked per QSP-5
+        totalSupply[cachedCurrentEpoch][vault] += amount;
+
+    }
+```
+
+we can see that it accrues rewards to the user and the vault based on the time since the last accrual. It then increases the shares accounted to the user for the current epoch which determine a user's fraction of the total rewards as a fraction of the total shares for the epoch.
+
+## Initial property outline
+
+Now that we have an understanding of how the system works, we can define our first properties.
+
+From the above function we can define a solvency property as: "the `totalSupply` of tracked shares is the sum of user share balances": 
+
+```md
+totalSupply == SUM(shares[vault][users])
+```
+
+which ensures that we never have more shares accounted to users than the `totalSupply` we're tracking.
+
+In addition to the solvency property, we can also define a property that states that: "the sum of accumulated rewards are less than or equal to the reward token balance of the `RewardsManager`":
+
+```md
+SUM(rewardsInfo[epochId][vaultAddress][tokenAddress]) <= rewardToken.balanceOf(address(rewardsManager))
+```
+
+## Implementing the first properties
 
 Often it's good to write out properties as pseudo-code before implementing in Solidity because it allows us to understand which values we can read from state and which we'll need to add additional tracking for. 
 
@@ -378,16 +422,13 @@ In our case we can use our property definitions:
 1. the `totalSupply` of shares tracked is the sum of user share balances
 2. the sum of rewards are less than or equal to the reward token balance of the `RewardsManager`
 
-To write the following pseudocode: 
-
-
-In our case we need to know the sum of rewards of a user, which we can get from the **TODO: `rewardsInfo` looks like it's unused so probably changed later down below in actual implementation**. We can then write the following pseudocode to describe what we need our property to do:
+To outline the following pseudocode:
 
 ```md
 ## Property 1 
 For each epoch, sum all user share balances (`sharesAtEpoch`) by looping through all actors (returned by `_getActors()`)
 
-assert that `totalSupply` for the given epoch is the same as the sum of shares `totalSupply == sharesAtEpoch`
+Assert that `totalSupply` for the given epoch is the same as the sum of shares `totalSupply == sharesAtEpoch`
 
 ## Property 2
 For each epoch, sum all rewards for `address(this)` (our placeholder for the vault)
@@ -395,9 +436,9 @@ For each epoch, sum all rewards for `address(this)` (our placeholder for the vau
 Using the sum of the above, assert that `total <= token.balanceOf(rewardsManager)`
 ```
 
-### Implementing the Total Supply Solvency Property
+### Implementing the total supply solvency property
 
-We can now implement the first property in the `Properties` contract as: 
+We can then use the pseudocode to guide the implementation of the first property in the `Properties` contract: 
 
 ```javascript
     function property_totalSupplySolvency() public {
@@ -429,9 +470,9 @@ We can then start a new run of the fuzzer with our implemented property to see i
 
 > Implementing many properties without running the fuzzer could result in many false positives that all need to be debugged separately and rerun to confirm they're resolved which ultimately slows down your implementation cycle.  
 
-## Property Refinement Process
+## Property refinement process
 
-Very shortly after we start running the fuzzer, we see that it breaks the property, so we can stop the fuzzer and generate a reproducer using the Recon extension automatically (or use the [Recon log scraper tool](../free_recon_tools/echidna_scraper.md) to generate one): 
+Very shortly after we start running the fuzzer it breaks the property, so we can stop the fuzzer and generate a reproducer using the Recon extension automatically (or use the [Recon log scraper tool](../free_recon_tools/echidna_scraper.md) to generate one): 
 
 ```javascript
     function test_property_totalSupplySolvency_0() public {
@@ -489,13 +530,13 @@ To ensure we're only allowing transfers to actors tracked by our `ActorManager` 
     }
 ```
 
-This type of clamping is often essential to prevent these types of false positives so we don't implement them in a separate clamped handler (as this would still allow the fuzzer to call the unclamped handler with other addresses). 
+This type of clamping is often essential to prevent these types of false positives, so we don't implement them in a separate clamped handler (as this would still allow the fuzzer to call the unclamped handler with other addresses). 
 
-Clamping these values also doesn't overly restrict the search space because having random values passed in for users or tokens doesn't provide any benefit as they won't actually explore any interesting state. 
+Clamping these values also doesn't overly restrict the search space because having random values passed in for users or tokens doesn't provide any benefit as they won't actually allow the fuzzer to reach additional states. 
 
 > Any time there are addresses representing users or addresses representing tokens in handler function calls we can clamp using the `_getActor()` and `_getAsset()` return values, respectively.
 
-We can then run Echidna again to confirm whether this resolved our broken property as expected. After which, we see that it still fails with the following reproducer:
+We can then run Echidna again to confirm whether this resolved our broken property as expected. After which we see that it still fails with the following reproducer:
 
 ```javascript
     function test_property_totalSupplySolvency_1() public {
@@ -520,12 +561,12 @@ We can see from the reproducer test that in the calls to `rewardsManager_notifyT
         ...
 
         if (from == address(0)) {
-            /// @audit this called first with 1 amount
+            /// @audit this is called first with 1 amount
             _handleDeposit(msg.sender, to, amount);
         } else if (to == address(0)) {
             _handleWithdrawal(msg.sender, from, amount);
         } else {
-            /// @audit this called second with 0 amount
+            /// @audit this is called second with 0 amount
             _handleTransfer(msg.sender, from, to, amount);
         }
 
@@ -533,7 +574,7 @@ We can see from the reproducer test that in the calls to `rewardsManager_notifyT
  }
 ```
 
-So we note that the first call is essentially registering a 1 wei deposit for the currently set actor (returned by `_getActor()`) and the second call is registering a transfer of 0 from the `0x00000000000000000000000000000000DeaDBeef` address to the currently set actor. 
+We can note that the first call is essentially registering a 1 wei deposit for the currently set actor (returned by `_getActor()`) and the second call is registering a transfer of 0 from the `0x00000000000000000000000000000000DeaDBeef` address to the currently set actor. 
 
 Since the `rewardsManager_notifyTransfer(0x00000000000000000000000000000000DeaDBeef,0)` call is the last one, we know that something in the `_handleTransfer` call changes state in an unexpected way, which leads our property to break. Looking at the implementation of `_handleTransfer`, we see that since we're passing in a 0 value, the only state-changing calls it makes are to `accrueUser`:
 
@@ -545,7 +586,7 @@ Since the `rewardsManager_notifyTransfer(0x00000000000000000000000000000000DeaDB
         // Accrue points for to, so they don't get too many rewards
         accrueUser(cachedCurrentEpoch, vault, to);
 
-        /// @audit anything below these lines don't actually get reached
+        /// @audit anything below these lines don't change state
         unchecked {
             // Add deposit data for to
             shares[cachedCurrentEpoch][vault][to] += amount;
@@ -556,7 +597,7 @@ Since the `rewardsManager_notifyTransfer(0x00000000000000000000000000000000DeaDB
     }
 ```
 
-This indicates to us that we are updating shares for the user if time has passed since the last update:
+This indicates to us that we are accruing shares for the user if time has passed since the last update:
 
 ```javascript
 
@@ -615,9 +656,9 @@ Looking at the `accrueVault` function, we see this is because it sets a new valu
   }
 ```
 
-In our case, since there is no call to `accrueVault` but there is a call to `accrueUser`, the user is accounted shares for the epoch, but the vault isn't.
+In our case, since there is no call to `accrueVault` in `_handleTransfer` but there is a call to `accrueUser`, **the user is accounted shares for the epoch, but the vault isn't**.
 
-We can say that this is a real bug because it causes users to have claimable shares in an epoch in which there are no claimable shares tracked by the total supply. This would cause the following logic in the `claimReward` function to behave incorrectly due to a 0 return value from `_getTotalSupplyAtEpoch`:
+We can say that this is a real bug because it causes users to have claimable shares in an epoch in which there are no claimable shares tracked by the total supply. This would cause the following logic in the `claimReward` function to behave incorrectly due to a 0 return value from `_getTotalSupplyAtEpoch`, making a user unable to claim in an epoch for which they've accrued rewards:
 
 ```javascript
     function claimReward(uint256 epochId, address vault, address token, address user) public {
@@ -705,7 +746,7 @@ which upon further investigation reveals that the call from `notifyTransfer` to 
     }
 ```
 
-This indicates that we should refactor our property to use a less than or equal to check (`lte`) instead of strict equality (`eq`):
+This should then cause us to reason that if we have a `totalSupply` greater than or equal to the shares accounted to users, then the system is solvent and able to repay all depositors, but if we have less than this amount, the system would be unable to repay all depositors. Which means that our property broke when it shouldn't have and so we can refactor it accordingly:
 
 ```javascript
     function property_totalSupplySolvency() public {
@@ -730,15 +771,17 @@ This indicates that we should refactor our property to use a less than or equal 
     }
 ```
 
-We can modify the assertion in this way because we can logically reason that if we have a `totalSupply` greater than or equal to the shares accounted to users, then the system is solvent and able to repay all depositors, but if we have less than this amount, the system would be unable to repay all depositors. 
+where our property now uses a less than or equal assertion (`lte`) instead of strict equality (`eq`), allowing the sum of user shares for an epoch to be less than the `totalSupply` for that epoch.
 
-After running the fuzzer with this new property implementation for 5-10 minutes, it holds, confirming that it is now properly implemented. 
+After running the fuzzer with this new property implementation for 5-10 minutes, it holds, confirming that it's now properly implemented. 
+
+The implementation property of the second property is left as an exercise to the reader, you can use the pseudocode to guide you and it should follow a similar implementation pattern as the first. 
 
 ## Conclusion 
 
-This shows how invariant testing can often highlight misunderstandings of a system by giving you ways to easily test assumptions that can't be tested with unit tests or stateless fuzzing. When these assumptions fail, it's either due to a false positive or a misunderstanding of how the system works, or both, as we saw above. 
+We've seen how invariant testing can often highlight misunderstandings of a system by giving you ways to easily test assumptions that are difficult to test with unit tests or stateless fuzzing. When these assumptions fail, it's either due to a false positive or a misunderstanding of how the system works, or both, as we saw above. 
 
-When you're forced to refactor your code to resolve an issue identified by a broken property, you can then run the fuzzer to confirm whether you resolved the issue for all cases, which as we saw above made us realize that our property implementation was overly strict.
+When you're forced to refactor your code to resolve an issue identified by a broken property, you can then run the fuzzer to confirm whether you resolved the issue for all cases. As we saw above this allowed us to see that our property implementation was overly strict and could be modified to be less strict.
 
 One of the other key benefits of invariant testing besides explicitly identifying exploits is that it allows you to ask and answer questions about **whether it's possible to get the system into a specific state**. If the answer is yes and the state is unexpected, this can often be used as a precondition that can lead to an exploit of the system. 
 

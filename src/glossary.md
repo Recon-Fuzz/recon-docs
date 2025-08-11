@@ -54,7 +54,15 @@ The set of functions that the fuzzer will call to explore state and properties f
 
 ## Shrinking
 
-A process performed by the fuzzer to remove unnecessary calls from a call sequence that don't contribute to breaking a property. 
+A process performed by the fuzzer to remove unnecessary calls from a call sequence that don't contribute to breaking a property.
+
+## Line Coverage
+
+The ability of the fuzzer to reach a specific line in the targeted contract.
+
+## Logical Coverage
+
+The frequency with which the fuzzer reaches all possible logical paths in a function of interest.
 
 ## [Scaffolding](../free_recon_tools/builder.md)
 
