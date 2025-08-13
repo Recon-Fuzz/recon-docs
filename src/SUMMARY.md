@@ -46,6 +46,7 @@
 - [Bytecode Static Deployment](./free_recon_tools/bytecode_static_deployment.md)
 - [Bytecode Formatter](./free_recon_tools/bytecode_formatter.md)
 - [String To Bytes](./free_recon_tools/bytecode_string.md)
+- [OpenZeppelin Roles Scraper](./free_recon_tools/openzeppelin_roles_scraper.md)
 --- 
 
 # OSS Repos
