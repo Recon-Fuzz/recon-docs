@@ -293,20 +293,24 @@ The Recon Extension allows automatically generating mocks for a contract by righ
 ```javascript
 import {MarketParams, Market} from "src/interfaces/IMorpho.sol";
 
-contract IrmMock {
+contract MockIRM {
     uint256 internal _borrowRate;
 
-    function setBorrowRate(uint256 borrowRate) external {
-        _borrowRate = borrowRate;
+    function setBorrowRate(uint256 newBorrowRate) external {
+        _borrowRate = newBorrowRate;
     }
 
-    function borrowRateView(MarketParams memory marketParams, Market memory market) external view returns (uint256) {
+    function borrowRate(MarketParams memory marketParams, Market memory market) public view returns (uint256) {
         return _borrowRate;
+    }
+
+    function borrowRateView(MarketParams memory marketParams, Market memory market) public view returns (uint256) {
+        return borrowRate(marketParams, market);
     }
 }
 ```
 
-Our mock simply exposes a function for setting and getting the `_borrowRate` because these are the functions required in the `IIRM` interface. We'll then expose a target function that calls the `setBorrowRate` function which allows the fuzzer to modify the borrow rate randomly. 
+Our mock simply exposes functions for setting and getting the `_borrowRate` because these are the functions defined in the `IIRM` interface. We'll then expose a target function that calls the `setBorrowRate` function which allows the fuzzer to modify the borrow rate randomly. 
 
 Now the next contract we'll need for creating a market is the oracle for setting the price of the underlying asset. Looking at the existing `OracleMock` in the Morpho repo we can see that it's sufficient for our case: 
 
