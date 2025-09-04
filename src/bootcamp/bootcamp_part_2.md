@@ -241,7 +241,7 @@ this again ensures that the **clamped handler always calls the unclamped handler
 
 The utility `_getActor()` function lets us pass its return value directly to our clamped handler to restrict it to be called for actors in the set managed by `ActorManager`. Calls for addresses other than these are not interesting to us because they wouldn't have been able to successfully deposit into the system since only the actors in the `ActorManager` are minted tokens in our setup.
 
-> Clamping using the `_getActor()` function above in the call to `morpho_liquidate` would only result in self liquidations because the `asActor` modifier on the `morpho_liquidate` function would be called by the same actor. To allow liquidations by a different actor than the one being liquidated you could simply pass an entropy value to the clamped handler and use it to grab an actor from the array returned by `_getActors()`.
+> Clamping using the `_getActor()` function above in the call to `morpho_liquidate` would only result in self liquidations because the `asActor` modifier on the `morpho_liquidate` function would be called by the same actor. To allow liquidations by a different actor than the one being liquidated you could simply pass an entropy value to the clamped handler and use it to grab an actor from the actor array like: `otherActor = _getActors()[entropy % _getActors().length]`.
 
 ## Echidna Results
 
