@@ -4,7 +4,7 @@
 
 Our goal is to make Invariant Testing a baseline for all projects building on the EVM.
 
-We're amongst the most profilific invariant testing writers, with [our template being used over 300 times by multiple professionals](https://getrecon.xyz/pro#builder).
+We're amongst the most prolific invariant testing writers, with [our template being used over 300 times by multiple professionals](https://getrecon.xyz/pro#builder).
 
 [Recon Pro](../using_recon/running_jobs.md) is a tool for running invariant tests in the cloud.
 
