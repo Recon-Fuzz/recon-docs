@@ -2,7 +2,7 @@
 
 Recipes allow you to save job configurations for easy reuse when running jobs on Recon.
 
-
+**Video Tutorial:** [Recipes](https://www.youtube.com/watch?v=3lByqfsxQWg) (2min)
 
 ## Creating A Recipe
 

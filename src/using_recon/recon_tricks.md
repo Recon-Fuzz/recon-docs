@@ -4,6 +4,8 @@ We've been using Recon for over a year to run all of our cloud runs.
 
 Here's some tips and tricks:
 
+**Video Tutorial:** [Recon Magic Workflow](https://www.youtube.com/watch?v=Hrshkv7ID2U) (8min)
+
 ## Run in exploration mode for an excessive amount of tests
 
 ![Exploration Mode](../images/using_recon/exploration.png)
@@ -14,6 +16,8 @@ Exploration mode is faster and builds a corpus faster.
 While building your suite, make use of this mode.
 
 ## Think about Corpus Reuse
+
+**Video Tutorial:** [Corpus Reuse](https://www.youtube.com/watch?v=U0GmaE_P4Jc) (2min)
 
 ![Corpus Reuse](../images/using_recon/corpus_reuse.png)
 

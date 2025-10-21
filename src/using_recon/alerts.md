@@ -1,8 +1,10 @@
-# Alerts 
+# Alerts
 
 Alerts can be added to any [recipe](/recipes.html)
 
 You can specify whether an alert should trigger a Webhook or send a message on Telegram.
+
+**Video Tutorial:** [Alerts](https://www.youtube.com/watch?v=xMRdHU4uH8M) (2min)
 
 ## Creating, Updating, and Viewing Alerts tied to a Recipe
 

@@ -8,6 +8,8 @@ We're amongst the most prolific invariant testing writers, with [our template be
 
 [Recon Pro](../using_recon/running_jobs.md) is a tool for running invariant tests in the cloud.
 
+**Video Tutorial:** [Intro to Recon Pro V2](https://www.youtube.com/watch?v=Gmdlka30uqs) (1min)
+
 The [Recon Extension](../free_recon_tools/recon_extension.md) is an open source VS Code Extension to scaffold a Invariant Testing Boilerplate using the [Chimera Framework](../writing_invariant_tests/chimera_framework.md).
 
 ## Navigating the Book

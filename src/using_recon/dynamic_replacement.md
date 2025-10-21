@@ -4,6 +4,8 @@ Dynamic replacement allows you to replace the value of any variable in your cont
 
 > To see an interactive demo of how dynamic replacement works see [here](https://getrecon.xyz/dynamic-replacement-demo), to use dynamic replacement on a real project with a Recon pro account click [here](https://getrecon.xyz/dashboard/dynamic-replacement).
 
+**Video Tutorial:** [Dynamic Replacement](https://www.youtube.com/watch?v=fk-xl0FkhDw) (1min)
+
 The key idea of dynamic replacement is to allow you to test multiple setup configuration variations or behaviors in your code.
 
 You may be accustomed to creating separate "config" files that allow you to test different suite setup parameters such as:

@@ -4,6 +4,8 @@ Campaigns are specific CI/CD automations.
 
 Each campaign is tied to an Organization, Repository and Branch and requires a [recipe](./recipes.md)
 
+**Video Tutorial:** [Campaigns](https://www.youtube.com/watch?v=YFkwtb-RFyU) (3min)
+
 Whenever you push code to the branch, the Organization, Repo and Branch will be replaced to the recipe you setup for the campaign.
 
 A job will run off of the recipe you configured.

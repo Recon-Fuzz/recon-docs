@@ -2,6 +2,8 @@
 
 Governance fuzzing allows us to simulate on-chain changes that modify the system state (function calls) or system configuration (governance function calls) in our forked testing setup to determine if the change causes a break in the existing properties.
 
+**Video Tutorial:** [Governance Fuzzing](https://www.youtube.com/watch?v=nrPCa59nl9M) (2min)
+
 ## How It Works
 
 To execute governance fuzzing on a system we first need to have a fork testing setup that achieves full line coverage over the contracts of interest. 
