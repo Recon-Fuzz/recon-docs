@@ -22,6 +22,36 @@ On the _Jobs_ tab you'll see a form for running a job.
 
 5. If your project uses a dependency system in addition to foundry, you can select the custom preinstall process in the dropdown menu.
 
+6. You can optionally add a custom **Job Name** to make it easier to identify your job later. If you don't provide one, Recon will generate a random hash.
+
+7. Click **Run Job** to start the fuzzing or verification job in the cloud.
+
+## Using Recipes
+
+You can save time by using [recipes](./recipes.md) - pre-configured job templates that appear at the top of the Jobs page. Simply select a recipe and it will prefill all the form fields, which you can then modify as needed before running the job.
+
+## Dynamic Replacement
+
+For advanced use cases, you can enable [dynamic replacement](./dynamic_replacement.md) to replace variables in your `Setup.sol` file without modifying the code. This is useful for testing different configurations or running the same test suite against different deployments.
+
+## Corpus Reuse
+
+If you've run a similar job before, you can paste the corpus from a previous run into the **Target Corpus** field. This allows Recon to reuse the fuzzer's learned inputs, which can save days of exploration time. See [Recon Tricks](./recon_tricks.md) for more details.
+
+## Job Status and Monitoring
+
+Once a job starts, you can:
+- Monitor its progress in real-time on the Jobs page (updates every minute)
+- Share the job URL with team members or auditors - the page updates automatically
+- Stop a running job if needed
+- Download the corpus for reuse in future jobs
+- View broken properties and download Foundry reproducers
+
+## Billing Limits
+
+- **Trial accounts** can only run one job at a time
+- **Pro accounts** can run multiple jobs concurrently
+
 ## Tool-Specific Video Tutorials
 
 - [Echidna Jobs](https://www.youtube.com/watch?v=JvPrJPGTjY8) (5min)

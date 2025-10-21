@@ -27,6 +27,7 @@
 <!-- - [Getting Started] -->
 - [Building Handlers](./using_recon/building_handlers.md)
 - [Running Jobs](./using_recon/running_jobs.md)
+- [Recon Magic](./using_recon/recon_magic.md)
 - [Recipes](./using_recon/recipes.md)
 - [Alerts](./using_recon/alerts.md)
 - [Campaigns](./using_recon/campaigns.md)

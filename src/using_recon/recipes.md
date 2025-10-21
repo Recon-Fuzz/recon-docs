@@ -28,4 +28,21 @@ Your recipe will then appear in the list of recipes at the bottom of the page. R
 
 ![Recipes](../images/using_recon/recipes.png)
 
-To use a recipe, you can select the recipe from the list of recipes at the top of the _Jobs_ page. This will prefill all the form fields for the job configuration and you can then edit any of the values as needed. The job can then be run as normal using the _Run Job_ button. 
+To use a recipe, you can select the recipe from the list of recipes at the top of the _Jobs_ page. This will prefill all the form fields for the job configuration and you can then edit any of the values as needed. The job can then be run as normal using the _Run Job_ button.
+
+## Recipe Use Cases
+
+Recipes serve three main purposes:
+
+1. **Quick Presets**: Use recipes as templates on the Jobs page to quickly run common configurations without re-entering all parameters
+2. **Campaign Templates**: Link recipes to [campaigns](./campaigns.md) for automated CI/CD fuzzing on PR pushes and commits
+3. **Alert Management**: Attach [alerts](./alerts.md) to recipes to receive notifications when broken properties are found
+
+## Managing Recipes
+
+All your recipes appear at the bottom of the Recipes page where you can:
+- **Edit** recipes using the "Edit this Recipe" button to update configurations
+- **Delete** recipes using the "Delete this Recipe" button when no longer needed
+- **View** recipe details including tool type, repository, and configuration parameters
+
+> **Note**: Changes to a recipe automatically apply to any campaigns using that recipe. 
