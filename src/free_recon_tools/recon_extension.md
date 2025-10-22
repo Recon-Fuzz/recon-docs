@@ -5,6 +5,8 @@ The Recon extension is a Visual Studio Code extension that allows you to use Rec
 
 Install the extension from the Visual Studio Marketplace: [https://marketplace.visualstudio.com/items?itemName=Recon-Fuzz.recon](https://marketplace.visualstudio.com/items?itemName=Recon-Fuzz.recon)
 
+Install the extension from the Open VSX Marketplace (Cursor): [https://open-vsx.org/extension/Recon-Fuzz/recon](https://open-vsx.org/extension/Recon-Fuzz/recon)
+
 Alternatively build from source and install the vsix: [https://github.com/Recon-Fuzz/recon-extension](https://github.com/Recon-Fuzz/recon-extension)
 
 ## Getting Started
