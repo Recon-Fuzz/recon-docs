@@ -53,6 +53,7 @@ Our bytecode tools can help you [compare the bytecode](../free_recon_tools/bytec
 **Video Tutorials:**
 - [All Recon Tools](https://www.youtube.com/watch?v=kxUA3eQcmJY) (1min)
 - [Bytecode Tools](https://www.youtube.com/watch?v=kxUA3eQcmJY) (6min)
+- [Storage & Governance Tools](https://www.youtube.com/watch?v=l2JZ1_nP0iU) (3min)
 - [Economic Tools](https://www.youtube.com/watch?v=M6gCgLcmk18) (4min)
 
 ### Open Source Contributions
