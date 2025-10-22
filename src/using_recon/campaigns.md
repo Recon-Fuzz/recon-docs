@@ -1,10 +1,9 @@
 # Campaigns
-
-Campaigns are specific CI/CD automations.
-
-Each campaign is tied to an Organization, Repository and Branch and requires a [recipe](./recipes.md)
-
 **Video Tutorial:** [Campaigns](https://www.youtube.com/watch?v=YFkwtb-RFyU) (3min)
+
+Campaigns are CI/CD automations that automatically run cloud fuzzing jobs when a commit is made to a specified branch.
+
+Campaigns are specified using: an organization, repository and branch and require an existing [recipe](./recipes.md)
 
 Whenever you push code to the branch, the Organization, Repo and Branch will be replaced to the recipe you setup for the campaign.
 
