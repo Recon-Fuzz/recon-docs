@@ -1,36 +1,58 @@
 # Campaigns
 
-Campaigns are specific CI/CD automations.
-
-Each campaign is tied to an Organization, Repository and Branch and requires a [recipe](./recipes.md)
+Campaigns are CI/CD automations that automatically run cloud fuzzing jobs when commits are pushed to a specified branch. They integrate directly into your development workflow by running fuzzing tests on pull requests and providing immediate feedback through PR comments.
 
 **Video Tutorial:** [Campaigns](https://www.youtube.com/watch?v=YFkwtb-RFyU) (3min)
 
-Whenever you push code to the branch, the Organization, Repo and Branch will be replaced to the recipe you setup for the campaign.
+## How Campaigns Work
 
-A job will run off of the recipe you configured.
+Campaigns connect a specific branch in your repository to a [recipe](./recipes.md) that defines the fuzzing configuration. When you push code to the monitored branch, Recon automatically:
 
-If you added an [alert](./alerts.md) to your run then alerts will also be triggered whenever they match their criteria.
+1. Triggers a fuzzing job using the configured campaign 
+3. Runs the job with your recipe's fuzzing settings
+4. Posts results directly to the pull request as comments
 
-By default campaigns will leave a comment on the PR that triggered them.
-
-![Campaign leaving a comment on start](../images/using_recon/campaign_start_comment.png)
-
-They will also print a summary of the run, with a findings table and foundry repros for each broken property
-
-![Campaign leaving a comment on end](../images/using_recon/campaign_end_comment.png)
+If you've configured [alerts](./alerts.md) for the recipe, they will also be triggered when their criteria are met during campaign runs.
 
 ## Creating a Campaign
 
-Creating a campaign requires having [created a recipe first](./recipes.md)
+Before creating a campaign, you must first [create a recipe](./recipes.md) that defines your fuzzing configuration.
 
-Simply config the branch that you will be PRing from (e.g. if you're working on `dev` and pushing to `main`) write `dev` in the `branch` field.
+To create a campaign:
+
+1. Navigate to the Campaigns page
+2. Fill in the campaign configuration form:
+   - **Recipe**: Select the recipe to use for this campaign
+   - **Organization** (optional): Your GitHub organization or username, if you are using a different organization than the one in your recipe
+   - **Repository** (optional): The name of your repository, if you are using a different repository than the one in your recipe
+   - **Branch** (optional): The branch you'll be pushing from (e.g., `dev` if you're creating PRs from `dev` to `main`), if you are using a different branch than the one in your recipe
+3. Click the _Create Campaign_ button to activate the campaign
 
 ![Creating a campaign](../images/using_recon/campaign_setup_form.png)
 
+Once created, your campaign will automatically trigger fuzzing jobs whenever new commits are pushed to the specified branch.
 
-If you wish to pause the campaign, delete it or manage alerts, simply scroll down to the campaign and click the buttons at the top.
+## Managing Campaigns
 
-![Updating a campaign](../images/using_recon/campaign_config.png)
+After creating a campaign, you can modify it by scrolling to the campaign in the list and using the control buttons:
 
-At this time it's not possible to edit a campaign, however, any change to the recipe will be reflected to the campaign.
+![Updating a campaign](../images/using_recon/modify_campaign.png)
+
+Available management options include:
+
+- **Pause Campaign**: Temporarily stop the campaign from triggering new jobs without deleting it
+- **Delete Campaign**: Permanently remove the campaign
+- **Manage Alerts**: Add, edit, or remove alerts associated with the campaign's recipe
+
+**Note**: Campaigns cannot be directly edited. However, any changes made to the underlying recipe will automatically be reflected in the campaign's behavior. To modify a campaign's configuration, update the associated recipe instead.
+
+
+## Pull Request Integration
+
+By default, campaigns will leave a comment on the PR when a fuzzing job starts:
+
+![Campaign leaving a comment on start](../images/using_recon/campaign_start_comment.png)
+
+Once the job completes, campaigns post a detailed summary that includes a table with all the tested properties and Foundry unit test reproducers for each broken property:
+
+![Campaign leaving a comment on end](../images/using_recon/campaign_end_comment.png)

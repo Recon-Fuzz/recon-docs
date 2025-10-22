@@ -1,48 +1,76 @@
-# Dynamic Replacement
+# dynamic replacement
 
-Dynamic replacement allows you to replace the value of any variable in your contracts.
+dynamic replacement allows you to test multiple configuration variations of your contracts without managing separate branches or config files. By replacing variable values in your `Setup.sol` file before fuzzing runs, you can quickly test different scenarios with the same codebase.
 
-> To see an interactive demo of how dynamic replacement works see [here](https://getrecon.xyz/dynamic-replacement-demo), to use dynamic replacement on a real project with a Recon pro account click [here](https://getrecon.xyz/dashboard/dynamic-replacement).
+**Video Tutorial:** [dynamic replacement](https://www.youtube.com/watch?v=fk-xl0FkhDw) (1min)
 
-**Video Tutorial:** [Dynamic Replacement](https://www.youtube.com/watch?v=fk-xl0FkhDw) (1min)
+> **Try it out:** See an [interactive demo](https://getrecon.xyz/dynamic-replacement-demo) or use dynamic replacement with your [Recon Pro account](https://getrecon.xyz/dashboard/dynamic-replacement).
 
-The key idea of dynamic replacement is to allow you to test multiple setup configuration variations or behaviors in your code.
+## How It Works
 
-You may be accustomed to creating separate "config" files that allow you to test different suite setup parameters such as:
-- Maximum precision loss
-- Number of actors
+dynamic replacement enables you to change the value of any variable in your [`Setup.sol`](../writing_invariant_tests/chimera_framework.md#setup) file before running a fuzzing job. Instead of creating multiple branches or config files to test different scenarios, you can:
 
-and other aspects of the suite.
+1. Identify the variables you want to modify.
+2. Specify replacement values in the Recon interface.
+3. Run multiple jobs with different configurations from the same branch.
 
-With dynamic replacement you can change one line, click a button, and run multiple jobs that have different setup configurations, without needing to create and manage multiple branches. The chosen variables are replaced before running the fuzzer and every other part of the setup remains the same, allowing you to fine tune your testing approach for different scenarios.
+The chosen variables are replaced before the fuzzer runs, while everything else in your setup remains identical. This allows you to fine-tune your testing approach for different scenarios efficiently.
 
-## When to use Dynamic Replacement
+## When to Use dynamic replacement
 
-### Toggle behavior via a boolean or by adding specific calldata
+### Toggle Behavior with Boolean Flags
 
-![Dynamic Replacement Constant](../images/using_recon/dynamic_replacement_constant.png)
+![dynamic replacement Constant](../images/using_recon/dynamic_replacement_constant.png)
 
-In the example above we want to allow certain unsafe ERC4626 operations via the `ALLOWS_REKT` constant. We can use dynamic replacement in this case to toggle the boolean to true or false so that we don't need to maintain two forked branches to test this minor change.
+You can use dynamic replacement to toggle feature flags or behavior switches without maintaining separate branches. In the example above, the `ALLOWS_REKT` constant controls whether certain unsafe ERC4626 operations are permitted. By using dynamic replacement to toggle this boolean between `true` and `false`, you can test both scenarios without duplicating code.
 
-### Using constants for precision, decimals, hardcoded addresses
+**Common use cases:**
+- Enabling/disabling specific protocol features
+- Testing with and without safety checks
+- Toggling between different execution modes
+
+### Test Different Precision and Decimal Configurations
+
 ![Token Replacement](../images/using_recon/dynamic_replacement_token.png)
 
-In the example above the suite was written to target a 18 decimal token. However, if the business requirements change and we want to be able to use the same suite for testing tokens of different decimal values, we can use dynamic replacement to reuse the suite with a different decimal value setup.
+When testing contracts that interact with tokens or handle numerical precision, dynamic replacement allows you to reuse test suites across different configurations. In the example above, the suite was originally written for an 18-decimal token. Using dynamic replacement, you can test the same suite with 6-decimal or 8-decimal tokens without rewriting your tests.
 
-### Fork testing
-![Dynamic Replacement Addresses](../images/using_recon/dynamic_replacement_addresses.png)
+**Common use cases:**
+- Testing different token decimal values (6, 8, 18)
+- Adjusting precision loss thresholds
+- Modifying numerical constants like maximum slippage or fees
 
-In the example above we can see the common practice of hardcoding multiple addresses on a fork test for a given chain. Using dynamic replacement we can replace these in the same branch, performing fork testing on new targets, or new chains.
+### Fork Testing with Different Addresses
+
+![dynamic replacement Addresses](../images/using_recon/dynamic_replacement_addresses.png)
+
+Fork tests often require hardcoded addresses for contracts deployed on specific chains. dynamic replacement enables you to swap these addresses to test against different protocols, chains, or deployment versions without modifying your codebase.
+
+**Common use cases:**
+- Testing the same protocol on different chains (Ethereum, Arbitrum, Optimism)
+- Comparing behavior across protocol versions
+- Testing against different token addresses or pool configurations
 
 ## Using Dynamic Replacement
 
-Dynamic Replacement applies only to the `Setup.sol` file in your repository. 
+Dynamic replacement applies only to variables defined in your `Setup.sol` file.
 
-To use:
-- add the name of the variable you want to replace
-- specify the interface/type of the variable 
-- specify the value you want to replace the existing value with
-- (optional) add additional values you'd like to replace
+To use dynamic replacement:
 
-![Dynamic Replacement Field](../images/using_recon/dynamic_replacement.png)
+1. Navigate to the _Fuzzing Jobs_ or _Recipes_ page and toggle the _Enable Dynamic Replacement_ switch
+2. For each variable you want to replace, provide:
+   - **Variable Name**: The exact name of the variable in your `Setup.sol` file
+   - **Type**: The variable's type/interface (e.g., `bool`, `uint256`, `address`)
+   - **Value**: The new value to replace the existing value with
+3. (Optional) Click _Add More Variables_ to specify additional replacement values for testing multiple configurations
+4. Run your job or save the recipe with the dynamic replacements configured
 
+![dynamic replacement Field](../images/using_recon/dynamic_replacement.png)
+
+Each replacement configuration will run as a separate job, allowing you to compare results across different variable values in parallel.
+
+## Best Practices
+
+- **Use descriptive variable names**: Make it clear what each variable controls to avoid confusion when setting up replacements
+- **Document your configurations**: Keep track of which replacement values represent which scenarios for easier analysis
+- **Combine with recipes**: Save frequently used replacement configurations as recipes for quick reuse
