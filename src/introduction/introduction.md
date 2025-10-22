@@ -50,6 +50,11 @@ Recon's free tools can help you turn fuzzer logs into Foundry reproducers ([Echi
 
 Our bytecode tools can help you [compare the bytecode](../free_recon_tools/bytecode_compare.md) of two different contracts and [generate an interface](../free_recon_tools/bytecode_to_interface.md) for a given contract's bytecode.
 
+**Video Tutorials:**
+- [All Recon Tools](https://www.youtube.com/watch?v=kxUA3eQcmJY) (1min)
+- [Bytecode Tools](https://www.youtube.com/watch?v=kxUA3eQcmJY) (6min)
+- [Economic Tools](https://www.youtube.com/watch?v=M6gCgLcmk18) (4min)
+
 ### Open Source Contributions
 Recon has created a number of open source tools to make invariant testing easier. These can be found in the OSS Repos section.
 
