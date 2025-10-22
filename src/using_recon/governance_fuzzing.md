@@ -38,21 +38,25 @@ Before setting up governance fuzzing, you need:
 
 1. **Navigate to the Governance Fuzzing page** in the Recon dashboard
 
-2. **Enter the contract address** you want to monitor for events
+![Governance Fuzzing Page](../images/using_recon/governance_fuzzing.png)
 
-3. **Select the chain** where the contract is deployed
+2. Enter the **contract address** you want to monitor for events
 
-4. **Choose a recipe** that will be used to run the fuzzing job when the event is detected
+3. Select the **chain** where the contract is deployed
 
-5. **Define the event** you want to monitor by either:
-   - Pasting the full event definition (e.g., `event ProposalCreated(uint256 indexed proposalId, address proposer, string description)`)
-   - Clicking "Parse Event Definition" to automatically extract the event name and parameters
+4. Choose a **recipe** that will be used to run the fuzzing job when the event is detected
 
-6. **Configure parameter replacements**: For each event parameter, specify how it should be injected into your `Setup.sol` file:
-   - **Type**: The Solidity type of the parameter (automatically filled from event definition)
+5. Define the **event** you want to monitor by either pasting the full event definition (e.g., `event ProposalCreated(uint256 indexed proposalId, address proposer, string description)`)
+   
+![Event Definition](../images/using_recon/event_definition.png)
+
+6. Configure **parameter replacements**: Click _Parse Event Definition_ to automatically extract the event name and parameters for each event, specifying how it should be injected into your `Setup.sol` file:
+   - **Type**: The Solidity type of the parameter
    - **Indexed**: Whether the parameter is indexed in the event (automatically detected)
    - **Replacement**: The variable in your `Setup.sol` file to replace, using `XX` as a placeholder for the event value
    - **Unused**: Toggle this if you want to ignore this parameter
+
+![Event Configuration](../images/using_recon/event_config.png)
 
 ### Example: Monitoring Governance Proposals
 
@@ -77,10 +81,11 @@ In the governance fuzzing setup:
 2. Select the appropriate chain
 3. Choose your recipe
 4. Paste the event definition and click "Parse Event Definition"
-5. For the `newParameter` field, set the replacement to:
-   ```solidity
+5. For the `newParameter` field, set the replacement to: 
+
+```solidity
    uint256 constant TARGET_PARAMETER = uint256(XX);
-   ```
+```
 
 When a `ProposalCreated` event is emitted, Recon will:
 - Detect the event on-chain
@@ -94,6 +99,8 @@ After configuring your governance fuzzing setup, verify:
 - **Topic**: The event topic hash is displayed - make sure this matches the actual event
 - **Event Definition**: The reconstructed event definition should match your contract
 - **Replacements**: Review that the `XX` placeholders are in the correct positions
+
+![Generated Events Info](../images/using_recon/generated_events_info.png)
 
 > **Warning**: An incorrect topic will cause Recon to miss events on-chain. Always double-check the generated topic before submitting.
 
