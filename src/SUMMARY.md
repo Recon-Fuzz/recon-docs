@@ -25,6 +25,7 @@
 
 # Using Recon
 - [Getting Started](./using_recon/getting_started.md)
+- [Upgrading to Pro](./using_recon/upgrading_to_pro.md)
 - [Building Handlers](./using_recon/building_handlers.md)
 - [Running Jobs](./using_recon/running_jobs.md)
 - [Recon Magic](./using_recon/recon_magic.md)
