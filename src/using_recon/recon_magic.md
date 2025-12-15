@@ -6,6 +6,73 @@ Access Recon Magic at: [getrecon.xyz/dashboard/magic](https://getrecon.xyz/dashb
 
 Works with both public and private repositories. For private repos, [install the Recon GitHub App](./getting_started.md#using-private-repositories) first.
 
+## Running Magic Jobs
+
+This section covers how Magic Jobs work, regardless of which specific workflow you choose.
+
+### How It Works
+
+When you start a Magic Job, the following happens:
+
+1. **Repository Creation**: A new GitHub repository is created for your job results (e.g., `your-repo-processed-1734567890`)
+2. **User Invitation**: You (and any other GitHub users you specify) are automatically invited as collaborators to the new repository
+3. **Initial Push**: Your original code is pushed to the new repository as the initial commit
+4. **Workflow Execution**: The AI workflow runs, making changes and committing them step by step
+5. **Results**: View the diff, generated documentation, and any artifacts directly in the dashboard
+
+### Repository Access
+
+#### Automatic Invitations
+
+When you start a job, you are automatically invited to the results repository. The invitation is sent before the workflow begins, so you can follow along in real-time.
+
+#### Inviting Additional Users
+
+You can invite other GitHub users to the results repository at any time:
+
+1. Navigate to your job's detail page in the dashboard
+2. Find the "Invite GitHub user to repository" form
+3. Enter the GitHub username of the person you want to invite
+4. Click "Invite"
+
+The invited user will receive a GitHub collaboration invite with push access to the repository.
+
+### Code Updates and Commits
+
+Magic Jobs commit changes after each workflow step. This provides:
+
+- **Transparency**: See exactly what the AI modified at each step
+- **Traceability**: Each step has its own commit hash you can reference
+- **Real-time progress**: Changes are pushed to GitHub as they happen
+
+In the job detail page, you can:
+- View the workflow progress with step-by-step completion status
+- Click on commit hashes to view them directly on GitHub
+- Expand each step to see which files were changed
+- Click on file names to view them at that specific commit
+
+### Stopping a Job Early
+
+If you need to stop a running job:
+
+1. Navigate to the job's detail page
+2. Click the "Stop Job" button (visible while the job is running)
+3. The job will gracefully stop after the current step completes
+
+The "Stop requested" badge will appear once your request is received. The job will finish its current step, commit any changes, and then stop. You'll still have access to all the work completed up to that point.
+
+### Job Statuses
+
+- **Queued**: Job is waiting to be processed
+- **WIP (Work in Progress)**: Job is currently running
+- **Done**: Job completed successfully
+- **Stopped**: Job was stopped early by user request
+- **Error**: Job encountered an error during execution
+
+---
+
+*See below for workflow-specific tutorials and details on each Magic Job type.*
+
 ## V2 Workflows
 
 The V2 AI agents are designed to be used in sequence. You can start from code as long as it's somewhat valid. Each step builds on the previous one:
