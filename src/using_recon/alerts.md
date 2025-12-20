@@ -4,6 +4,10 @@ Alerts allow you to receive notifications when properties break during one of yo
 
 **Video Tutorial:** [Alerts](https://www.youtube.com/watch?v=xMRdHU4uH8M) (2min)
 
+Access Recon Alerts at: [getrecon.xyz/dashboard/recipes](https://getrecon.xyz/dashboard/recipes)
+
+*Note: Needs a Recipe first to be created. The alerts are created in the same page.*
+
 ## Creating, Updating, and Viewing Alerts
 
 Navigate to a Recipe

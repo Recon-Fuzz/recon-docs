@@ -4,6 +4,8 @@ Recipes allow you to save and reuse job configurations for your fuzzing and veri
 
 **Video Tutorial:** [Recipes](https://www.youtube.com/watch?v=3lByqfsxQWg) (2min)
 
+Access Recon Recipes at: [getrecon.xyz/dashboard/recipes](https://getrecon.xyz/dashboard/recipes)
+
 ## Why Use Recipes
 
 Recipes provide several benefits:

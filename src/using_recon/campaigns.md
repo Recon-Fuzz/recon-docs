@@ -4,6 +4,8 @@ Campaigns are CI/CD automations that automatically run cloud fuzzing jobs when c
 
 **Video Tutorial:** [Campaigns](https://www.youtube.com/watch?v=YFkwtb-RFyU) (3min)
 
+Access Recon Campaigns at: [getrecon.xyz/dashboard/campaigns](https://getrecon.xyz/dashboard/campaigns)
+
 ## How Campaigns Work
 
 Campaigns connect a specific branch in your repository to a [recipe](./recipes.md) that defines the fuzzing configuration. When you push code to the monitored branch, Recon automatically:

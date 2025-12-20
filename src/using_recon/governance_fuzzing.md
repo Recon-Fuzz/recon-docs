@@ -4,6 +4,8 @@ Governance fuzzing allows you to automatically trigger fuzzing jobs in response 
 
 **Video Tutorial:** [Governance Fuzzing](https://www.youtube.com/watch?v=nrPCa59nl9M) (2min)
 
+Access Recon Governance Fuzzing at: [getrecon.xyz/dashboard/governance-fuzzing](https://getrecon.xyz/dashboard/governance-fuzzing)
+
 ## What is Governance Fuzzing?
 
 Governance fuzzing monitors on-chain events from a specific contract address and automatically runs a fuzzing job when that event is emitted. The event parameters can be used to dynamically replace values in your `Setup.sol` file, allowing you to test how different configurations affect your invariants.
