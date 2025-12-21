@@ -6,6 +6,8 @@ Using Recon's Job running feature you can offload long-duration jobs to Recon's 
 
 You can run jobs on both public and private repositories. For private repos, you'll need to [install the Recon GitHub App](./getting_started.md#using-private-repositories) first.
 
+Access Recon Fuzzing Jobs at: [getrecon.xyz/dashboard/jobs](https://getrecon.xyz/dashboard/jobs)
+
 **Video Tutorial:** [Run Jobs with Recon Pro](https://www.youtube.com/watch?v=LWQeFSZ9kz4) (5min)
 
 ## How To Run A Fuzzing Job

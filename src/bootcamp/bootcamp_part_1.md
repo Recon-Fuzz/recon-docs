@@ -357,7 +357,14 @@ In the above we use the `_newAsset` function exposed by the [`AssetManager`](../
 
 ## Market Creation and Handler Implementation
 
-Now to continue the fixes to our setup we'll need to register a market in the `Morpho` contract which we can do by adding the following to our setup: 
+Now to continue the fixes to our setup we'll need to register a market in the `Morpho` contract :
+
+```javascript
+// Add import for MarketParams
+import {Morpho, MarketParams} from "src/Morpho.sol";
+```
+
+And then we can register it by adding the following to our setup: 
 
 ```javascript
     function setup() internal virtual override {
@@ -434,6 +441,7 @@ abstract contract MorphoTargets is
         morpho.createMarket(marketParams);
     }
     
+    // Note: remove from ALL functions the parameter MarketParams marketParams so that it is used the storage var
     ...
 }
 ```
@@ -447,6 +455,8 @@ This helps us get to coverage over the lines of interest faster because instead 
 At this point we also need to mint the tokens we're using in the system to our actors and approve the `Morpho` contract to spend them: 
 
 ```javascript
+import {MockERC20} from "@recon/MockERC20.sol"; // import Recon MockERC20
+
 abstract contract Setup is BaseSetup, ActorManager, AssetManager, Utils {
     ...
     
@@ -661,7 +671,7 @@ Now we can add our `oracle_setPrice` function to our sanity test to confirm that
 
 ```javascript
     function test_crytic() public {
-        morpho_supply_clamped(1e18);;
+        morpho_supply_clamped(1e18);
         morpho_supplyCollateral_clamped(1e18);
 
         oracle_setPrice(1e30);
