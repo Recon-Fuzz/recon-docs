@@ -10,3 +10,5 @@ default-theme = "navy"
 preferred-dark-theme = "navy"
 additional-css = ["theme/toc.css"]
 additional-js = ["theme/toc.js"]
+git-repository-url = "https://github.com/Recon-Fuzz/recon-docs"
+git-repository-icon = "fa-github"
