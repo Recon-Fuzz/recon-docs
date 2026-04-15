@@ -8,6 +8,15 @@
     "applicationSubCategory": "Smart Contract Security Testing",
     "operatingSystem": "Web, VS Code",
     "url": "https://getrecon.xyz",
+    "sameAs": [
+      "https://book.getrecon.xyz",
+      "https://x.com/getreconxyz",
+      "https://github.com/Recon-Fuzz",
+      "https://getrecon.substack.com/",
+      "https://www.linkedin.com/company/recon-fuzz",
+      "https://www.dailywarden.com",
+      "https://www.onebugperday.com"
+    ],
     "description": "Cloud-native invariant testing platform for EVM smart contracts. Run Echidna, Medusa, Foundry, Halmos, and Kontrol fuzzing jobs in the cloud with real-time Telegram alerts, CI/CD campaigns, AI-powered harness generation, and governance fuzzing.",
     "featureList": [
       "Cloud fuzzing with Echidna, Medusa, Foundry, Halmos, Kontrol",
@@ -26,6 +35,14 @@
       "@type": "Organization",
       "name": "Recon",
       "url": "https://getrecon.xyz",
+      "sameAs": [
+        "https://x.com/getreconxyz",
+        "https://github.com/Recon-Fuzz",
+        "https://getrecon.substack.com/",
+        "https://www.linkedin.com/company/recon-fuzz",
+        "https://www.dailywarden.com",
+        "https://www.onebugperday.com"
+      ],
       "founder": {
         "@type": "Person",
         "name": "Alex the Entreprenerd",
@@ -61,6 +78,11 @@
     "headline": "Recon Book: Complete Guide to Invariant Testing for Smart Contracts",
     "description": "Technical documentation covering invariant testing methodology, the Chimera framework, cloud fuzzing with Recon Pro, AI-powered harness generation, and advanced techniques like governance fuzzing and optimization mode.",
     "url": "https://book.getrecon.xyz",
+    "isPartOf": {
+      "@type": "WebSite",
+      "name": "Recon",
+      "url": "https://getrecon.xyz"
+    },
     "inLanguage": "en",
     "author": [
       {
@@ -79,7 +101,15 @@
     "publisher": {
       "@type": "Organization",
       "name": "Recon",
-      "url": "https://getrecon.xyz"
+      "url": "https://getrecon.xyz",
+      "sameAs": [
+        "https://x.com/getreconxyz",
+        "https://github.com/Recon-Fuzz",
+        "https://getrecon.substack.com/",
+        "https://www.linkedin.com/company/recon-fuzz",
+        "https://www.dailywarden.com",
+        "https://www.onebugperday.com"
+      ]
     },
     "about": [
       "Invariant Testing",

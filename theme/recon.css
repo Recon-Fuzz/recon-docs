@@ -33,6 +33,11 @@
   max-width: 750px;
   padding: 0 24px 60px 24px;
   margin-left: clamp(24px, 5vw, 80px);
+  margin-right: 300px; /* Reserve space for right TOC (250px + 30px right + padding) */
+}
+
+/* When TOC is hidden, content can use full width */
+body.toc-hidden .content main {
   margin-right: auto;
 }
 
@@ -41,12 +46,30 @@
   margin-inline: auto;
 }
 
+/* Below 1200px: TOC becomes slide-in panel, no right margin needed */
+@media only screen and (max-width: 1200px) {
+  .content main {
+    margin-right: auto;
+  }
+}
+
 /* Tablet: sidebar visible but less space — tighten gap, let content fill */
 @media only screen and (max-width: 1080px) {
   .content main {
     max-width: none;
     margin-left: 16px;
     margin-right: 16px;
+  }
+
+  /* Tablet: constrain code blocks and tables */
+  .content main pre {
+    max-width: calc(100vw - 300px);
+    overflow-x: auto;
+  }
+
+  .content main .table-wrapper {
+    max-width: calc(100vw - 300px);
+    overflow-x: auto;
   }
 }
 
@@ -57,11 +80,60 @@
     padding: 0 12px 40px 12px;
     margin-left: 0;
     margin-right: 0;
+    overflow-x: hidden;
   }
 
   h1 { font-size: 1.5em; }
   h2 { font-size: 1.25em; }
   h3 { font-size: 1.1em; }
+
+  /* Prevent code blocks from overflowing page on mobile */
+  .content main pre {
+    max-width: calc(100vw - 24px);
+    overflow-x: auto;
+    -webkit-overflow-scrolling: touch;
+    font-size: 0.85em;
+  }
+
+  /* Tables: ensure contained horizontal scroll */
+  .content main .table-wrapper {
+    max-width: calc(100vw - 24px);
+    overflow-x: auto;
+    -webkit-overflow-scrolling: touch;
+  }
+
+  .content main table {
+    min-width: unset;
+  }
+
+  /* Long inline code: allow wrapping */
+  .content main :not(pre) > code {
+    word-break: break-all;
+  }
+
+  /* Blockquotes: tighter padding on mobile */
+  .content main blockquote {
+    padding: 10px 12px;
+    margin: 1em 0;
+  }
+
+  /* Images: ensure they never overflow */
+  .content main img {
+    max-width: 100%;
+    height: auto;
+  }
+
+  /* Long URLs and text: prevent overflow */
+  .content main {
+    word-wrap: break-word;
+    overflow-wrap: break-word;
+  }
+}
+
+/* Prevent horizontal scroll on mobile */
+html, body {
+  overflow-x: hidden;
+  max-width: 100vw;
 }
 
 /* 3. Typography
@@ -252,6 +324,45 @@ h3 {
   color: #7160e8;
 }
 
+/* Mobile: nav arrows as bottom bar instead of side overlays */
+@media only screen and (max-width: 620px) {
+  .nav-chapters {
+    position: fixed;
+    bottom: 0;
+    top: auto !important;
+    width: 50%;
+    height: 44px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    background: rgba(30, 29, 42, 0.95);
+    border-top: 1px solid rgba(255, 255, 255, 0.06);
+    margin: 0;
+    padding: 0;
+    font-size: 1em;
+    z-index: 100;
+  }
+
+  .nav-chapters.previous {
+    left: 0;
+    border-right: 1px solid rgba(255, 255, 255, 0.06);
+  }
+
+  .nav-chapters.next {
+    right: 0;
+  }
+
+  /* Add bottom padding to content so nav bar doesn't cover it */
+  .content main {
+    padding-bottom: 64px !important;
+  }
+
+  /* Shift the TOC toggle button above nav bar */
+  #toc-toggle {
+    bottom: 56px;
+  }
+}
+
 /* 9. Menu bar
    ----------- */
 .navy #menu-bar {
@@ -271,6 +382,48 @@ h3 {
 
 .navy #menu-bar i:hover {
   color: #9d8fff;
+}
+
+/* Mobile: larger touch targets for menu bar icons */
+@media only screen and (max-width: 620px) {
+  #menu-bar {
+    padding: 0 8px;
+    height: 50px;
+  }
+
+  #menu-bar .icon-button,
+  #menu-bar a.icon-button {
+    min-width: 44px;
+    min-height: 44px;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+  }
+
+  #menu-bar i {
+    font-size: 1.2em;
+  }
+
+  /* Ensure search bar doesn't overflow */
+  #menu-bar #searchbar {
+    max-width: 50vw;
+    font-size: 16px; /* ≥16px prevents iOS auto-zoom on focus */
+  }
+
+  /* Prevent iOS auto-zoom on any input focus */
+  input, select, textarea {
+    font-size: 16px;
+  }
+
+  /* Search results: constrain width */
+  #searchresults-outer {
+    max-width: 100vw;
+    overflow-x: hidden;
+  }
+
+  #searchresults-outer .search-results {
+    padding: 0 12px;
+  }
 }
 
 /* 10. Scrollbar
@@ -318,4 +471,50 @@ h3 {
 .content main img {
   max-width: 100%;
   height: auto;
+}
+
+/* 12. Extra-small screens (< 360px) — e.g. iPhone SE, Galaxy Fold
+   ---------------------------------------------------------------- */
+@media only screen and (max-width: 360px) {
+  .content main {
+    padding: 0 8px 64px 8px;
+  }
+
+  h1 { font-size: 1.3em; }
+  h2 { font-size: 1.15em; }
+  h3 { font-size: 1em; }
+
+  .content main pre {
+    font-size: 0.78em;
+    padding: 0.8rem;
+  }
+
+  .content main blockquote {
+    padding: 8px 10px;
+  }
+
+  .content main table thead th,
+  .content main table tbody td {
+    padding: 6px 10px;
+    font-size: 0.9em;
+  }
+}
+
+/* 13. Safe area insets for notched devices (iPhone X+)
+   ---------------------------------------------------- */
+@supports (padding-bottom: env(safe-area-inset-bottom)) {
+  @media only screen and (max-width: 620px) {
+    .nav-chapters {
+      padding-bottom: env(safe-area-inset-bottom);
+      height: calc(44px + env(safe-area-inset-bottom));
+    }
+
+    .content main {
+      padding-bottom: calc(64px + env(safe-area-inset-bottom)) !important;
+    }
+
+    #toc-toggle {
+      bottom: calc(56px + env(safe-area-inset-bottom));
+    }
+  }
 }

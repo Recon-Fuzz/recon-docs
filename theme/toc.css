@@ -62,11 +62,96 @@
   background-color: var(--active-bg);
 }
 
-/* Hide TOC on smaller screens */
+/* Desktop: TOC hides in place when toggled */
+@media (min-width: 1201px) {
+  #right-toc {
+    transition: opacity 0.2s ease, visibility 0.2s ease;
+  }
+
+  body.toc-hidden #right-toc {
+    opacity: 0;
+    visibility: hidden;
+    pointer-events: none;
+  }
+}
+
+/* Mobile/tablet: TOC hidden by default, toggleable */
 @media (max-width: 1200px) {
   #right-toc {
-    display: none;
+    display: block;
+    position: fixed;
+    top: 50px;
+    right: 0;
+    width: 280px;
+    max-width: 85vw;
+    max-height: calc(100vh - 50px);
+    background: #1e1d2a;
+    border-left: 1px solid rgba(255, 255, 255, 0.08);
+    border-radius: 0;
+    padding: 16px;
+    z-index: 2000;
+    box-shadow: -4px 0 20px rgba(0, 0, 0, 0.3);
+    overflow-y: auto;
+    -webkit-overflow-scrolling: touch;
+    transform: translateX(100%);
+    transition: transform 0.25s ease;
+    visibility: hidden;
   }
+
+  #right-toc.toc-visible {
+    transform: translateX(0);
+    visibility: visible;
+  }
+}
+
+/* TOC toggle button — always visible on all screen sizes */
+#toc-toggle {
+  display: flex;
+  position: fixed;
+  bottom: 20px;
+  right: 20px;
+  width: 44px;
+  height: 44px;
+  background: #7160e8;
+  color: #fff;
+  border: none;
+  border-radius: 50%;
+  font-size: 18px;
+  cursor: pointer;
+  z-index: 2001;
+  box-shadow: 0 2px 12px rgba(113, 96, 232, 0.4);
+  transition: background 0.2s ease, transform 0.2s ease;
+  align-items: center;
+  justify-content: center;
+  line-height: 1;
+}
+
+#toc-toggle:hover {
+  background: #5a4bd4;
+  transform: scale(1.05);
+}
+
+#toc-toggle:active {
+  transform: scale(0.95);
+}
+
+/* TOC overlay backdrop for mobile */
+#toc-overlay {
+  position: fixed;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 100%;
+  background: rgba(0, 0, 0, 0.5);
+  z-index: 1999;
+  opacity: 0;
+  visibility: hidden;
+  transition: opacity 0.25s ease, visibility 0.25s ease;
+}
+
+#toc-overlay.toc-overlay-visible {
+  opacity: 1;
+  visibility: visible;
 }
 
 /* Sidebar logo styling */
@@ -92,6 +177,34 @@
 /* Adjust sidebar content to account for logo */
 .sidebar .sidebar-scrollbox {
   top: 220px !important;
+}
+
+/* Mobile: smaller logo + adjusted scrollbox */
+@media (max-width: 620px) {
+  .sidebar-logo {
+    width: 100px;
+    height: 100px;
+    margin: 12px auto 16px auto;
+    padding: 8px;
+  }
+
+  .sidebar .sidebar-scrollbox {
+    top: 140px !important;
+  }
+}
+
+/* Tablet: slightly smaller logo */
+@media (min-width: 621px) and (max-width: 1080px) {
+  .sidebar-logo {
+    width: 140px;
+    height: 140px;
+    margin: 16px auto 20px auto;
+    padding: 10px;
+  }
+
+  .sidebar .sidebar-scrollbox {
+    top: 180px !important;
+  }
 }
 
 /* CSS Variables for consistent theming - getrecon.xyz purple accent */
@@ -123,4 +236,23 @@
   --border-color: rgba(255, 255, 255, 0.08);
   --hover-bg: rgba(113, 96, 232, 0.1);
   --active-bg: rgba(113, 96, 232, 0.18);
-} 
+}
+
+/* Respect reduced motion preferences */
+@media (prefers-reduced-motion: reduce) {
+  #right-toc {
+    transition: none;
+  }
+
+  #toc-overlay {
+    transition: none;
+  }
+
+  #toc-toggle {
+    transition: none;
+  }
+
+  #right-toc a {
+    transition: none;
+  }
+}
